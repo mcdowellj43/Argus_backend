@@ -17,6 +17,20 @@ from pathlib import Path
 import threading
 import time
 
+# Module-specific timeout configuration (in seconds)
+MODULE_TIMEOUTS = {
+    'data_leak.py': 300,              # 5 minutes - API rate limited
+    'subdomain_enum.py': 180,         # 3 minutes - DNS enumeration
+    'subdomain_takeover.py': 240,     # 4 minutes - comprehensive testing
+    'virustotal_scan.py': 120,        # 2 minutes - API dependent
+    'default': 60                     # 1 minute for all other modules
+}
+
+def get_module_timeout(module_script):
+    """Get timeout for specific module, fallback to default"""
+    return MODULE_TIMEOUTS.get(module_script, MODULE_TIMEOUTS['default'])
+
+
 # Configuration
 PORT = 8000
 HOST = "localhost"
@@ -765,7 +779,7 @@ def execute_scan(scan_id):
                         [sys.executable, str(module_path), target],
                         capture_output=True,
                         text=True,
-                        timeout=60,  # 1 minute timeout per module
+                        timeout=get_module_timeout(module_script),  # Dynamic timeout per module
                         cwd=str(argus_root)
                     )
                     
@@ -793,7 +807,7 @@ def execute_scan(scan_id):
                     result = {
                         "module_name": module_script,
                         "status": "failed",
-                        "error": "Module execution timed out after 60 seconds",
+                        "error": f"Module execution timed out after {get_module_timeout(module_script)} seconds",
                         "execution_time": 60
                     }
                 except Exception as e:

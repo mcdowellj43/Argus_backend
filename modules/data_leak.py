@@ -2,9 +2,11 @@
 """
 Argus - Advanced Data Leak Checker
 Uses HaveIBeenPwned API to check for real data breaches
+Secure version with environment variable API key management
 """
 
 import sys
+import os
 import requests
 from urllib.parse import urlparse
 from rich.console import Console
@@ -24,16 +26,68 @@ init(autoreset=True)
 console = Console()
 lock = threading.Lock()
 
-# Rate limiting tracker
-request_times = deque()
-rate_limit_lock = threading.Lock()
-
 # HaveIBeenPwned API Configuration
-HIBP_API_KEY = "46d0dd6674544e2286da27176198b5ea"
 HIBP_BASE_URL = "https://haveibeenpwned.com/api/v3"
 HIBP_RATE_LIMIT = 6.0  # Seconds between requests (10 requests per minute = 6 seconds between requests)
 HIBP_REQUESTS_PER_MINUTE = 10
 HIBP_REQUEST_WINDOW = 60  # seconds
+
+# Rate limiting tracker
+request_times = deque()
+rate_limit_lock = threading.Lock()
+
+def get_api_key():
+    """Get API key from environment variable or command line argument"""
+    # Priority order:
+    # 1. Command line argument (--api-key)
+    # 2. Environment variable (HIBP_API_KEY)
+    # 3. Environment variable (HAVEIBEENPWNED_API_KEY) - alternative name
+    # 4. Prompt user interactively
+    
+    api_key = os.getenv('HIBP_API_KEY') or os.getenv('HAVEIBEENPWNED_API_KEY')
+    
+    if not api_key:
+        console.print(Fore.YELLOW + "[!] No API key found in environment variables.")
+        console.print(Fore.WHITE + "    Set HIBP_API_KEY environment variable or use --api-key")
+        console.print(Fore.WHITE + "    Example: export HIBP_API_KEY=your_api_key_here")
+        
+        # Option to enter interactively (for testing only - not recommended for production)
+        try:
+            api_key = input("\nEnter your HaveIBeenPwned API key (or Ctrl+C to exit): ").strip()
+            if not api_key:
+                console.print(Fore.RED + "[!] No API key provided.")
+                return None
+        except KeyboardInterrupt:
+            console.print(Fore.RED + "\n[!] Operation cancelled.")
+            return None
+    
+    return api_key
+
+def validate_api_key(api_key):
+    """Validate API key by making a test request"""
+    if not api_key or len(api_key) < 20:  # HIBP API keys are typically longer
+        return False, "API key appears to be too short or empty"
+    
+    # Test with a simple request
+    test_url = f"{HIBP_BASE_URL}/breachedaccount/test@example.com"
+    headers = {
+        'hibp-api-key': api_key,
+        'User-Agent': 'ArgusDataLeakChecker/2.0',
+        'Accept': 'application/json'
+    }
+    
+    try:
+        response = requests.get(test_url, headers=headers, timeout=10)
+        if response.status_code in [200, 404]:  # Both are valid responses
+            return True, "API key validated successfully"
+        elif response.status_code == 401:
+            return False, "Invalid API key - authentication failed"
+        elif response.status_code == 429:
+            return True, "API key valid but rate limited (this is normal)"
+        else:
+            return False, f"Unexpected response: HTTP {response.status_code}"
+    except requests.RequestException as e:
+        return False, f"Network error during validation: {e}"
 
 def banner():
     console.print(Fore.GREEN + """
@@ -85,7 +139,7 @@ def wait_for_rate_limit():
         # Record this request
         request_times.append(current_time)
 
-def check_email_breaches(email, session):
+def check_email_breaches(email, session, api_key):
     """Check email against HaveIBeenPwned API with rate limiting"""
     
     # Wait for rate limit before making request
@@ -93,7 +147,7 @@ def check_email_breaches(email, session):
     
     url = f"{HIBP_BASE_URL}/breachedaccount/{email}"
     headers = {
-        'hibp-api-key': HIBP_API_KEY,
+        'hibp-api-key': api_key,
         'User-Agent': 'ArgusDataLeakChecker/2.0',
         'Accept': 'application/json'
     }
@@ -116,7 +170,7 @@ def check_email_breaches(email, session):
             with lock:
                 console.print(Fore.YELLOW + f"[!] Rate limited despite precautions. Waiting 60 seconds...")
             time.sleep(60)  # Wait a full minute and retry
-            return check_email_breaches(email, session)
+            return check_email_breaches(email, session, api_key)
         else:
             with lock:
                 console.print(Fore.RED + f"[!] Error checking {email}: HTTP {response.status_code}")
@@ -291,7 +345,7 @@ def display_breaches(email, breaches):
     with lock:
         console.print(table)
 
-def worker(email_queue, session, stats):
+def worker(email_queue, session, stats, api_key):
     """Worker thread for processing emails"""
     while True:
         email = email_queue.get()
@@ -301,7 +355,7 @@ def worker(email_queue, session, stats):
         with lock:
             console.print(Fore.YELLOW + f"[*] Checking {email}...")
         
-        breaches = check_email_breaches(email, session)
+        breaches = check_email_breaches(email, session, api_key)
         
         if breaches is None:
             stats['errors'] += 1
@@ -354,7 +408,7 @@ def main():
     parser.add_argument('domain', help='Domain to check for data leaks')
     parser.add_argument('--email', action='append', help='Specific email addresses to check (can be used multiple times)')
     parser.add_argument('--threads', type=int, default=1, help='Number of concurrent threads (default: 1, FORCED to 1 due to rate limits)')
-    parser.add_argument('--api-key', help='HaveIBeenPwned API key (overrides default)')
+    parser.add_argument('--api-key', help='HaveIBeenPwned API key (overrides environment variable)')
     parser.add_argument('--verbose', '-v', action='store_true', help='Enable verbose output')
     parser.add_argument('--limit', type=int, help='Limit number of emails to check (useful for testing)')
     args = parser.parse_args()
@@ -364,20 +418,20 @@ def main():
         console.print(Fore.YELLOW + f"[!] Warning: API rate limit is 10/minute. Forcing single thread to prevent issues.")
         args.threads = 1
 
-    # Force single thread due to rate limiting
-    if args.threads > 1:
-        console.print(Fore.YELLOW + f"[!] Warning: API rate limit is 10/minute. Forcing single thread to prevent issues.")
-        args.threads = 1
-
-    # Override API key if provided
-    global HIBP_API_KEY
-    if args.api_key:
-        HIBP_API_KEY = args.api_key
+    # Get API key (priority: command line > environment > interactive)
+    api_key = args.api_key or get_api_key()
+    if not api_key:
+        console.print(Fore.RED + "[!] No API key provided. Exiting.")
+        sys.exit(1)
 
     # Validate API key
-    if not HIBP_API_KEY:
-        console.print(Fore.RED + "[!] No API key provided. Please set HIBP_API_KEY or use --api-key")
+    console.print(Fore.WHITE + "[*] Validating API key...")
+    is_valid, message = validate_api_key(api_key)
+    if not is_valid:
+        console.print(Fore.RED + f"[!] API key validation failed: {message}")
         sys.exit(1)
+    else:
+        console.print(Fore.GREEN + f"[+] {message}")
 
     domain = clean_domain_input(args.domain)
     start_time = time.time()
@@ -434,7 +488,7 @@ def main():
     # Start worker threads
     threads = []
     for _ in range(args.threads):
-        t = threading.Thread(target=worker, args=(email_queue, session, stats))
+        t = threading.Thread(target=worker, args=(email_queue, session, stats, api_key))
         t.start()
         threads.append(t)
 
