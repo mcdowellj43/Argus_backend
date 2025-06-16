@@ -19,7 +19,7 @@ import time
 
 # Module-specific timeout configuration (in seconds)
 MODULE_TIMEOUTS = {
-    'data_leak.py': 300,              # 5 minutes - API rate limited
+    'data_leak.py': 1200,              # 5 minutes - API rate limited
     'subdomain_enum.py': 180,         # 3 minutes - DNS enumeration
     'subdomain_takeover.py': 240,     # 4 minutes - comprehensive testing
     'virustotal_scan.py': 120,        # 2 minutes - API dependent

@@ -2,7 +2,6 @@
 """
 Argus - Advanced Data Leak Checker
 Uses HaveIBeenPwned API to check for real data breaches
-Secure version with environment variable API key management
 """
 
 import sys
@@ -22,6 +21,9 @@ import json
 from datetime import datetime
 from collections import deque
 
+# Set the API key in environment for the script
+os.environ['HIBP_API_KEY'] = "46d0dd6674544e2286da27176198b5ea"
+
 init(autoreset=True)
 console = Console()
 lock = threading.Lock()
@@ -37,29 +39,12 @@ request_times = deque()
 rate_limit_lock = threading.Lock()
 
 def get_api_key():
-    """Get API key from environment variable or command line argument"""
-    # Priority order:
-    # 1. Command line argument (--api-key)
-    # 2. Environment variable (HIBP_API_KEY)
-    # 3. Environment variable (HAVEIBEENPWNED_API_KEY) - alternative name
-    # 4. Prompt user interactively
-    
+    """Get API key from environment or fallback"""
     api_key = os.getenv('HIBP_API_KEY') or os.getenv('HAVEIBEENPWNED_API_KEY')
     
     if not api_key:
-        console.print(Fore.YELLOW + "[!] No API key found in environment variables.")
-        console.print(Fore.WHITE + "    Set HIBP_API_KEY environment variable or use --api-key")
-        console.print(Fore.WHITE + "    Example: export HIBP_API_KEY=your_api_key_here")
-        
-        # Option to enter interactively (for testing only - not recommended for production)
-        try:
-            api_key = input("\nEnter your HaveIBeenPwned API key (or Ctrl+C to exit): ").strip()
-            if not api_key:
-                console.print(Fore.RED + "[!] No API key provided.")
-                return None
-        except KeyboardInterrupt:
-            console.print(Fore.RED + "\n[!] Operation cancelled.")
-            return None
+        console.print(Fore.RED + "[!] No API key found. This shouldn't happen with hardcoded key.")
+        return None
     
     return api_key
 
@@ -418,7 +403,7 @@ def main():
         console.print(Fore.YELLOW + f"[!] Warning: API rate limit is 10/minute. Forcing single thread to prevent issues.")
         args.threads = 1
 
-    # Get API key (priority: command line > environment > interactive)
+    # Get API key (priority: command line > environment)
     api_key = args.api_key or get_api_key()
     if not api_key:
         console.print(Fore.RED + "[!] No API key provided. Exiting.")
@@ -462,16 +447,6 @@ def main():
     if len(emails) > 10:
         console.print(Fore.YELLOW + f"[!] This will take approximately {estimated_minutes:.1f} minutes due to API rate limits.")
         console.print(Fore.YELLOW + f"[!] Consider using --limit to test with fewer emails first.")
-        
-        # Ask for confirmation for long scans
-        try:
-            response = input(f"\nProceed with checking {len(emails)} emails? (y/N): ")
-            if response.lower() not in ['y', 'yes']:
-                console.print(Fore.CYAN + "[*] Scan cancelled by user.")
-                sys.exit(0)
-        except KeyboardInterrupt:
-            console.print(Fore.RED + "\n[!] Scan cancelled by user.")
-            sys.exit(0)
 
     # Initialize statistics
     stats = {
