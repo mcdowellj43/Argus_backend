@@ -5,15 +5,15 @@ RESULTS_DIR = "results"
 
 # Default timeout for network requests (in seconds)
 DEFAULT_TIMEOUT = 10
-# config/settings.py
 
 USER_AGENT = 'Mozilla/5.0 (compatible; ArgusBot/1.0; +https://yourdomain.com/bot)'
 
 # API Keys for third-party services (add your own keys)
 API_KEYS = {
     "VIRUSTOTAL_API_KEY": "YOUR_VIRUSTOTAL_API_KEY",  # API key for VirusTotal
-    "SHODAN_API_KEY": "YOUR_SHODAN_API_KEY",         # API key for Shodan
-    "GOOGLE_API_KEY": "YOUR_GOOGLE_PageSpeed_Insights_API_KEY",     # API key for Google
+    "SHODAN_API_KEY": "C9t5dFvE86Yuv2bqCz1C3zYRlXk9RsG2",         # API key for Shodan
+    "GOOGLE_API_KEY": "YOUR_GOOGLE_PageSpeed_Insights_API_KEY",     # API key for Google PageSpeed Insights
+    "SSL_LABS_API_KEY": "YOUR_SSL_LABS_API_KEY",     # API key for SSL Labs (if required)
     "CENSYS_API_ID": "YOUR_CENSYS_API_ID",           # API ID for Censys
     "CENSYS_API_SECRET": "YOUR_CENSYS_API_SECRET"    # API Secret for Censys
 }
@@ -21,7 +21,7 @@ API_KEYS = {
 # Export Settings for Reports
 EXPORT_SETTINGS = {
     "enable_txt_export": True,   # Enable or disable TXT report generation
-    "enable_csv_export": False    # Enable or disable CSV report generation (Still in Developpement)
+    "enable_csv_export": False    # Enable or disable CSV report generation (Still in Development)
 }
 
 # Logging Configuration
