@@ -58,7 +58,6 @@ def display_whois_info(whois_data):
             table.add_row(key.strip(), value.strip())
 
     console.print(table)
-    console.print(f"\n{Fore.CYAN}[*] WHOIS lookup completed.{Style.RESET_ALL}")
 
 def whois_lookup(target):
     """Perform the WHOIS lookup process for the given target."""
@@ -66,6 +65,12 @@ def whois_lookup(target):
     domain = clean_domain_input(target)
     whois_data = perform_whois_lookup(domain)
     display_whois_info(whois_data)
+
+    if whois_data:
+        console.print(f"{Fore.GREEN}[SUCCESS] Retrieved and displayed WHOIS information for {domain}.{Style.RESET_ALL}")
+    else:
+        # This handles cases where whois_data is None (error in lookup) or empty string (lookup successful but no data)
+        console.print(f"{Fore.YELLOW}[INFO] No WHOIS information found, or an error occurred during lookup for {domain}.{Style.RESET_ALL}")
 
 def main(target):
     whois_lookup(target)

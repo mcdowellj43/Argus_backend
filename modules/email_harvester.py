@@ -101,9 +101,9 @@ class EmailHarvester:
             for email in sorted(self.emails_found):
                 table.add_row(email)
             console.print(table)
-            console.print(f"\n[cyan][*] Email harvesting completed. Total emails found: {len(self.emails_found)}[/cyan]")
+            console.print(f"\n[green][SUCCESS] Found {len(self.emails_found)} email address(es) for {self.base_url}.[/green]")
         else:
-            console.print("[yellow][!] No email addresses found.[/yellow]")
+            console.print(f"[yellow][INFO] No email addresses found for {self.base_url}.[/yellow]")
 
 def main(target):
     banner()

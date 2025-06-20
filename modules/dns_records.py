@@ -68,10 +68,12 @@ def main(target):
 
     if dns_records:
         display_dns_records(dns_records)
+        num_record_types = len(dns_records)
+        console.print(Fore.GREEN + f"[SUCCESS] Found {num_record_types} types of DNS records for {domain}.")
     else:
-        console.print(Fore.RED + "[!] No DNS records found.")
-
-    console.print(Fore.WHITE + "[*] DNS records retrieval completed.")
+        # This handles cases where dns_records is None (e.g., domain doesn't exist)
+        # or dns_records is an empty dictionary (e.g. no records found after checking all types)
+        console.print(Fore.YELLOW + f"[INFO] No DNS records found for {domain}.")
 
 
 if __name__ == "__main__":

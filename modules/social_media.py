@@ -179,7 +179,11 @@ def main(target):
         social_media_profiles += search_social_media_using_google(domain)
 
     display_social_media_profiles(social_media_profiles)
-    console.print(Fore.WHITE + "[*] Social media presence check completed.")
+
+    if social_media_profiles:
+        console.print(Fore.GREEN + f"[SUCCESS] Found {len(social_media_profiles)} social media profile(s) for {url}.")
+    else:
+        console.print(Fore.YELLOW + f"[INFO] No social media profiles found for {url}.")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

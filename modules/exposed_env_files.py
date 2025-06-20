@@ -87,8 +87,9 @@ def check_exposed_env_files(target):
 
     if found_files:
         display_results(found_files)
+        console.print(f"[red][WARNING] Found {len(found_files)} potentially exposed file(s) for {target}. Please review the table above immediately.[/red]")
     else:
-        console.print("[green][+] No publicly exposed environment files found.[/green]")
+        console.print(f"[green][SUCCESS] No publicly exposed environment files found for {target}.[/green]")
 
 def display_results(found_files):
     table = Table(show_header=True, header_style="bold white")
@@ -101,7 +102,6 @@ def display_results(found_files):
 
     console.print("\n[bold red]Warning: The following files are publicly accessible and may contain sensitive information.[/bold red]")
     console.print(table)
-    console.print(f"\n[cyan][*] Exposed environment files check completed.[/cyan]")
 
 def main(target):
     check_exposed_env_files(target)

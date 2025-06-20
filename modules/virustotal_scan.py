@@ -98,6 +98,11 @@ def generate_stats(all_scan_data):
     table.add_row("Detection Percentage", f"{detection_percentage:.2f}%")
     
     console.print(table)
+    return {
+        "total_urls": total_urls,
+        "scanned_urls": scanned_urls,
+        "total_positives": total_positives
+    }
 
 async def run_scans(targets, api_key):
     async with aiohttp.ClientSession() as session:
@@ -114,7 +119,8 @@ async def run_scans(targets, api_key):
             console.print(Fore.WHITE + f"[*] Processing results for: {url}")
             display_virustotal_scan(data, url)
 
-        generate_stats(scan_data)
+        stats_summary = generate_stats(scan_data) # capture here
+        return stats_summary # return here
 
 def main(targets):
     banner()
@@ -138,8 +144,24 @@ def main(targets):
     console.print(Fore.WHITE + f"[*] Initiating VirusTotal scans for {len(cleaned_targets)} URL(s)...")
     
     # Run asynchronous scanning
-    asyncio.run(run_scans(cleaned_targets, api_key))
-    console.print(Fore.CYAN + "[*] VirusTotal scan completed.")
+    stats_summary_results = asyncio.run(run_scans(cleaned_targets, api_key))
+
+    if stats_summary_results: # Check if stats_summary_results is not None
+        num_total_urls = stats_summary_results.get("total_urls", 0)
+        num_scanned_urls = stats_summary_results.get("scanned_urls", 0)
+        num_total_positives = stats_summary_results.get("total_positives", 0)
+
+        if num_total_positives > 0:
+            console.print(Fore.RED + f"\n[WARNING] VirusTotal scan for {num_total_urls} URL(s) completed. {num_total_positives} positive detection(s) found across {num_scanned_urls} successfully scanned URL(s). Review summary table above.")
+        elif num_scanned_urls > 0: # No positives, but some URLs were scanned
+            console.print(Fore.GREEN + f"\n[SUCCESS] VirusTotal scan for {num_total_urls} URL(s) completed. No positive detections found across {num_scanned_urls} successfully scanned URL(s). Review summary table above.")
+        elif num_total_urls > 0: # URLs were processed but none successfully scanned (e.g. all queued/not found)
+            console.print(Fore.YELLOW + f"\n[INFO] VirusTotal scan for {num_total_urls} URL(s) completed. No URLs were successfully scanned (e.g., all queued or not found by VirusTotal). Review summary table above.")
+        else: # No URLs were even processed by run_scans (e.g. cleaned_targets was empty - though main already checks for this)
+            console.print(Fore.YELLOW + f"\n[INFO] VirusTotal scan completed. No URLs were processed or scanned. Review summary table above.")
+    else:
+        # Fallback if stats_summary_results is None for some reason (should not happen with current structure)
+        console.print(Fore.YELLOW + "\n[INFO] VirusTotal scan completed. Detailed summary statistics might be missing. Review output above.")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

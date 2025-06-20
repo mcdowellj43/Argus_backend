@@ -181,6 +181,7 @@ def analyze_content(paste, content):
     if findings:
         display_findings(paste, findings)
         log_findings(paste, findings)
+    return findings
 
 def display_findings(paste, findings):
     table = Table(show_header=True, header_style="bold magenta")
@@ -272,6 +273,9 @@ async def check_virustotal(session, domain):
 
 async def monitor_paste_sites(query):
     all_results = []
+    total_pastes_processed_in_script = 0
+    pastes_with_any_findings = 0
+    aggregated_findings_details = {'Emails': 0, 'API Keys': 0, 'Passwords': 0}
 
     async with aiohttp.ClientSession() as session:
         # Search all paste sites concurrently
@@ -291,20 +295,50 @@ async def monitor_paste_sites(query):
             analysis_tasks = []
             for paste in all_results:
                 analysis_tasks.append(analyze_paste_content(session, paste))
-            await asyncio.gather(*analysis_tasks)
+            collected_analysis_outcomes = await asyncio.gather(*analysis_tasks)
+
+            if all_results: # This check is important
+                total_pastes_processed_in_script = len(all_results) # Count of unique pastes found
+                for individual_paste_findings in collected_analysis_outcomes:
+                    if individual_paste_findings: # Check if the findings dict is not empty
+                        pastes_with_any_findings += 1
+                        for key, found_items_list in individual_paste_findings.items():
+                            if key in aggregated_findings_details: # e.g. key is 'Emails'
+                                aggregated_findings_details[key] += len(found_items_list)
+
+            if total_pastes_processed_in_script > 0:
+                summary_parts = []
+                if aggregated_findings_details['Emails'] > 0:
+                    summary_parts.append(f"{aggregated_findings_details['Emails']} email(s)")
+                if aggregated_findings_details['API Keys'] > 0:
+                    summary_parts.append(f"{aggregated_findings_details['API Keys']} API key(s)")
+                if aggregated_findings_details['Passwords'] > 0:
+                    summary_parts.append(f"{aggregated_findings_details['Passwords']} password(s)")
+
+                if pastes_with_any_findings > 0:
+                    found_details_str = ", ".join(summary_parts) if summary_parts else "unspecified sensitive items"
+                    console.print(Fore.YELLOW + f"[SUMMARY] Paste Analysis for '{query}': Processed {total_pastes_processed_in_script} paste(s). {pastes_with_any_findings} paste(s) contained sensitive data ({found_details_str}).")
+                else:
+                    console.print(Fore.GREEN + f"[SUMMARY] Paste Analysis for '{query}': Processed {total_pastes_processed_in_script} paste(s). No sensitive data found in analyzed content.")
+            # If total_pastes_processed_in_script is 0, the script already prints:
+            # console.print(Fore.YELLOW + "[!] No pastes found for the given query.")
+            # So no 'else' needed here for the summary message.
         else:
             console.print(Fore.YELLOW + "[!] No pastes found for the given query.")
 
 async def analyze_paste_content(session, paste):
     content = await retrieve_paste_content(session, paste)
+    findings_from_sync_analyze = {}
     if content:
-        analyze_content(paste, content)
-        # Extract domain from paste link
+        findings_from_sync_analyze = analyze_content(paste, content) # capture returned findings
+
+        # Keep existing blacklist and VT checks for now, their results are not part of this subtask's summary
         parsed_url = urlparse(paste['link'])
         domain = parsed_url.netloc
         if domain:
             await check_blacklist_services(domain)
             await check_virustotal(session, domain)
+    return findings_from_sync_analyze # return the findings
 
 def banner():
     console.print(Fore.GREEN + """
@@ -317,7 +351,7 @@ def main(query):
     banner()
     console.print(Fore.WHITE + f"[*] Monitoring paste sites for query: {query}")
     asyncio.run(monitor_paste_sites(query))
-    console.print(Fore.CYAN + "[*] Paste monitoring completed.")
+    console.print(Fore.WHITE + "[*] Paste monitoring completed.")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Argus - Advanced Paste Monitoring Tool")

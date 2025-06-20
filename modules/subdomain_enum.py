@@ -33,21 +33,23 @@ def fetch_subdomains(domain):
         return []
 
 def display_subdomains(subdomains):
-    if not subdomains:
-        console.print(Fore.YELLOW + "[!] No subdomains found.")
-    else:
+    if subdomains: # Only proceed if there are subdomains
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Subdomains", style="cyan", justify="left")
         for sub in subdomains:
             table.add_row(sub)
         console.print(table)
+        # The 'else' part that printed "No subdomains found" should be removed.
 
 def main(domain):
     banner()
     console.print(Fore.WHITE + f"[*] Fetching subdomains for: {domain}")
     subdomains = fetch_subdomains(domain)
     display_subdomains(subdomains)
-    console.print(Fore.WHITE + "[*] Subdomain enumeration completed.")
+    if subdomains:
+        console.print(Fore.GREEN + f"[SUCCESS] Found {len(subdomains)} subdomain(s) for {domain}.")
+    else:
+        console.print(Fore.YELLOW + f"[INFO] No subdomains found for {domain}.")
 
 if len(sys.argv) > 1:
     target_domain = sys.argv[1]

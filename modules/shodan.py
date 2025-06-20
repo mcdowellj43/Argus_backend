@@ -225,6 +225,9 @@ async def resolve_domain_async(domain):
 async def main_async(inputs):
     banner()
     
+    inputs_with_basic_info_count = 0
+    inputs_with_ports_count = 0
+
     # Check API status
     api_info = await check_api_status()
     
@@ -258,7 +261,21 @@ async def main_async(inputs):
                     display_enhanced_results(result)
                     progress.advance(task)
 
-    console.print(Fore.CYAN + "[*] Enhanced IP reconnaissance completed.")
+        actual_processed_inputs = len(recon_results) # Number of inputs for which scan was attempted
+        successful_scans = 0
+        for res in recon_results:
+            if not res.get("error"): # Count scans that didn't have a top-level error.
+                successful_scans +=1
+                if res.get("basic_info"):
+                    inputs_with_basic_info_count += 1
+                if res.get("ports"):
+                    inputs_with_ports_count += 1
+
+        if actual_processed_inputs > 0:
+            console.print(Fore.GREEN + f"[SUCCESS] IP reconnaissance completed for {actual_processed_inputs} target(s). Successfully scanned: {successful_scans}. Basic info found for {inputs_with_basic_info_count} target(s). Open ports detected for {inputs_with_ports_count} target(s).")
+        else:
+            # This case means no inputs were even attempted (e.g. all failed to resolve before creating tasks)
+            console.print(Fore.YELLOW + f"[INFO] IP reconnaissance completed, but no targets were processed (e.g., all domains failed to resolve or no valid IPs provided).")
     
     if api_info and api_info.get('query_credits', 0) == 0:
         console.print(f"\n[yellow][💡] Tip: To get full Shodan data, you can:[/yellow]")

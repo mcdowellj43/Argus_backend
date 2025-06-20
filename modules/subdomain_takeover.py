@@ -72,7 +72,7 @@ async def check_subdomain_takeover(session, subdomain, semaphore):
                         for indicator in indicators:
                             if indicator in text:
                                 console.print(Fore.RED + f"[!] Vulnerable: {subdomain} ({protocol.upper()}) - Service: {service}")
-                                return subdomain
+                                return (subdomain, protocol.upper()) # MODIFIED HERE
                     console.print(Fore.GREEN + f"[+] Safe: {subdomain} ({protocol.upper()})")
             except asyncio.TimeoutError:
                 console.print(Fore.RED + f"[!] Timeout: {subdomain} ({protocol.upper()})")
@@ -81,15 +81,13 @@ async def check_subdomain_takeover(session, subdomain, semaphore):
     return None
 
 def display_vulnerable_subdomains(vulnerable_subdomains):
-    if not vulnerable_subdomains:
-        console.print(Fore.GREEN + "[+] No vulnerable subdomains found.")
-        return
-    table = Table(title="Vulnerable Subdomains", box=box.ROUNDED)
-    table.add_column("Subdomain", style="cyan", justify="left")
-    table.add_column("Protocol", style="red", justify="left")
-    for sub, proto in vulnerable_subdomains:
-        table.add_row(sub, proto)
-    console.print(table)
+    if vulnerable_subdomains: # Only proceed if there are vulnerable subdomains
+        table = Table(title="Vulnerable Subdomains", box=box.ROUNDED)
+        table.add_column("Subdomain", style="cyan", justify="left")
+        table.add_column("Protocol", style="red", justify="left")
+        for sub, proto in vulnerable_subdomains:
+            table.add_row(sub, proto)
+        console.print(table)
 
 async def main_async(inputs):
     semaphore = asyncio.Semaphore(20)
@@ -108,12 +106,24 @@ async def main_async(inputs):
                     continue
                 for sub in subdomains:
                     tasks.append(check_subdomain_takeover(session, sub, semaphore))
+
+        total_subdomains_to_check = len(tasks)
+
         for coro in asyncio.as_completed(tasks):
             result = await coro
             if result:
                 vulnerable_subdomains.append(result)
+
     display_vulnerable_subdomains(vulnerable_subdomains)
-    console.print(Fore.CYAN + "[*] Subdomain takeover check completed.")
+    num_vulnerable = len(vulnerable_subdomains)
+
+    if total_subdomains_to_check > 0:
+        if num_vulnerable > 0:
+            console.print(Fore.RED + f"[WARNING] Subdomain takeover check completed. Checked {total_subdomains_to_check} subdomain instance(s). Found {num_vulnerable} potentially vulnerable instance(s). Review table above.")
+        else:
+            console.print(Fore.GREEN + f"[SUCCESS] Subdomain takeover check completed. Checked {total_subdomains_to_check} subdomain instance(s). No potentially vulnerable subdomains found.")
+    else:
+        console.print(Fore.YELLOW + f"[INFO] Subdomain takeover check completed, but no subdomains were effectively checked (e.g., all domains failed to resolve or no valid initial inputs).")
 
 def main(inputs):
     banner()

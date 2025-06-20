@@ -176,6 +176,33 @@ async def content_discovery(target, output):
 
         display_results(robots_txt, sitemaps, internal_links, external_links, css_files, js_files)
 
+        summary_parts = []
+        if robots_txt:
+            summary_parts.append("robots.txt")
+        if sitemaps:
+            summary_parts.append(f"{len(sitemaps)} sitemap link(s)")
+        if internal_links:
+            summary_parts.append(f"{len(internal_links)} internal link(s)")
+        if external_links:
+            summary_parts.append(f"{len(external_links)} external link(s)")
+        if css_files:
+            summary_parts.append(f"{len(css_files)} CSS file(s)")
+        if js_files:
+            summary_parts.append(f"{len(js_files)} JS file(s)")
+
+        # The 'target' variable in this function is the URL.
+        if summary_parts:
+            found_summary = ", ".join(summary_parts)
+            console.print(Fore.GREEN + f"[SUCCESS] Content discovery for {target} completed. Found: {found_summary}.")
+        else:
+            # This case implies that the initial request might have failed or nothing at all was discovered.
+            # The display_results function already prints a table that would show "Not Found" or 0 counts.
+            # We can refine this message based on whether the initial response was successful.
+            # For now, a general message if summary_parts is empty.
+            # Let's check if the initial response failed (status_code != 200), which is handled earlier.
+            # The logic here assumes display_results was called, meaning the initial request was likely okay.
+            console.print(Fore.YELLOW + f"[INFO] Content discovery for {target} completed, but no specific items (robots.txt, sitemaps, links, assets) were found through parsing.")
+
     except requests.RequestException as e:
         console.print(Fore.RED + f"[!] Error during content discovery for {target}: {e}")
 

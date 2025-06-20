@@ -45,9 +45,10 @@ def main(target):
     open_ports = scan_ports(target)
     if open_ports:
         display_ports(open_ports)
+        num_open_ports = len(open_ports)
+        console.print(Fore.GREEN + f"[SUCCESS] Found {num_open_ports} open port(s) for {target}.")
     else:
-        console.print(Fore.RED + "[!] No open ports found.")
-    console.print(Fore.WHITE + "[*] Open ports scanning completed.")
+        console.print(Fore.YELLOW + f"[INFO] No open ports found for {target}.")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

@@ -215,15 +215,23 @@ def main(target):
     tech_stack += detect_by_files(target)
 
     if tech_stack:
-        print(Fore.GREEN + "[+] Technologies detected:")
         display_tech_stack(tech_stack)
         save_results(tech_stack, target)
-    else:
-        console.print(Fore.RED + "[!] No technology stack data found.")
-        logging.info("No technology stack data found.")
 
-    print(Fore.CYAN + "[*] Technology stack detection completed.")
-    logging.info("Technology stack detection completed.")
+        seen_summary = set()
+        unique_tech_count = 0
+        for tech_item in tech_stack: # tech_stack is the list populated by detection functions
+            # Create a unique identifier for each technology entry based on its name and categories
+            tech_id_summary = (tech_item.get('technology', 'Unknown'), tuple(sorted(tech_item.get('categories', []))))
+            if tech_id_summary not in seen_summary:
+                seen_summary.add(tech_id_summary)
+                unique_tech_count += 1
+
+        print(Fore.GREEN + f"[SUCCESS] Detected {unique_tech_count} unique technology/technologies for {target}.")
+        logging.info(f"[SUCCESS] Detected {unique_tech_count} unique technology/technologies for {target}.")
+    else:
+        print(Fore.YELLOW + f"[INFO] No specific technologies detected for {target}.")
+        logging.info(f"[INFO] No specific technologies detected for {target}.")
 
 if __name__ == "__main__":
     try:

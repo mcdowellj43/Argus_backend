@@ -483,7 +483,14 @@ def main():
     # Display final summary
     display_final_summary(stats, start_time)
     
-    console.print(Fore.CYAN + "\n[*] Data leak check completed.")
+    if stats['breached'] > 0:
+        console.print(Fore.RED + f"\n[WARNING] Data leak check for {domain} completed. Found {stats['breached']} breached email(s). Review summary above for details.")
+    elif stats['clean'] > 0 and stats['breached'] == 0 : # Successfully checked and no breaches
+        console.print(Fore.GREEN + f"\n[SUCCESS] Data leak check for {domain} completed. No breaches found for {stats['clean']} checked email(s) (out of {stats['total']} total). Review summary above.")
+    elif stats['total'] > 0 and stats['errors'] == stats['total']: # All attempts resulted in errors
+        console.print(Fore.RED + f"\n[ERROR] Data leak check for {domain} completed, but all {stats['total']} email checks resulted in errors. Review summary and logs.")
+    else: # Default case, perhaps no emails to check or other unhandled scenarios
+        console.print(Fore.YELLOW + f"\n[INFO] Data leak check for {domain} completed. Review summary above for details on emails checked and breaches found.")
 
 if __name__ == "__main__":
     try:
