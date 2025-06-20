@@ -1,83 +1,92 @@
+#!/usr/bin/env python3
+"""
+Improved DNS Records Module - Clean Output with Success/Failure Indicators
+"""
+
 import os
 import sys
 import dns.resolver
-from rich.console import Console
-from rich.table import Table
-from colorama import Fore, init
+import dns.exception
+from datetime import datetime
 
-
+# Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.util import clean_domain_input, validate_domain  
-
-
-init(autoreset=True)
-console = Console()
-
-def banner():
-    print(Fore.GREEN + """
-    =============================================
-               Argus - DNS Records Check
-    =============================================
-    """)
+from utils.util import clean_domain_input, validate_domain
 
 def get_dns_records(domain):
+    """Get DNS records for domain with error handling"""
     records = {}
     record_types = ['A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME', 'SOA']
-    try:
-        for record_type in record_types:
-            try:
-                answers = dns.resolver.resolve(domain, record_type)
-                records[record_type] = [str(rdata) for rdata in answers]
-            except dns.resolver.NoAnswer:
-                console.print(Fore.WHITE + f"[!] No {record_type} records found for {domain}.")
-            except dns.resolver.NXDOMAIN:
-                console.print(Fore.RED + f"[!] Domain {domain} does not exist.")
-                return None
-            except dns.exception.DNSException as e:
-                console.print(Fore.RED + f"[!] Error retrieving {record_type} records: {e}")
-        return records
-    except dns.exception.DNSException as e:
-        console.print(Fore.RED + f"[!] Error retrieving DNS records for {domain}: {e}")
-        return None
-
-def display_dns_records(records):
-    if records:
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Record Type", style="cyan", justify="left")
-        table.add_column("Record Value", style="green")
-
-        for record_type, record_data in records.items():
-            table.add_row(record_type, "\n".join(record_data))
-
-        console.print(table)
-    else:
-        console.print(Fore.RED + "[!] No DNS records to display.")
+    
+    for record_type in record_types:
+        try:
+            answers = dns.resolver.resolve(domain, record_type, lifetime=10)
+            records[record_type] = [str(rdata) for rdata in answers]
+        except (dns.resolver.NoAnswer, dns.resolver.NXDOMAIN):
+            continue
+        except dns.exception.DNSException:
+            continue
+    
+    return records
 
 def main(target):
-    banner()
-
+    """Main execution with clean output"""
+    print(f"🔍 DNS Records Check - {target}")
+    print("=" * 50)
     
-    domain = clean_domain_input(target)
-
-    if not validate_domain(domain):
-        console.print(Fore.RED + "[!] Invalid domain format. Please check the domain and try again.")
-        return
-
-    console.print(Fore.WHITE + f"[*] Fetching DNS records for: {domain}")
-    dns_records = get_dns_records(domain)
-
-    if dns_records:
-        display_dns_records(dns_records)
-    else:
-        console.print(Fore.RED + "[!] No DNS records found.")
-
-    console.print(Fore.WHITE + "[*] DNS records retrieval completed.")
-
+    start_time = datetime.now()
+    
+    try:
+        # Clean and validate input
+        domain = clean_domain_input(target)
+        
+        if not validate_domain(domain):
+            print("❌ FAILED: Invalid domain format")
+            return {"status": "FAILED", "error": "Invalid domain format"}
+        
+        # Perform DNS lookup
+        dns_records = get_dns_records(domain)
+        execution_time = (datetime.now() - start_time).total_seconds()
+        
+        if dns_records:
+            total_records = sum(len(records) for records in dns_records.values())
+            print(f"✅ SUCCESS: Found {total_records} DNS records")
+            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print()
+            
+            # Display results in clean format
+            for record_type, records in dns_records.items():
+                print(f"📋 {record_type} Records ({len(records)}):")
+                for record in records:
+                    print(f"   • {record}")
+                print()
+            
+            return {
+                "status": "SUCCESS", 
+                "data": dns_records,
+                "count": total_records,
+                "execution_time": execution_time
+            }
+        else:
+            print("ℹ️  NO DATA: No DNS records found")
+            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            return {"status": "NO_DATA", "execution_time": execution_time}
+            
+    except KeyboardInterrupt:
+        print("⚠️  INTERRUPTED: Script stopped by user")
+        return {"status": "INTERRUPTED"}
+        
+    except Exception as e:
+        execution_time = (datetime.now() - start_time).total_seconds()
+        print(f"❌ ERROR: {str(e)}")
+        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        return {"status": "ERROR", "error": str(e), "execution_time": execution_time}
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
         main(target)
     else:
-        console.print(Fore.RED + "[!] No target provided. Please pass a domain.")
+        print("❌ ERROR: No target provided")
+        print("Usage: python dns_records.py <domain>")
         sys.exit(1)

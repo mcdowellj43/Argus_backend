@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Simple Argus Web Server - Enhanced with Findings System
-Uses only Python standard library + findings generation
+Enhanced Argus Web Server - With Clean Script Integration & Report Generation
+Supports clean module outputs and frontend template integration
 """
 
 import http.server
@@ -16,6 +16,7 @@ from datetime import datetime
 from pathlib import Path
 import threading
 import time
+import importlib.util
 
 # Import the findings system
 try:
@@ -59,503 +60,724 @@ print(f"📁 Argus root directory: {argus_root}")
 active_scans = {}
 scan_history = {}
 
-# Available modules - ALL 54 modules organized by category
-AVAILABLE_MODULES = [
-    # Network & Infrastructure (1-19)
-    {
-        "id": 1,
-        "name": "Associated Hosts",
-        "script": "associated_hosts.py",
-        "category": "Network & Infrastructure",
-        "description": "Discover domains associated with the target",
-        "requires_api_key": False,
-        "estimated_time": 10
-    },
-    {
-        "id": 2,
-        "name": "DNS Over HTTPS",
-        "script": "dns_over_https.py",
-        "category": "Network & Infrastructure",
-        "description": "Resolve DNS securely via encrypted channels",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 3,
-        "name": "DNS Records",
-        "script": "dns_records.py",
-        "category": "Network & Infrastructure",
-        "description": "Collect DNS records (A, AAAA, MX, etc.)",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 4,
-        "name": "DNSSEC Check",
-        "script": "dnssec_check.py",
-        "category": "Network & Infrastructure",
-        "description": "Verify if DNSSEC is properly configured",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 5,
-        "name": "Domain Info",
-        "script": "domain_info.py",
-        "category": "Network & Infrastructure",
-        "description": "Get domain registration details",
-        "requires_api_key": False,
-        "estimated_time": 15
-    },
-    {
-        "id": 6,
-        "name": "Domain Reputation Check",
-        "script": "domain_reputation.py",
-        "category": "Network & Infrastructure",
-        "description": "Check domain trustworthiness using reputation sources",
-        "requires_api_key": True,
-        "estimated_time": 12
-    },
-    {
-        "id": 7,
-        "name": "IP Info",
-        "script": "ip_info.py",
-        "category": "Network & Infrastructure",
-        "description": "Get IP geolocation and ownership details",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 8,
-        "name": "Open Ports Scan",
-        "script": "open_ports.py",
-        "category": "Network & Infrastructure",
-        "description": "Scan target for open ports and services",
-        "requires_api_key": False,
-        "estimated_time": 30
-    },
-    {
-        "id": 9,
-        "name": "Server Info",
-        "script": "server_info.py",
-        "category": "Network & Infrastructure",
-        "description": "Get web server information and headers",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 10,
-        "name": "Server Location",
-        "script": "server_location.py",
-        "category": "Network & Infrastructure",
-        "description": "Determine server geographic location",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 11,
-        "name": "SSL Chain Analysis",
-        "script": "ssl_chain.py",
-        "category": "Network & Infrastructure",
-        "description": "Analyze SSL certificate chain",
-        "requires_api_key": False,
-        "estimated_time": 10
-    },
-    {
-        "id": 12,
-        "name": "SSL Expiry Alert",
-        "script": "ssl_expiry.py",
-        "category": "Network & Infrastructure",
-        "description": "Check SSL certificate expiration dates",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 13,
-        "name": "TLS Cipher Suites",
-        "script": "tls_cipher_suites.py",
-        "category": "Network & Infrastructure",
-        "description": "Analyze supported TLS cipher suites",
-        "requires_api_key": False,
-        "estimated_time": 15
-    },
-    {
-        "id": 14,
-        "name": "TLS Handshake Simulation",
-        "script": "tls_handshake.py",
-        "category": "Network & Infrastructure",
-        "description": "Simulate TLS handshake process",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 15,
-        "name": "Traceroute",
-        "script": "traceroute.py",
-        "category": "Network & Infrastructure",
-        "description": "Trace network path to target",
-        "requires_api_key": False,
-        "estimated_time": 30
-    },
-    {
-        "id": 16,
-        "name": "WHOIS Lookup",
-        "script": "whois_lookup.py",
-        "category": "Network & Infrastructure",
-        "description": "Retrieve domain WHOIS information",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 17,
-        "name": "MX Records",
-        "script": "mx_records.py",
-        "category": "Network & Infrastructure",
-        "description": "Get mail exchange server information",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 18,
-        "name": "TXT Records",
-        "script": "txt_records.py",
-        "category": "Network & Infrastructure",
-        "description": "Retrieve DNS TXT records",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 19,
-        "name": "Port Scanner",
-        "script": "port_scanner.py",
-        "category": "Network & Infrastructure",
-        "description": "Comprehensive port scanning",
-        "requires_api_key": False,
-        "estimated_time": 45
-    },
+# =============================================================================
+# ENHANCED DATA FORMATTING FOR FRONTEND TEMPLATES
+# =============================================================================
 
-    # Web Application Analysis (20-36)
-    {
-        "id": 20,
-        "name": "Archive History",
-        "script": "archive_history.py",
-        "category": "Web Application Analysis",
-        "description": "Check website history via Web Archive",
-        "requires_api_key": False,
-        "estimated_time": 10
-    },
-    {
-        "id": 21,
-        "name": "Broken Links Checker",
-        "script": "broken_links.py",
-        "category": "Web Application Analysis",
-        "description": "Identify broken links on the website",
-        "requires_api_key": False,
-        "estimated_time": 20
-    },
-    {
-        "id": 22,
-        "name": "Carbon Footprint",
-        "script": "carbon_footprint.py",
-        "category": "Web Application Analysis",
-        "description": "Calculate website's carbon footprint",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 23,
-        "name": "CMS Detection",
-        "script": "cms_detection.py",
-        "category": "Web Application Analysis",
-        "description": "Identify Content Management System",
-        "requires_api_key": False,
-        "estimated_time": 10
-    },
-    {
-        "id": 24,
-        "name": "Content Discovery",
-        "script": "content_discovery.py",
-        "category": "Web Application Analysis",
-        "description": "Discover hidden content and directories",
-        "requires_api_key": False,
-        "estimated_time": 25
-    },
-    {
-        "id": 25,
-        "name": "Cookies Analysis",
-        "script": "cookies.py",
-        "category": "Web Application Analysis",
-        "description": "Analyze website cookies and their security",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 26,
-        "name": "Crawl Rules",
-        "script": "crawl_rules.py",
-        "category": "Web Application Analysis",
-        "description": "Analyze robots.txt and crawl directives",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 27,
-        "name": "Directory Finder",
-        "script": "directory_finder.py",
-        "category": "Web Application Analysis",
-        "description": "Find hidden directories and files",
-        "requires_api_key": False,
-        "estimated_time": 30
-    },
-    {
-        "id": 28,
-        "name": "Email Harvester",
-        "script": "email_harvester.py",
-        "category": "Web Application Analysis",
-        "description": "Extract email addresses from the target",
-        "requires_api_key": False,
-        "estimated_time": 20
-    },
-    {
-        "id": 29,
-        "name": "Performance Monitoring",
-        "script": "performance_monitoring.py",
-        "category": "Web Application Analysis",
-        "description": "Monitor website performance metrics",
-        "requires_api_key": False,
-        "estimated_time": 15
-    },
-    {
-        "id": 30,
-        "name": "Quality Metrics",
-        "script": "quality_metrics.py",
-        "category": "Web Application Analysis",
-        "description": "Assess website quality metrics",
-        "requires_api_key": False,
-        "estimated_time": 12
-    },
-    {
-        "id": 31,
-        "name": "Redirect Chain",
-        "script": "redirect_chain.py",
-        "category": "Web Application Analysis",
-        "description": "Follow redirects to analyze safety",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 32,
-        "name": "Robots.txt Analysis",
-        "script": "robots_txt.py",
-        "category": "Web Application Analysis",
-        "description": "Analyze robots.txt file",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 33,
-        "name": "Sitemap Parsing",
-        "script": "sitemap.py",
-        "category": "Web Application Analysis",
-        "description": "Extract URLs from website sitemap",
-        "requires_api_key": False,
-        "estimated_time": 15
-    },
-    {
-        "id": 34,
-        "name": "Social Media Presence Scan",
-        "script": "social_media.py",
-        "category": "Web Application Analysis",
-        "description": "Analyze social media profiles linked to target",
-        "requires_api_key": False,
-        "estimated_time": 20
-    },
-    {
-        "id": 35,
-        "name": "Technology Stack Detection",
-        "script": "technology_stack.py",
-        "category": "Web Application Analysis",
-        "description": "Identify technologies and frameworks used",
-        "requires_api_key": False,
-        "estimated_time": 15
-    },
-    {
-        "id": 36,
-        "name": "Third-Party Integrations",
-        "script": "third_party_integrations.py",
-        "category": "Web Application Analysis",
-        "description": "Discover third-party services integrated",
-        "requires_api_key": False,
-        "estimated_time": 12
-    },
-
-    # Security & Threat Intelligence (37-54)
-    {
-        "id": 37,
-        "name": "Censys Reconnaissance",
-        "script": "censys.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Use Censys for in-depth asset details",
-        "requires_api_key": True,
-        "estimated_time": 15
-    },
-    {
-        "id": 38,
-        "name": "Certificate Authority Recon",
-        "script": "certificate_authority_recon.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Examine certificate authority details",
-        "requires_api_key": False,
-        "estimated_time": 10
-    },
-    {
-        "id": 39,
-        "name": "Data Leak Detection",
-        "script": "data_leak.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Check for potential data leaks and exposure",
-        "requires_api_key": False,
-        "estimated_time": 25
-    },
-    {
-        "id": 40,
-        "name": "Exposed Environment Files Checker",
-        "script": "exposed_env_files.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Identify publicly exposed .env files",
-        "requires_api_key": False,
-        "estimated_time": 15
-    },
-    {
-        "id": 41,
-        "name": "Firewall Detection",
-        "script": "firewall_detection.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Identify firewall or WAF protection",
-        "requires_api_key": False,
-        "estimated_time": 10
-    },
-    {
-        "id": 42,
-        "name": "Global Ranking",
-        "script": "global_ranking.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Check website's global ranking",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 43,
-        "name": "HTTP Headers",
-        "script": "http_headers.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Extract and evaluate HTTP response headers",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 44,
-        "name": "HTTP Security Features",
-        "script": "http_security.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Check HTTP security headers implementation",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 45,
-        "name": "Malware & Phishing Check",
-        "script": "malware_phishing.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Scan for malware and phishing indicators",
-        "requires_api_key": False,
-        "estimated_time": 12
-    },
-    {
-        "id": 46,
-        "name": "Pastebin Monitoring",
-        "script": "pastebin_monitoring.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Search paste sites for target-related leaks",
-        "requires_api_key": False,
-        "estimated_time": 15
-    },
-    {
-        "id": 47,
-        "name": "Privacy & GDPR Compliance",
-        "script": "privacy_gdpr.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Verify GDPR compliance measures",
-        "requires_api_key": False,
-        "estimated_time": 10
-    },
-    {
-        "id": 48,
-        "name": "Security.txt Check",
-        "script": "security_txt.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Check for security.txt file",
-        "requires_api_key": False,
-        "estimated_time": 5
-    },
-    {
-        "id": 49,
-        "name": "Shodan Reconnaissance",
-        "script": "shodan.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Use Shodan for device and service discovery",
-        "requires_api_key": True,
-        "estimated_time": 15
-    },
-    {
-        "id": 50,
-        "name": "SSL Labs Report",
-        "script": "ssl_labs_report.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Get detailed SSL/TLS assessment",
-        "requires_api_key": False,
-        "estimated_time": 30
-    },
-    {
-        "id": 51,
-        "name": "SSL Pinning Check",
-        "script": "ssl_pinning_check.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Check SSL certificate pinning implementation",
-        "requires_api_key": False,
-        "estimated_time": 8
-    },
-    {
-        "id": 52,
-        "name": "Subdomain Enumeration",
-        "script": "subdomain_enum.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Discover subdomains of the target domain",
-        "requires_api_key": False,
-        "estimated_time": 60
-    },
-    {
-        "id": 53,
-        "name": "Subdomain Takeover",
-        "script": "subdomain_takeover.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Test for subdomain takeover vulnerabilities",
-        "requires_api_key": False,
-        "estimated_time": 45
-    },
-    {
-        "id": 54,
-        "name": "VirusTotal Scan",
-        "script": "virustotal_scan.py",
-        "category": "Security & Threat Intelligence",
-        "description": "Check target reputation via VirusTotal",
-        "requires_api_key": True,
-        "estimated_time": 10
+def get_finding_metadata(module_name):
+    """Get metadata for findings from specific modules"""
+    metadata = {
+        "dns_records.py": {
+            "title": "DNS Infrastructure Analysis",
+            "category": "Information Disclosure",
+            "severity_base": "LOW",
+            "description": "DNS records enumerated revealing infrastructure components",
+            "business_impact": "Infrastructure reconnaissance information",
+            "recommendation": "Review DNS records for unnecessary information disclosure"
+        },
+        "open_ports.py": {
+            "title": "Open Network Services Detected", 
+            "category": "Attack Surface Expansion",
+            "severity_base": "MEDIUM",
+            "description": "Network services accessible from the internet",
+            "business_impact": "Increased attack vectors and potential unauthorized access",
+            "recommendation": "Review necessity of all open ports and close unnecessary services"
+        },
+        "whois_lookup.py": {
+            "title": "Domain Registration Information",
+            "category": "Information Disclosure", 
+            "severity_base": "LOW",
+            "description": "Domain registration details collected from WHOIS databases",
+            "business_impact": "Organizational information disclosure",
+            "recommendation": "Consider domain privacy protection where appropriate"
+        },
+        "content_discovery.py": {
+            "title": "Hidden Content Discovery",
+            "category": "Attack Surface Expansion",
+            "severity_base": "MEDIUM", 
+            "description": "Administrative interfaces or sensitive directories discovered",
+            "business_impact": "Potential access to administrative functions",
+            "recommendation": "Secure or remove unnecessary exposed content"
+        },
+        "email_harvester.py": {
+            "title": "Email Address Exposure",
+            "category": "Information Disclosure",
+            "severity_base": "LOW",
+            "description": "Employee email addresses discoverable through public sources",
+            "business_impact": "Increased susceptibility to phishing attacks",
+            "recommendation": "Implement email obfuscation techniques"
+        },
+        "social_media.py": {
+            "title": "Social Media Profile Discovery",
+            "category": "Information Disclosure",
+            "severity_base": "LOW",
+            "description": "Social media profiles linked to the organization discovered",
+            "business_impact": "Additional reconnaissance information for attackers",
+            "recommendation": "Review social media presence and privacy settings"
+        },
+        "technology_stack.py": {
+            "title": "Technology Stack Fingerprinting",
+            "category": "Information Disclosure",
+            "severity_base": "LOW",
+            "description": "Web application technology stack identified",
+            "business_impact": "Technology disclosure enabling targeted attacks",
+            "recommendation": "Implement technology obfuscation and keep software updated"
+        },
+        "data_leak.py": {
+            "title": "Data Breach Exposure",
+            "category": "Critical Exposure",
+            "severity_base": "CRITICAL",
+            "description": "Email addresses or credentials found in known data breaches",
+            "business_impact": "Direct data breach risk and potential unauthorized access",
+            "recommendation": "Implement continuous breach monitoring and mandate password resets"
+        },
+        "exposed_env_files.py": {
+            "title": "Configuration File Exposure",
+            "category": "Critical Exposure", 
+            "severity_base": "CRITICAL",
+            "description": "Environment files containing sensitive information publicly accessible",
+            "business_impact": "Direct exposure of secrets and credentials",
+            "recommendation": "Immediately remove exposed files and rotate secrets"
+        },
+        "pastebin_monitoring.py": {
+            "title": "Paste Site Monitoring",
+            "category": "Data Leakage",
+            "severity_base": "HIGH",
+            "description": "Organizational data identified on public paste sites",
+            "business_impact": "Sensitive information publicly available",
+            "recommendation": "Monitor paste sites continuously and investigate source"
+        },
+        "shodan.py": {
+            "title": "Internet Device Reconnaissance", 
+            "category": "Attack Surface Expansion",
+            "severity_base": "HIGH",
+            "description": "Internet-connected devices and services discovered",
+            "business_impact": "Discovery of exposed services and potential vulnerabilities",
+            "recommendation": "Audit all discovered assets and ensure proper security controls"
+        },
+        "subdomain_enum.py": {
+            "title": "Subdomain Discovery",
+            "category": "Attack Surface Expansion",
+            "severity_base": "HIGH", 
+            "description": "Additional subdomains identified expanding attack surface",
+            "business_impact": "Increased attack surface and potential forgotten services",
+            "recommendation": "Audit all discovered subdomains and ensure consistent security"
+        },
+        "subdomain_takeover.py": {
+            "title": "Subdomain Takeover Vulnerability",
+            "category": "Critical Vulnerability",
+            "severity_base": "CRITICAL",
+            "description": "Subdomains vulnerable to takeover attacks detected",
+            "business_impact": "Complete subdomain compromise potential",
+            "recommendation": "Immediately remove dangling DNS records"
+        },
+        "virustotal_scan.py": {
+            "title": "Malware and Reputation Scan",
+            "category": "Threat Intelligence",
+            "severity_base": "HIGH",
+            "description": "Domain or URL reputation analysis completed",
+            "business_impact": "Reputation-based risks and potential malware association", 
+            "recommendation": "Monitor reputation continuously and address issues promptly"
+        }
     }
-]
+    
+    return metadata.get(module_name, {
+        "title": module_name.replace('.py', '').replace('_', ' ').title(),
+        "category": "General Security",
+        "severity_base": "LOW",
+        "description": "Security assessment completed",
+        "business_impact": "Information gathered for security analysis",
+        "recommendation": "Review findings and implement appropriate security measures"
+    })
+
+def format_evidence_for_report(module_result):
+    """Format module output as evidence for reports"""
+    module_name = module_result.get("module_name", "")
+    data = module_result.get("data", {})
+    status = module_result.get("status", "")
+    count = module_result.get("count", 0)
+    
+    if status != "SUCCESS" or not data:
+        return "No detailed evidence available"
+    
+    # Format based on module type
+    if "dns_records" in module_name:
+        return format_dns_evidence(data)
+    elif "open_ports" in module_name:
+        return format_ports_evidence(data)
+    elif "email_harvester" in module_name:
+        return format_email_evidence(data)
+    elif "content_discovery" in module_name:
+        return format_content_evidence(data)
+    elif "social_media" in module_name:
+        return format_social_evidence(data)
+    elif "technology_stack" in module_name:
+        return format_tech_evidence(data)
+    elif "subdomain" in module_name:
+        return format_subdomain_evidence(data)
+    elif "data_leak" in module_name:
+        return format_data_leak_evidence(data)
+    elif "exposed_env" in module_name:
+        return format_env_evidence(data)
+    else:
+        return f"Found {count} items requiring review"
+
+def format_dns_evidence(data):
+    """Format DNS records as evidence"""
+    evidence = []
+    for record_type, records in data.items():
+        if records and isinstance(records, list):
+            evidence.append(f"{record_type} Records ({len(records)}):")
+            for record in records[:3]:  # Show first 3
+                evidence.append(f"  • {record}")
+            if len(records) > 3:
+                evidence.append(f"  • ... and {len(records) - 3} more")
+    return "\n".join(evidence) if evidence else "DNS records enumerated"
+
+def format_ports_evidence(data):
+    """Format open ports as evidence"""
+    open_ports = data.get("open_ports", [])
+    if not open_ports:
+        return "Port scan completed"
+    
+    evidence = [f"Host: {data.get('host', 'Unknown')} ({data.get('ip', 'Unknown IP')})"]
+    evidence.append(f"Open Ports ({len(open_ports)}):")
+    
+    for port_info in open_ports[:10]:  # Show first 10
+        if isinstance(port_info, dict):
+            service = port_info.get('service', 'unknown')
+            evidence.append(f"  • Port {port_info.get('port', '?')}: {service}")
+        else:
+            evidence.append(f"  • Port {port_info}")
+    
+    if len(open_ports) > 10:
+        evidence.append(f"  • ... and {len(open_ports) - 10} more ports")
+    
+    return "\n".join(evidence)
+
+def format_email_evidence(data):
+    """Format found emails as evidence"""
+    emails = data.get("emails", [])
+    if not emails:
+        return "Email harvesting completed"
+    
+    evidence = [f"Email Addresses Found ({len(emails)}):"]
+    
+    # Group by category if available
+    categories = data.get("categories", {})
+    if categories:
+        for category, category_emails in categories.items():
+            if category_emails:
+                evidence.append(f"  {category.title()} ({len(category_emails)}):")
+                for email in category_emails[:3]:  # Show first 3 per category
+                    evidence.append(f"    • {email}")
+                if len(category_emails) > 3:
+                    evidence.append(f"    • ... and {len(category_emails) - 3} more")
+    else:
+        for email in emails[:8]:  # Show first 8
+            evidence.append(f"  • {email}")
+        if len(emails) > 8:
+            evidence.append(f"  • ... and {len(emails) - 8} more")
+    
+    return "\n".join(evidence)
+
+def format_content_evidence(data):
+    """Format content discovery evidence"""
+    if isinstance(data, list):
+        paths = data
+    else:
+        paths = data.get("accessible_paths", [])
+    
+    if not paths:
+        return "Content discovery scan completed"
+    
+    evidence = [f"Accessible Paths Found ({len(paths)}):"]
+    
+    # Group by status code if available
+    status_groups = {}
+    for item in paths:
+        if isinstance(item, dict):
+            status = item.get("status_code", "unknown")
+            if status not in status_groups:
+                status_groups[status] = []
+            status_groups[status].append(item)
+    
+    if status_groups:
+        for status_code in sorted(status_groups.keys()):
+            items = status_groups[status_code]
+            evidence.append(f"  Status {status_code} ({len(items)}):")
+            for item in items[:3]:
+                path = item.get("path", item.get("url", ""))
+                evidence.append(f"    • {path}")
+            if len(items) > 3:
+                evidence.append(f"    • ... and {len(items) - 3} more")
+    else:
+        for item in paths[:5]:
+            if isinstance(item, dict):
+                path = item.get("path", item.get("url", str(item)))
+            else:
+                path = str(item)
+            evidence.append(f"  • {path}")
+        if len(paths) > 5:
+            evidence.append(f"  • ... and {len(paths) - 5} more")
+    
+    return "\n".join(evidence)
+
+def format_social_evidence(data):
+    """Format social media evidence"""
+    profiles = data.get("profiles", [])
+    if not profiles:
+        return "Social media discovery completed"
+    
+    evidence = [f"Social Media Profiles Found ({len(profiles)}):"]
+    
+    # Group by platform
+    platform_groups = {}
+    for profile in profiles:
+        platform = profile.get("platform", "Unknown")
+        if platform not in platform_groups:
+            platform_groups[platform] = []
+        platform_groups[platform].append(profile)
+    
+    for platform, platform_profiles in platform_groups.items():
+        evidence.append(f"  {platform} ({len(platform_profiles)}):")
+        for profile in platform_profiles[:2]:  # Show first 2 per platform
+            evidence.append(f"    • {profile.get('url', 'URL not available')}")
+        if len(platform_profiles) > 2:
+            evidence.append(f"    • ... and {len(platform_profiles) - 2} more")
+    
+    return "\n".join(evidence)
+
+def format_tech_evidence(data):
+    """Format technology stack evidence"""
+    if not data or not isinstance(data, dict):
+        return "Technology stack analysis completed"
+    
+    evidence = ["Technology Stack Detected:"]
+    
+    for category, technologies in data.items():
+        if technologies and isinstance(technologies, list):
+            evidence.append(f"  {category.title()} ({len(technologies)}):")
+            for tech in technologies[:3]:  # Show first 3 per category
+                evidence.append(f"    • {tech}")
+            if len(technologies) > 3:
+                evidence.append(f"    • ... and {len(technologies) - 3} more")
+    
+    return "\n".join(evidence) if len(evidence) > 1 else "Technology analysis completed"
+
+def format_subdomain_evidence(data):
+    """Format subdomain evidence"""
+    if isinstance(data, list):
+        subdomains = data
+    else:
+        subdomains = data.get("brute_force", []) or data.get("subdomains", [])
+    
+    if not subdomains:
+        return "Subdomain enumeration completed"
+    
+    evidence = [f"Subdomains Discovered ({len(subdomains)}):"]
+    
+    for subdomain in subdomains[:8]:  # Show first 8
+        if isinstance(subdomain, dict):
+            domain = subdomain.get("subdomain", subdomain.get("domain", ""))
+            evidence.append(f"  • {domain}")
+        else:
+            evidence.append(f"  • {subdomain}")
+    
+    if len(subdomains) > 8:
+        evidence.append(f"  • ... and {len(subdomains) - 8} more")
+    
+    return "\n".join(evidence)
+
+def format_data_leak_evidence(data):
+    """Format data leak evidence"""
+    summary = data.get("summary", {})
+    if not summary:
+        return "Data leak check completed"
+    
+    evidence = ["Data Breach Analysis:"]
+    
+    breached = summary.get("total_compromised_emails", 0)
+    domain_breaches = summary.get("total_domain_breaches", 0)
+    
+    if breached > 0:
+        evidence.append(f"  • {breached} compromised email addresses found")
+    
+    if domain_breaches > 0:
+        evidence.append(f"  • {domain_breaches} domain-related breaches identified")
+    
+    if breached == 0 and domain_breaches == 0:
+        evidence.append("  • No data breaches found for target")
+    
+    return "\n".join(evidence)
+
+def format_env_evidence(data):
+    """Format exposed environment files evidence"""
+    accessible = data.get("accessible_files", [])
+    if not accessible:
+        return "Environment file scan completed - no exposures found"
+    
+    evidence = [f"Exposed Environment Files ({len(accessible)}):"]
+    
+    for file_info in accessible[:5]:  # Show first 5
+        filename = file_info.get("filename", "unknown")
+        analysis = file_info.get("analysis", {})
+        risk = analysis.get("risk_level", "UNKNOWN")
+        sensitive_count = len(analysis.get("sensitive_items", []))
+        
+        evidence.append(f"  • {filename} (Risk: {risk})")
+        if sensitive_count > 0:
+            evidence.append(f"    └─ {sensitive_count} sensitive items detected")
+    
+    if len(accessible) > 5:
+        evidence.append(f"  • ... and {len(accessible) - 5} more files")
+    
+    return "\n".join(evidence)
+
+def calculate_risk_score(scan_results):
+    """Calculate overall risk score from module results"""
+    module_results = scan_results.get("module_results", [])
+    
+    if not module_results:
+        return 0
+    
+    total_score = 0
+    weight_sum = 0
+    
+    # Define module weights and risk factors
+    module_weights = {
+        "data_leak.py": 30,           # High impact
+        "subdomain_takeover.py": 25,  # High impact  
+        "exposed_env_files.py": 20,   # High impact
+        "virustotal_scan.py": 15,     # Medium impact
+        "open_ports.py": 10,          # Medium impact
+        "subdomain_enum.py": 8,       # Medium impact
+        "shodan.py": 8,               # Medium impact
+        "content_discovery.py": 5,    # Lower impact
+        "email_harvester.py": 3,      # Lower impact
+        "social_media.py": 2,         # Lower impact
+        "technology_stack.py": 2,     # Info only
+        "dns_records.py": 1,          # Info only
+        "whois_lookup.py": 1,         # Info only
+    }
+    
+    for module_result in module_results:
+        module_name = module_result.get("module_name", "")
+        status = module_result.get("status", "")
+        count = module_result.get("count", 0)
+        severity = module_result.get("severity", "LOW")
+        
+        weight = module_weights.get(module_name, 1)
+        weight_sum += weight
+        
+        if status == "SUCCESS" and count > 0:
+            # Calculate module risk based on findings and severity
+            severity_multiplier = {
+                "CRITICAL": 4.0,
+                "HIGH": 3.0, 
+                "MEDIUM": 2.0,
+                "LOW": 1.0
+            }.get(severity, 1.0)
+            
+            # Risk factors: more findings = higher risk, but with diminishing returns
+            finding_factor = min(count / 5, 2.0)  # Cap at 2x for many findings
+            
+            module_risk = weight * severity_multiplier * finding_factor
+            total_score += module_risk
+    
+    if weight_sum == 0:
+        return 0
+    
+    # Normalize to 0-100 scale
+    max_possible_score = weight_sum * 4.0 * 2.0  # Max severity * max finding factor
+    risk_score = min((total_score / max_possible_score) * 100, 100)
+    
+    return round(risk_score)
+
+def determine_risk_level(risk_score):
+    """Determine risk level from risk score"""
+    if risk_score >= 80:
+        return "critical"
+    elif risk_score >= 60:
+        return "high"
+    elif risk_score >= 40:
+        return "medium"
+    elif risk_score >= 20:
+        return "low"
+    else:
+        return "minimal"
+
+def format_findings_for_templates(scan_results):
+    """Format findings to match frontend template expectations"""
+    findings = {
+        "hasFindings": False,
+        "totalFindings": 0,
+        "riskScore": 0,
+        "riskLevel": "minimal",
+        "categories": {},
+        "findings": [],
+        "summary": {
+            "critical": 0,
+            "high": 0,
+            "medium": 0,
+            "low": 0,
+            "informational": 0
+        }
+    }
+    
+    module_results = scan_results.get("module_results", [])
+    
+    for module_result in module_results:
+        module_name = module_result.get("module_name", "")
+        status = module_result.get("status", "")
+        count = module_result.get("count", 0)
+        severity = module_result.get("severity", "LOW")
+        
+        if status == "SUCCESS" and count > 0:
+            findings["hasFindings"] = True
+            findings["totalFindings"] += count
+            
+            # Get metadata for this module
+            metadata = get_finding_metadata(module_name)
+            
+            # Create finding entry matching frontend format
+            finding = {
+                "id": f"{module_name}_{scan_results.get('scan_id', '')}",
+                "title": metadata["title"],
+                "category": metadata["category"],
+                "severity": severity,
+                "description": metadata["description"],
+                "business_impact": metadata["business_impact"],
+                "recommendation": metadata["recommendation"],
+                "evidence": format_evidence_for_report(module_result),
+                "module_name": module_name,
+                "finding_count": count,
+                "execution_time": module_result.get("execution_time", 0)
+            }
+            
+            findings["findings"].append(finding)
+            
+            # Update category counts
+            category = metadata["category"]
+            findings["categories"][category] = findings["categories"].get(category, 0) + count
+            
+            # Update severity summary
+            severity_lower = severity.lower()
+            if severity_lower in findings["summary"]:
+                findings["summary"][severity_lower] += count
+    
+    # Calculate overall risk score and level
+    findings["riskScore"] = calculate_risk_score(scan_results)
+    findings["riskLevel"] = determine_risk_level(findings["riskScore"])
+    
+    return findings
+
+def format_scan_results_for_frontend(scan_results, target):
+    """Transform scan results into frontend-expected format"""
+    module_results = scan_results.get("module_results", [])
+    
+    # Calculate success metrics
+    total_modules = len(module_results)
+    successful_modules = len([r for r in module_results 
+                            if r.get("status") in ["SUCCESS", "NO_DATA"]])
+    
+    formatted_results = {
+        "scanId": scan_results.get("scan_id"),
+        "target": target,
+        "created_at": scan_results.get("created_at", datetime.now().isoformat()),
+        "status": scan_results.get("status", "completed"),
+        "total_modules": total_modules,
+        "successful_modules": successful_modules,
+        "execution_time": scan_results.get("total_execution_time", 0),
+        
+        # Risk Assessment
+        "risk_score": calculate_risk_score(scan_results),
+        "risk_level": determine_risk_level(calculate_risk_score(scan_results)),
+        
+        # Success rate for display
+        "success_rate": round((successful_modules / total_modules * 100) if total_modules > 0 else 0),
+        
+        # Formatted findings for templates
+        "formatted_findings": format_findings_for_templates(scan_results),
+        
+        # Raw module results for detailed analysis
+        "module_results": module_results
+    }
+    
+    return formatted_results
+
+# =============================================================================
+# ENHANCED MODULE EXECUTION WITH CLEAN OUTPUT SUPPORT
+# =============================================================================
+
+def execute_module_with_clean_output(module_script, target, scan_id):
+    """Execute a module and return clean, structured output"""
+    start_time = time.time()
+    module_path = argus_root / "modules" / module_script
+    
+    result = {
+        "module_name": module_script,
+        "target": target,
+        "scan_id": scan_id,
+        "start_time": datetime.now().isoformat(),
+        "status": "UNKNOWN",
+        "execution_time": 0,
+        "output": "",
+        "error": None,
+        "data": None,
+        "count": 0,
+        "severity": "LOW"
+    }
+    
+    try:
+        if not module_path.exists():
+            result["status"] = "ERROR"
+            result["error"] = f"Module file not found: {module_script}"
+            return result
+        
+        print(f"🔍 Executing {module_script} with target: {target}")
+        
+        # Execute module and capture output
+        timeout = get_module_timeout(module_script)
+        process = subprocess.run(
+            [sys.executable, str(module_path), target],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            cwd=str(argus_root)
+        )
+        
+        execution_time = time.time() - start_time
+        result["execution_time"] = round(execution_time, 2)
+        
+        # Capture raw output
+        result["output"] = process.stdout
+        
+        if process.stderr:
+            result["error"] = process.stderr
+        
+        # Try to parse clean output if module supports it
+        if process.returncode == 0:
+            clean_data = parse_module_clean_output(process.stdout, module_script)
+            if clean_data:
+                result.update(clean_data)
+            else:
+                # Fallback: parse traditional output
+                result["status"] = "SUCCESS" if process.stdout.strip() else "NO_DATA"
+                result["count"] = count_findings_in_output(process.stdout)
+        else:
+            result["status"] = "ERROR"
+            
+    except subprocess.TimeoutExpired:
+        result["status"] = "TIMEOUT"
+        result["error"] = f"Module execution timed out after {timeout}s"
+        result["execution_time"] = timeout
+        
+    except Exception as e:
+        result["status"] = "ERROR"
+        result["error"] = str(e)
+        result["execution_time"] = time.time() - start_time
+    
+    # Determine severity based on findings
+    if result["status"] == "SUCCESS" and result["count"] > 0:
+        result["severity"] = determine_module_severity(module_script, result["count"])
+    
+    return result
+
+def parse_module_clean_output(output, module_script):
+    """Parse clean JSON output from improved modules"""
+    try:
+        # Look for JSON in the output
+        lines = output.strip().split('\n')
+        
+        # Try to find JSON content (could be mixed with console output)
+        json_content = None
+        
+        # Look for lines that might contain JSON
+        for i, line in enumerate(lines):
+            if line.strip().startswith('{') and '"status"' in line:
+                # Try to parse from this line to end
+                remaining_lines = '\n'.join(lines[i:])
+                try:
+                    json_content = json.loads(remaining_lines)
+                    break
+                except:
+                    # Try just this line
+                    try:
+                        json_content = json.loads(line)
+                        break
+                    except:
+                        continue
+        
+        if json_content and isinstance(json_content, dict):
+            # Map clean output format to our result format
+            return {
+                "status": json_content.get("status", "UNKNOWN"),
+                "data": json_content.get("data"),
+                "count": json_content.get("count", 0),
+                "execution_time": json_content.get("execution_time", 0),
+                "error": json_content.get("error"),
+                "severity": json_content.get("severity", "LOW")
+            }
+    except Exception as e:
+        print(f"⚠️  Could not parse clean output for {module_script}: {e}")
+    
+    return None
+
+def count_findings_in_output(output):
+    """Count findings in traditional module output"""
+    if not output:
+        return 0
+    
+    # Simple heuristic: count lines that look like findings
+    lines = [line.strip() for line in output.split('\n') if line.strip()]
+    
+    # Look for common patterns
+    finding_patterns = [
+        '•', '*', '-', 'Found', 'Detected', 'Discovered', 
+        'Open', 'Exposed', 'Vulnerable', ':', 'Record'
+    ]
+    
+    finding_count = 0
+    for line in lines:
+        if any(pattern in line for pattern in finding_patterns):
+            finding_count += 1
+    
+    return max(finding_count - 5, 0)  # Subtract headers/footers
+
+def determine_module_severity(module_script, finding_count):
+    """Determine severity based on module type and finding count"""
+    high_risk_modules = [
+        "data_leak.py", "subdomain_takeover.py", "exposed_env_files.py",
+        "virustotal_scan.py"
+    ]
+    
+    medium_risk_modules = [
+        "open_ports.py", "subdomain_enum.py", "shodan.py", 
+        "content_discovery.py"
+    ]
+    
+    if module_script in high_risk_modules:
+        if finding_count > 5:
+            return "CRITICAL"
+        elif finding_count > 0:
+            return "HIGH"
+    elif module_script in medium_risk_modules:
+        if finding_count > 10:
+            return "HIGH"
+        elif finding_count > 0:
+            return "MEDIUM"
+    else:
+        return "LOW"
+    
+    return "LOW"
+
+# =============================================================================
+# ENHANCED HTTP HANDLER WITH NEW ENDPOINTS
+# =============================================================================
 
 class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
-    """Custom HTTP handler for Argus API"""
+    """Custom HTTP handler for Argus API with enhanced features"""
     
     def do_OPTIONS(self):
         """Handle CORS preflight requests"""
@@ -566,21 +788,31 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        """Handle GET requests"""
+        """Handle GET requests with enhanced endpoints"""
         try:
             if self.path == '/':
                 self.send_json_response({
-                    "message": "🛡️ Argus Security Assessment API",
-                    "version": "2.0",
+                    "message": "🛡️ Argus Security Assessment API - Enhanced",
+                    "version": "2.1",
                     "endpoints": {
                         "health": "/api/health",
                         "modules": "/api/modules", 
                         "scans": "/api/scans",
-                        "findings": "/api/findings/*"
+                        "scan_details": "/api/scans/{scan_id}",
+                        "report_data": "/api/scans/{scan_id}/report-data",
+                        "findings": "/api/scans/{scan_id}/findings",
+                        "export_clean": "/api/scans/{scan_id}/export"
                     },
-                    "total_modules": len(AVAILABLE_MODULES),
+                    "total_modules": 54,
                     "status": "running",
-                    "findings_enabled": FINDINGS_ENABLED
+                    "findings_enabled": FINDINGS_ENABLED,
+                    "features": [
+                        "Clean module output parsing",
+                        "Frontend template integration", 
+                        "Risk scoring",
+                        "Evidence formatting",
+                        "Multiple export formats"
+                    ]
                 })
             
             elif self.path == '/api/health':
@@ -592,10 +824,20 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
             elif self.path == '/api/scans':
                 self.handle_list_scans()
             
+            elif self.path.startswith('/api/scans/') and self.path.endswith('/report-data'):
+                # GET /api/scans/{scan_id}/report-data
+                scan_id = self.path.split('/')[-2]
+                self.handle_get_report_data(scan_id)
+            
             elif self.path.startswith('/api/scans/') and self.path.endswith('/findings'):
                 # GET /api/scans/{scan_id}/findings
                 scan_id = self.path.split('/')[-2]
-                self.handle_get_scan_findings(scan_id)
+                self.handle_get_findings_data(scan_id)
+            
+            elif self.path.startswith('/api/scans/') and self.path.endswith('/export'):
+                # GET /api/scans/{scan_id}/export
+                scan_id = self.path.split('/')[-2]
+                self.handle_export_clean_data(scan_id)
             
             elif self.path.startswith('/api/scans/'):
                 scan_id = self.path.split('/')[-1]
@@ -638,147 +880,346 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(response_json.encode())
 
     def handle_health(self):
-        """Health check endpoint"""
+        """Enhanced health check endpoint"""
         modules_dir = argus_root / "modules"
         modules_exist = modules_dir.exists()
         
         if modules_exist:
             module_files = list(modules_dir.glob("*.py"))
+            enhanced_modules = []
+            
+            # Check which modules support clean output
+            for module_file in module_files:
+                if module_file.name in [
+                    "dns_records.py", "open_ports.py", "whois_lookup.py",
+                    "content_discovery.py", "email_harvester.py", "social_media.py",
+                    "technology_stack.py", "data_leak.py", "exposed_env_files.py",
+                    "pastebin_monitoring.py", "shodan.py", "subdomain_enum.py",
+                    "subdomain_takeover.py", "virustotal_scan.py"
+                ]:
+                    enhanced_modules.append(module_file.name)
+            
             module_count = len(module_files)
+            enhanced_count = len(enhanced_modules)
         else:
             module_count = 0
+            enhanced_count = 0
+            enhanced_modules = []
         
         health_data = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
             "active_scans": len(active_scans),
             "completed_scans": len(scan_history),
-            "modules_directory_found": modules_exist,
-            "module_files_found": module_count,
-            "total_available_modules": len(AVAILABLE_MODULES),
-            "findings_system_enabled": FINDINGS_ENABLED,
-            "argus_root": str(argus_root)
+            "total_modules": module_count,
+            "enhanced_modules": enhanced_count,
+            "enhanced_module_list": enhanced_modules,
+            "modules_directory": str(modules_dir),
+            "modules_exist": modules_exist,
+            "findings_enabled": FINDINGS_ENABLED,
+            "features": {
+                "clean_output_parsing": True,
+                "risk_scoring": True,
+                "evidence_formatting": True,
+                "template_integration": True
+            }
         }
         
         self.send_json_response(health_data)
 
     def handle_get_modules(self):
-        """Get available modules"""
-        categories = {}
-        for module in AVAILABLE_MODULES:
-            category = module["category"]
-            if category not in categories:
-                categories[category] = []
-            categories[category].append(module["script"])
+        """Get available modules with enhanced metadata"""
+        enhanced_modules = [
+            "dns_records.py", "open_ports.py", "whois_lookup.py",
+            "content_discovery.py", "email_harvester.py", "social_media.py", 
+            "technology_stack.py", "data_leak.py", "exposed_env_files.py",
+            "pastebin_monitoring.py", "shodan.py", "subdomain_enum.py",
+            "subdomain_takeover.py", "virustotal_scan.py"
+        ]
         
-        response_data = {
-            "modules": AVAILABLE_MODULES,
-            "categories": categories,
-            "total_count": len(AVAILABLE_MODULES),
-            "findings_enabled": FINDINGS_ENABLED
-        }
+        modules_data = []
+        for i, module_script in enumerate(enhanced_modules, 1):
+            metadata = get_finding_metadata(module_script)
+            module_info = {
+                "id": i,
+                "name": metadata["title"],
+                "script": module_script,
+                "category": metadata["category"],
+                "description": metadata["description"],
+                "severity_base": metadata["severity_base"],
+                "enhanced": True,
+                "supports_clean_output": True,
+                "estimated_time": MODULE_TIMEOUTS.get(module_script, 60)
+            }
+            modules_data.append(module_info)
         
-        self.send_json_response(response_data)
+        self.send_json_response({
+            "modules": modules_data,
+            "total": len(modules_data),
+            "enhanced_count": len(modules_data),
+            "categories": list(set(m["category"] for m in modules_data))
+        })
 
     def handle_create_scan(self):
-        """Create a new scan"""
-        # Read request body
-        content_length = int(self.headers.get('Content-Length', 0))
-        post_data = self.rfile.read(content_length)
-        
+        """Enhanced scan creation with clean output support"""
         try:
-            scan_data = json.loads(post_data.decode())
-        except json.JSONDecodeError:
-            self.send_error(400, "Invalid JSON")
-            return
-        
-        # Validate input
-        target = scan_data.get("target", "").strip()
-        modules = scan_data.get("modules", [])
-        
-        if not target:
-            self.send_json_response({"error": "Target is required"}, 400)
-            return
-        
-        if not modules:
-            self.send_json_response({"error": "At least one module must be selected"}, 400)
-            return
-        
-        # Validate modules exist
-        valid_modules = [m["script"] for m in AVAILABLE_MODULES]
-        invalid_modules = [m for m in modules if m not in valid_modules]
-        if invalid_modules:
+            content_length = int(self.headers.get('Content-Length', 0))
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode())
+            
+            target = data.get('target')
+            modules = data.get('modules', [])
+            
+            if not target:
+                self.send_json_response({'error': 'Target is required'}, 400)
+                return
+            
+            if not modules:
+                self.send_json_response({'error': 'At least one module must be selected'}, 400)
+                return
+            
+            # Create scan record
+            scan_id = str(uuid.uuid4())
+            scan_record = {
+                "scan_id": scan_id,
+                "target": target,
+                "modules": modules,
+                "status": "running",
+                "created_at": datetime.now().isoformat(),
+                "module_results": [],
+                "total_execution_time": 0,
+                "enhanced_output": True
+            }
+            
+            def execute_scan(scan_id):
+                """Execute scan with enhanced module support"""
+                start_time = time.time()
+                scan_record["module_results"] = []
+                
+                try:
+                    for module_script in modules:
+                        if scan_record["status"] == "cancelled":
+                            break
+                        
+                        print(f"🔍 Running enhanced module: {module_script}")
+                        module_result = execute_module_with_clean_output(module_script, target, scan_id)
+                        scan_record["module_results"].append(module_result)
+                        
+                        print(f"✅ {module_script}: {module_result['status']} "
+                              f"({module_result['count']} findings, {module_result['execution_time']}s)")
+                    
+                    scan_record["total_execution_time"] = time.time() - start_time
+                    scan_record["status"] = "completed"
+                    scan_record["completed_at"] = datetime.now().isoformat()
+                    
+                    # Move to history
+                    scan_history[scan_id] = scan_record.copy()
+                    if scan_id in active_scans:
+                        del active_scans[scan_id]
+                    
+                    print(f"✅ Scan {scan_id} completed in {scan_record['total_execution_time']:.2f}s")
+                    
+                except Exception as e:
+                    scan_record["status"] = "error"
+                    scan_record["error"] = str(e)
+                    scan_record["total_execution_time"] = time.time() - start_time
+                    print(f"❌ Scan {scan_id} failed: {str(e)}")
+            
+            # Start scan in background
+            active_scans[scan_id] = scan_record
+            scan_thread = threading.Thread(target=execute_scan, args=(scan_id,))
+            scan_thread.daemon = True
+            scan_thread.start()
+            
+            print(f"✅ Created enhanced scan {scan_id} for {target} with {len(modules)} modules")
+            
             self.send_json_response({
-                "error": f"Invalid modules: {', '.join(invalid_modules)}"
-            }, 400)
-            return
-        
-        # Generate scan ID
-        scan_id = str(uuid.uuid4())
-        
-        # Create scan record
-        scan_record = {
-            "scan_id": scan_id,
-            "target": target,
-            "modules": modules,
-            "status": "queued",
-            "created_at": datetime.utcnow().isoformat(),
-            "progress": 0,
-            "total_modules": len(modules),
-            "completed_modules": 0,
-            "module_results": []
-        }
-        
-        active_scans[scan_id] = scan_record
-        
-        # Start scan in background thread
-        scan_thread = threading.Thread(target=execute_scan, args=(scan_id,))
-        scan_thread.daemon = True
-        scan_thread.start()
-        
-        print(f"✅ Created scan {scan_id} for target {target} with {len(modules)} modules")
-        
-        response_data = {
-            "scan_id": scan_id,
-            "status": "queued",
-            "message": "Scan created successfully",
-            "target": target,
-            "modules": modules,
-            "findings_enabled": FINDINGS_ENABLED
-        }
-        
-        self.send_json_response(response_data, 201)
+                "scan_id": scan_id,
+                "status": "created",
+                "message": "Enhanced scan created successfully",
+                "target": target,
+                "modules": modules,
+                "enhanced_features": True,
+                "findings_enabled": FINDINGS_ENABLED
+            }, 201)
+            
+        except Exception as e:
+            print(f"❌ Error creating scan: {str(e)}")
+            self.send_json_response({'error': str(e)}, 500)
 
     def handle_get_scan(self, scan_id):
-        """Get scan status"""
+        """Get scan status with enhanced information"""
         if scan_id in active_scans:
-            self.send_json_response(active_scans[scan_id])
+            scan_data = active_scans[scan_id]
         elif scan_id in scan_history:
-            self.send_json_response(scan_history[scan_id])
+            scan_data = scan_history[scan_id]
         else:
             self.send_json_response({"error": "Scan not found"}, 404)
+            return
+        
+        # Add enhanced metadata
+        enhanced_data = scan_data.copy()
+        enhanced_data["enhanced_output"] = True
+        enhanced_data["total_findings"] = sum(r.get("count", 0) for r in scan_data.get("module_results", []))
+        enhanced_data["successful_modules"] = len([r for r in scan_data.get("module_results", []) 
+                                                 if r.get("status") in ["SUCCESS", "NO_DATA"]])
+        
+        self.send_json_response(enhanced_data)
+
+    def handle_get_report_data(self, scan_id):
+        """NEW: Get scan data formatted for frontend templates"""
+        if scan_id in active_scans:
+            scan_data = active_scans[scan_id]
+        elif scan_id in scan_history:
+            scan_data = scan_history[scan_id]
+        else:
+            self.send_json_response({"error": "Scan not found"}, 404)
+            return
+        
+        try:
+            # Format for frontend templates
+            formatted_data = format_scan_results_for_frontend(scan_data, scan_data.get("target", ""))
+            
+            self.send_json_response({
+                "success": True,
+                "data": formatted_data,
+                "scan_id": scan_id,
+                "generated_at": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            print(f"❌ Error formatting report data: {str(e)}")
+            self.send_json_response({"error": f"Failed to format report data: {str(e)}"}, 500)
+
+    def handle_get_findings_data(self, scan_id):
+        """NEW: Get findings data in format expected by frontend templates"""
+        if scan_id in active_scans:
+            scan_data = active_scans[scan_id]
+        elif scan_id in scan_history:
+            scan_data = scan_history[scan_id]
+        else:
+            self.send_json_response({"error": "Scan not found"}, 404)
+            return
+        
+        try:
+            # Generate findings in format expected by templates
+            findings_data = format_findings_for_templates(scan_data)
+            
+            self.send_json_response({
+                "success": True,
+                "data": findings_data,
+                "scan_id": scan_id,
+                "generated_at": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            print(f"❌ Error generating findings data: {str(e)}")
+            self.send_json_response({"error": f"Failed to generate findings: {str(e)}"}, 500)
+
+    def handle_export_clean_data(self, scan_id):
+        """NEW: Export clean, structured scan data"""
+        if scan_id in active_scans:
+            scan_data = active_scans[scan_id]
+        elif scan_id in scan_history:
+            scan_data = scan_history[scan_id]
+        else:
+            self.send_json_response({"error": "Scan not found"}, 404)
+            return
+        
+        try:
+            # Prepare clean export data
+            export_data = {
+                "metadata": {
+                    "scan_id": scan_id,
+                    "target": scan_data.get("target"),
+                    "created_at": scan_data.get("created_at"),
+                    "completed_at": scan_data.get("completed_at"),
+                    "status": scan_data.get("status"),
+                    "total_execution_time": scan_data.get("total_execution_time", 0),
+                    "export_generated_at": datetime.now().isoformat(),
+                    "export_version": "2.1"
+                },
+                "summary": {
+                    "total_modules": len(scan_data.get("module_results", [])),
+                    "successful_modules": len([r for r in scan_data.get("module_results", []) 
+                                             if r.get("status") in ["SUCCESS", "NO_DATA"]]),
+                    "total_findings": sum(r.get("count", 0) for r in scan_data.get("module_results", [])),
+                    "risk_score": calculate_risk_score(scan_data),
+                    "risk_level": determine_risk_level(calculate_risk_score(scan_data))
+                },
+                "module_results": [],
+                "findings": format_findings_for_templates(scan_data),
+                "formatted_for_reports": format_scan_results_for_frontend(scan_data, scan_data.get("target", ""))
+            }
+            
+            # Clean module results for export
+            for module_result in scan_data.get("module_results", []):
+                clean_result = {
+                    "module_name": module_result.get("module_name"),
+                    "status": module_result.get("status"),
+                    "execution_time": module_result.get("execution_time", 0),
+                    "findings_count": module_result.get("count", 0),
+                    "severity": module_result.get("severity", "LOW"),
+                    "data": module_result.get("data"),
+                    "evidence": format_evidence_for_report(module_result),
+                    "metadata": get_finding_metadata(module_result.get("module_name", "")),
+                    "error": module_result.get("error") if module_result.get("status") in ["ERROR", "TIMEOUT"] else None
+                }
+                export_data["module_results"].append(clean_result)
+            
+            self.send_json_response({
+                "success": True,
+                "export_data": export_data,
+                "download_info": {
+                    "filename": f"argus_scan_{scan_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                    "format": "json",
+                    "size_kb": round(len(json.dumps(export_data)) / 1024, 2)
+                }
+            })
+            
+        except Exception as e:
+            print(f"❌ Error exporting clean data: {str(e)}")
+            self.send_json_response({"error": f"Failed to export data: {str(e)}"}, 500)
 
     def handle_list_scans(self):
-        """List all scans"""
-        all_scans = list(scan_history.values()) + list(active_scans.values())
+        """List all scans with enhanced information"""
+        all_scans = []
+        
+        # Add active scans
+        for scan_id, scan_data in active_scans.items():
+            enhanced_scan = scan_data.copy()
+            enhanced_scan["is_active"] = True
+            enhanced_scan["total_findings"] = sum(r.get("count", 0) for r in scan_data.get("module_results", []))
+            all_scans.append(enhanced_scan)
+        
+        # Add completed scans
+        for scan_id, scan_data in scan_history.items():
+            enhanced_scan = scan_data.copy() 
+            enhanced_scan["is_active"] = False
+            enhanced_scan["total_findings"] = sum(r.get("count", 0) for r in scan_data.get("module_results", []))
+            all_scans.append(enhanced_scan)
+        
+        # Sort by creation time (newest first)
         all_scans.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         
         response_data = {
             "scans": all_scans[:50],  # Limit to 50 most recent
             "total": len(all_scans),
+            "active": len(active_scans),
+            "completed": len(scan_history),
+            "enhanced_features": True,
             "findings_enabled": FINDINGS_ENABLED
         }
         
         self.send_json_response(response_data)
 
     def handle_generate_findings(self):
-        """Generate security findings from module results"""
+        """Generate security findings from module results (legacy endpoint)"""
         if not FINDINGS_ENABLED:
             self.send_json_response({"error": "Findings system not available"}, 503)
             return
         
         try:
-            # Read request body
             content_length = int(self.headers.get('Content-Length', 0))
             post_data = self.rfile.read(content_length)
             data = json.loads(post_data.decode())
@@ -790,394 +1231,189 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
             module_results = data['module_results']
             target = data.get('target', 'Unknown')
             
-            # Generate findings
-            findings_generator = FindingsGenerator()
-            findings_data = findings_generator.generate_findings_from_results(module_results, target)
+            # Use enhanced findings generation
+            findings_data = format_findings_for_templates({"module_results": module_results})
             
             self.send_json_response({
                 'success': True,
-                'data': findings_data
+                'data': findings_data,
+                'enhanced': True
             })
             
         except Exception as e:
             print(f"❌ Error generating findings: {str(e)}")
             self.send_json_response({'error': str(e)}, 500)
 
-    def handle_get_scan_findings(self, scan_id):
-        """Get findings for a completed scan"""
-        if not FINDINGS_ENABLED:
-            self.send_json_response({"error": "Findings system not available"}, 503)
-            return
-        
-        try:
-            # Get scan data
-            scan_data = None
-            if scan_id in scan_history:
-                scan_data = scan_history[scan_id]
-            elif scan_id in active_scans:
-                scan_data = active_scans[scan_id]
-            
-            if not scan_data:
-                self.send_json_response({'error': 'Scan not found'}, 404)
-                return
-            
-            # If findings already exist, return them
-            if 'findings' in scan_data:
-                self.send_json_response({
-                    'success': True,
-                    'data': {
-                        'findings': scan_data['findings'],
-                        'risk_assessment': scan_data.get('risk_assessment', {}),
-                        'category_breakdown': scan_data.get('category_breakdown', {}),
-                        'overall_risk_score': scan_data.get('overall_risk_score', 0),
-                        'security_summary': scan_data.get('security_summary', {})
-                    }
-                })
-                return
-            
-            # Generate findings from existing module results
-            module_results = scan_data.get('module_results', [])
-            target = scan_data.get('target', 'Unknown')
-            
-            findings_generator = FindingsGenerator()
-            findings_data = findings_generator.generate_findings_from_results(module_results, target)
-            
-            # Save the generated findings back to storage
-            scan_data.update({
-                'findings': findings_data['findings'],
-                'risk_assessment': findings_data['risk_assessment'],
-                'category_breakdown': findings_data['category_breakdown'],
-                'overall_risk_score': findings_data['overall_risk_score'],
-                'security_summary': findings_data['summary']
-            })
-            
-            # Update the stored scan data
-            if scan_id in scan_history:
-                scan_history[scan_id] = scan_data
-            elif scan_id in active_scans:
-                active_scans[scan_id] = scan_data
-            
-            self.send_json_response({
-                'success': True,
-                'data': findings_data
-            })
-            
-        except Exception as e:
-            print(f"❌ Error getting scan findings: {str(e)}")
-            self.send_json_response({'error': str(e)}, 500)
-
     def handle_test_findings(self):
-        """Test endpoint to verify findings system is working"""
+        """Test endpoint for enhanced findings system"""
         if not FINDINGS_ENABLED:
             self.send_json_response({"error": "Findings system not available"}, 503)
             return
         
         try:
-            # Sample module results for testing
+            # Sample enhanced module results
             test_module_results = [
                 {
-                    'module_name': 'data_leak.py',
-                    'status': 'completed',
-                    'execution_time': 45.2,
-                    'output': 'user@example.com found in breach: ExampleBreach2023\nadmin@example.com found in breach: DataLeak2022',
-                    'error': None
-                },
-                {
-                    'module_name': 'subdomain_enum.py',
-                    'status': 'completed',
-                    'execution_time': 12.1,
-                    'output': 'api.example.com\ndev.example.com\nstaging.example.com\ntest.example.com',
-                    'error': None
+                    'module_name': 'dns_records.py',
+                    'status': 'SUCCESS',
+                    'execution_time': 2.34,
+                    'count': 12,
+                    'severity': 'LOW',
+                    'data': {
+                        'A': ['142.250.190.14'],
+                        'MX': ['10 smtp.google.com.'],
+                        'NS': ['ns1.google.com.', 'ns2.google.com.']
+                    }
                 },
                 {
                     'module_name': 'open_ports.py',
-                    'status': 'completed',
-                    'execution_time': 8.7,
-                    'output': 'Port 22 open\nPort 80 open\nPort 443 open\nPort 8080 open',
-                    'error': None
+                    'status': 'SUCCESS', 
+                    'execution_time': 15.67,
+                    'count': 3,
+                    'severity': 'MEDIUM',
+                    'data': {
+                        'host': 'example.com',
+                        'ip': '93.184.216.34',
+                        'open_ports': [
+                            {'port': 80, 'service': 'http'},
+                            {'port': 443, 'service': 'https'}
+                        ]
+                    }
+                },
+                {
+                    'module_name': 'data_leak.py',
+                    'status': 'SUCCESS',
+                    'execution_time': 45.2, 
+                    'count': 2,
+                    'severity': 'HIGH',
+                    'data': {
+                        'summary': {
+                            'total_compromised_emails': 2,
+                            'total_domain_breaches': 1
+                        }
+                    }
                 }
             ]
             
-            findings_generator = FindingsGenerator()
-            findings_data = findings_generator.generate_findings_from_results(test_module_results, 'example.com')
+            # Test enhanced findings generation
+            scan_data = {"module_results": test_module_results}
+            findings_data = format_findings_for_templates(scan_data)
+            report_data = format_scan_results_for_frontend(scan_data, 'example.com')
             
             self.send_json_response({
                 'success': True,
-                'message': 'Findings system is working correctly',
-                'test_data': findings_data
+                'message': 'Enhanced findings system is working correctly',
+                'test_data': {
+                    'findings': findings_data,
+                    'report_data': report_data,
+                    'risk_score': calculate_risk_score(scan_data),
+                    'sample_evidence': format_evidence_for_report(test_module_results[1])
+                }
             })
             
         except Exception as e:
-            print(f"❌ Error testing findings system: {str(e)}")
+            print(f"❌ Error testing enhanced findings: {str(e)}")
             self.send_json_response({'error': str(e)}, 500)
 
     def handle_findings_config(self):
-        """Get findings system configuration"""
+        """Get enhanced findings system configuration"""
         if not FINDINGS_ENABLED:
             self.send_json_response({"error": "Findings system not available"}, 503)
             return
         
         try:
-            from modules.module_mappings import MODULE_FINDINGS_MAP, CATEGORY_WEIGHTS, get_module_categories
+            enhanced_modules = [
+                "dns_records.py", "open_ports.py", "whois_lookup.py",
+                "content_discovery.py", "email_harvester.py", "social_media.py",
+                "technology_stack.py", "data_leak.py", "exposed_env_files.py", 
+                "pastebin_monitoring.py", "shodan.py", "subdomain_enum.py",
+                "subdomain_takeover.py", "virustotal_scan.py"
+            ]
+            
+            categories = set()
+            for module in enhanced_modules:
+                metadata = get_finding_metadata(module)
+                categories.add(metadata["category"])
             
             self.send_json_response({
                 'success': True,
                 'data': {
-                    'total_modules_mapped': len(MODULE_FINDINGS_MAP),
-                    'categories': get_module_categories(),
-                    'category_weights': CATEGORY_WEIGHTS,
-                    'sample_modules': list(MODULE_FINDINGS_MAP.keys())[:10],
-                    'findings_enabled': FINDINGS_ENABLED
+                    'enhanced_modules_count': len(enhanced_modules),
+                    'enhanced_modules': enhanced_modules,
+                    'categories': list(categories),
+                    'features': [
+                        'Clean output parsing',
+                        'Risk scoring', 
+                        'Evidence formatting',
+                        'Template integration',
+                        'Multiple export formats'
+                    ],
+                    'risk_calculation': {
+                        'weights': {
+                            'data_leak.py': 30,
+                            'subdomain_takeover.py': 25,
+                            'exposed_env_files.py': 20,
+                            'virustotal_scan.py': 15,
+                            'other_modules': '1-10'
+                        },
+                        'severity_multipliers': {
+                            'CRITICAL': 4.0,
+                            'HIGH': 3.0,
+                            'MEDIUM': 2.0, 
+                            'LOW': 1.0
+                        }
+                    }
                 }
             })
             
         except Exception as e:
-            print(f"❌ Error getting findings config: {str(e)}")
+            print(f"❌ Error getting enhanced config: {str(e)}")
             self.send_json_response({'error': str(e)}, 500)
 
-def execute_scan(scan_id):
-    """Execute a scan by running the actual Argus modules"""
-    if scan_id not in active_scans:
-        print(f"❌ Scan {scan_id} not found in active scans")
-        return
-    
-    scan = active_scans[scan_id]
-    modules = scan["modules"]
-    target = scan["target"]
-    
-    print(f"🚀 Starting scan {scan_id} for target {target}")
-    
-    try:
-        scan["status"] = "running"
-        scan["started_at"] = datetime.utcnow().isoformat()
-        
-        # Get the modules directory
-        modules_dir = argus_root / "modules"
-        
-        if not modules_dir.exists():
-            raise Exception(f"Modules directory not found: {modules_dir}")
-        
-        # Execute each module
-        for i, module_script in enumerate(modules):
-            module_path = modules_dir / module_script
-            
-            print(f"📦 Executing module {i+1}/{len(modules)}: {module_script}")
-            
-            # Update progress
-            scan["progress"] = int((i / len(modules)) * 100)
-            scan["current_module"] = module_script
-            
-            if not module_path.exists():
-                print(f"❌ Module file not found: {module_path}")
-                result = {
-                    "module_name": module_script,
-                    "status": "failed",
-                    "error": f"Module file not found: {module_path}",
-                    "execution_time": 0
-                }
-            else:
-                # Execute the module
-                start_time = datetime.utcnow()
-                
-                try:
-                    print(f"   Running: python {module_path} {target}")
-                    
-                    # Get module-specific timeout
-                    timeout = get_module_timeout(module_script)
-                    print(f"   Timeout: {timeout}s")
-                    
-                    # Run the module with timeout
-                    process = subprocess.run(
-                        [sys.executable, str(module_path), target],
-                        cwd=str(argus_root),
-                        capture_output=True,
-                        text=True,
-                        timeout=timeout
-                    )
-                    
-                    end_time = datetime.utcnow()
-                    execution_time = (end_time - start_time).total_seconds()
-                    
-                    # Determine status based on return code and output
-                    if process.returncode == 0:
-                        status = "completed"
-                        error = None
-                        output = process.stdout.strip()
-                        
-                        # Additional validation for successful completion
-                        if not output or len(output) < 10:
-                            # Module ran but produced no meaningful output
-                            status = "completed"  # Still mark as completed, but note in output
-                            output = output or "No output produced"
-                        
-                        print(f"   ✅ Success ({execution_time:.1f}s) - {len(output)} chars output")
-                        
-                    else:
-                        status = "failed"
-                        error = process.stderr.strip() or "Module execution failed"
-                        output = process.stdout.strip()
-                        print(f"   ❌ Failed ({execution_time:.1f}s) - {error}")
-                    
-                    result = {
-                        "module_name": module_script,
-                        "status": status,
-                        "output": output,
-                        "error": error,
-                        "execution_time": round(execution_time, 1),
-                        "return_code": process.returncode
-                    }
-                    
-                except subprocess.TimeoutExpired:
-                    end_time = datetime.utcnow()
-                    execution_time = (end_time - start_time).total_seconds()
-                    
-                    print(f"   ⏰ Timeout after {timeout}s")
-                    result = {
-                        "module_name": module_script,
-                        "status": "failed",
-                        "error": f"Module timed out after {timeout} seconds",
-                        "execution_time": round(execution_time, 1),
-                        "output": None
-                    }
-                    
-                except Exception as e:
-                    end_time = datetime.utcnow()
-                    execution_time = (end_time - start_time).total_seconds()
-                    
-                    print(f"   ❌ Exception: {str(e)}")
-                    result = {
-                        "module_name": module_script,
-                        "status": "failed",
-                        "error": str(e),
-                        "execution_time": round(execution_time, 1),
-                        "output": None
-                    }
-            
-            # Add result to scan
-            scan["module_results"].append(result)
-            scan["completed_modules"] = len(scan["module_results"])
-        
-        # Complete scan
-        scan["status"] = "completed"
-        scan["completed_at"] = datetime.utcnow().isoformat()
-        scan["progress"] = 100
-        scan["current_module"] = None
-        
-        # Generate summary
-        successful = sum(1 for r in scan["module_results"] if r["status"] == "completed")
-        scan["summary"] = {
-            "total_modules": len(modules),
-            "successful_modules": successful,
-            "failed_modules": len(modules) - successful,
-            "success_rate": (successful / len(modules) * 100) if modules else 0
-        }
-        
-        # Generate findings if system is enabled
-        if FINDINGS_ENABLED:
-            try:
-                print(f"🔍 Generating security findings for scan {scan_id}")
-                findings_generator = FindingsGenerator()
-                findings_data = findings_generator.generate_findings_from_results(
-                    scan["module_results"], 
-                    target
-                )
-                
-                # Add findings to scan data
-                scan.update({
-                    'findings': findings_data['findings'],
-                    'risk_assessment': findings_data['risk_assessment'],
-                    'category_breakdown': findings_data['category_breakdown'],
-                    'overall_risk_score': findings_data['overall_risk_score'],
-                    'security_summary': findings_data['summary']
-                })
-                
-                print(f"✅ Generated {len(findings_data['findings'])} security findings")
-                print(f"📊 Risk Score: {findings_data['overall_risk_score']}/100")
-                
-            except Exception as e:
-                print(f"⚠️  Failed to generate findings: {str(e)}")
-                # Don't fail the entire scan if findings generation fails
-        
-        # Move to history
-        scan_history[scan_id] = scan.copy()
-        del active_scans[scan_id]
-        
-        print(f"🎉 Scan {scan_id} completed successfully - {successful}/{len(modules)} modules succeeded")
-        
-        if FINDINGS_ENABLED and 'findings' in scan:
-            print(f"🛡️  Security findings generated - Risk Level: {scan.get('security_summary', {}).get('risk_level', 'unknown')}")
-        
-    except Exception as e:
-        print(f"❌ Scan {scan_id} failed: {str(e)}")
-        scan["status"] = "failed"
-        scan["completed_at"] = datetime.utcnow().isoformat()
-        scan["error"] = str(e)
-        
-        # Move to history
-        scan_history[scan_id] = scan.copy()
-        del active_scans[scan_id]
+# =============================================================================
+# MAIN SERVER STARTUP
+# =============================================================================
 
-def main():
-    print("🚀 Starting Argus Web Interface - Enhanced with Findings System...")
-    print(f"🌐 Server will be available at: http://{HOST}:{PORT}")
-    print(f"🛡️  Findings System: {'✅ Enabled' if FINDINGS_ENABLED else '❌ Disabled'}")
-    print(f"📚 API endpoints:")
-    print(f"   - http://{HOST}:{PORT}/api/health")
-    print(f"   - http://{HOST}:{PORT}/api/modules")
-    print(f"   - http://{HOST}:{PORT}/api/scans")
-    if FINDINGS_ENABLED:
-        print(f"   - http://{HOST}:{PORT}/api/generate-findings")
-        print(f"   - http://{HOST}:{PORT}/api/scans/{{id}}/findings")
-        print(f"   - http://{HOST}:{PORT}/api/test-findings")
-        print(f"   - http://{HOST}:{PORT}/api/findings/config")
-    print("=" * 50)
-    
-    # Check if modules directory exists
-    modules_dir = argus_root / "modules"
-    if modules_dir.exists():
-        module_files = list(modules_dir.glob("*.py"))
-        print(f"✅ Found {len(module_files)} module files in {modules_dir}")
-        print(f"✅ Configured {len(AVAILABLE_MODULES)} modules in API")
-        
-        # Check for some key modules
-        key_modules = ["dns_records.py", "http_headers.py", "domain_info.py", "ssl_chain.py", "subdomain_enum.py"]
-        for module in key_modules:
-            if (modules_dir / module).exists():
-                print(f"   ✅ {module}")
-            else:
-                print(f"   ⚠️  {module} (missing)")
-    else:
-        print(f"❌ Modules directory not found at {modules_dir}")
-        print("   Make sure you're running this from the correct Argus project directory")
-    
-    # Test findings system if enabled
-    if FINDINGS_ENABLED:
-        try:
-            from modules.module_mappings import MODULE_FINDINGS_MAP, get_module_categories
-            categories = get_module_categories()
-            print(f"🔍 Findings System Status:")
-            print(f"   ✅ {len(MODULE_FINDINGS_MAP)} modules mapped")
-            print(f"   ✅ {len(categories)} security categories defined")
-            print(f"   ✅ Categories: {', '.join(categories[:3])}{'...' if len(categories) > 3 else ''}")
-        except Exception as e:
-            print(f"   ⚠️  Findings system error: {e}")
-    
-    print("=" * 50)
-    
+def start_server():
+    """Start the enhanced Argus server"""
     try:
         with socketserver.TCPServer((HOST, PORT), ArgusHTTPHandler) as httpd:
-            print(f"✅ Server started successfully!")
-            print(f"🔗 Visit: http://{HOST}:{PORT}/api/health")
-            print(f"🎯 Total modules available: {len(AVAILABLE_MODULES)}")
-            if FINDINGS_ENABLED:
-                print(f"🛡️  Test findings: http://{HOST}:{PORT}/api/test-findings")
+            print("=" * 60)
+            print("🛡️  ARGUS ENHANCED SECURITY ASSESSMENT SERVER")
+            print("=" * 60)
+            print(f"🚀 Server running at http://{HOST}:{PORT}")
+            print(f"📁 Modules directory: {argus_root / 'modules'}")
+            print(f"🔧 Enhanced features: ENABLED")
+            print(f"📊 Findings system: {'ENABLED' if FINDINGS_ENABLED else 'DISABLED'}")
+            print(f"🎯 Enhanced modules: 14/54")
+            print("=" * 60)
+            print("📡 Available endpoints:")
+            print("   GET  /                          - API information")
+            print("   GET  /api/health                - Health check")
+            print("   GET  /api/modules               - List enhanced modules")
+            print("   POST /api/scans                 - Create new scan")
+            print("   GET  /api/scans                 - List all scans")
+            print("   GET  /api/scans/{id}            - Get scan details")
+            print("   GET  /api/scans/{id}/report-data - Get template-ready data")
+            print("   GET  /api/scans/{id}/findings   - Get findings for reports")
+            print("   GET  /api/scans/{id}/export     - Export clean data")
+            print("=" * 60)
+            print("🔥 NEW FEATURES:")
+            print("   ✅ Clean module output parsing")
+            print("   ✅ Frontend template integration")
+            print("   ✅ Automated risk scoring")
+            print("   ✅ Evidence formatting")
+            print("   ✅ Professional PDF reports")
+            print("=" * 60)
+            print("🎬 Ready for requests! Press Ctrl+C to stop")
+            print()
+            
             httpd.serve_forever()
+            
     except KeyboardInterrupt:
-        print("\n👋 Server stopped")
+        print("\n🛑 Server stopped by user")
     except Exception as e:
-        print(f"❌ Error starting server: {e}")
-        sys.exit(1)
+        print(f"❌ Server error: {str(e)}")
 
 if __name__ == "__main__":
-    main()
-                
+    start_server()

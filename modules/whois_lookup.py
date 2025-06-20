@@ -1,87 +1,181 @@
-import sys
+#!/usr/bin/env python3
+"""
+Improved WHOIS Lookup Module - Clean Output with Success/Failure Indicators
+"""
+
 import os
+import sys
 import subprocess
-from rich.console import Console
-from rich.table import Table
-from colorama import Fore, init, Style
+import re
+from datetime import datetime
 
-# Add parent directory to sys.path for module imports
+# Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.util import clean_domain_input
+from utils.util import clean_domain_input, validate_domain
 
-# Initialize colorama
-init(autoreset=True)
-console = Console()
-
-def banner():
-    console.print(f"""
-{Fore.GREEN}=============================================
-        Argus - WHOIS Lookup Module
-============================================={Style.RESET_ALL}
-""")
+def parse_whois_data(whois_output):
+    """Parse WHOIS output and extract key information"""
+    parsed_data = {}
+    
+    # Domain status
+    status_patterns = [r'Domain Status:\s*(.+)', r'Status:\s*(.+)']
+    for pattern in status_patterns:
+        match = re.search(pattern, whois_output, re.IGNORECASE)
+        if match:
+            parsed_data['status'] = match.group(1).strip()
+            break
+    
+    # Registrar
+    registrar_patterns = [
+        r'Registrar:\s*(.+)',
+        r'Registrar Name:\s*(.+)',
+        r'Sponsoring Registrar:\s*(.+)'
+    ]
+    for pattern in registrar_patterns:
+        match = re.search(pattern, whois_output, re.IGNORECASE)
+        if match:
+            parsed_data['registrar'] = match.group(1).strip()
+            break
+    
+    # Creation date
+    created_patterns = [
+        r'Creation Date:\s*(.+)',
+        r'Created On:\s*(.+)',
+        r'Registered:\s*(.+)'
+    ]
+    for pattern in created_patterns:
+        match = re.search(pattern, whois_output, re.IGNORECASE)
+        if match:
+            parsed_data['created'] = match.group(1).strip()
+            break
+    
+    # Expiration date
+    expires_patterns = [
+        r'Registry Expiry Date:\s*(.+)',
+        r'Expiration Date:\s*(.+)',
+        r'Expires On:\s*(.+)'
+    ]
+    for pattern in expires_patterns:
+        match = re.search(pattern, whois_output, re.IGNORECASE)
+        if match:
+            parsed_data['expires'] = match.group(1).strip()
+            break
+    
+    # Name servers
+    ns_matches = re.findall(r'Name Server:\s*(.+)', whois_output, re.IGNORECASE)
+    if ns_matches:
+        parsed_data['nameservers'] = [ns.strip() for ns in ns_matches]
+    
+    # Organization (privacy-aware)
+    org_patterns = [r'Registrant Organization:\s*(.+)', r'Organization:\s*(.+)']
+    for pattern in org_patterns:
+        match = re.search(pattern, whois_output, re.IGNORECASE)
+        if match:
+            org = match.group(1).strip()
+            if org and org.lower() not in ['redacted for privacy', 'private', 'n/a']:
+                parsed_data['organization'] = org
+            break
+    
+    return parsed_data
 
 def perform_whois_lookup(domain):
-    """Perform WHOIS lookup for the given domain using subprocess."""
+    """Perform WHOIS lookup using system command"""
     try:
-        console.print(f"{Fore.CYAN}[*] Performing WHOIS lookup for domain: {domain}{Style.RESET_ALL}")
-        result = subprocess.run(["whois", domain], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30)
+        result = subprocess.run(
+            ['whois', domain], 
+            capture_output=True, 
+            text=True, 
+            timeout=30
+        )
         
         if result.returncode != 0:
-            console.print(f"{Fore.RED}[!] Failed to perform WHOIS lookup for {domain}: {result.stderr.strip()}{Style.RESET_ALL}")
             return None
         
-        return result.stdout.strip()
+        whois_data = result.stdout
+        
+        if not whois_data or len(whois_data.strip()) < 50:
+            return None
+        
+        return parse_whois_data(whois_data)
+        
     except subprocess.TimeoutExpired:
-        console.print(f"{Fore.RED}[!] WHOIS lookup timed out for {domain}{Style.RESET_ALL}")
-        return None
+        raise Exception("WHOIS lookup timed out")
     except FileNotFoundError:
-        console.print(f"{Fore.RED}[!] 'whois' command not found. Please ensure it is installed on your system.{Style.RESET_ALL}")
-        return None
+        raise Exception("WHOIS command not found. Please install whois package.")
     except Exception as e:
-        console.print(f"{Fore.RED}[!] An unexpected error occurred: {e}{Style.RESET_ALL}")
-        return None
-
-def display_whois_info(whois_data):
-    """Display the WHOIS information in a table format."""
-    if not whois_data:
-        console.print(f"{Fore.YELLOW}[!] No WHOIS information found.{Style.RESET_ALL}")
-        return
-
-    table = Table(show_header=True, header_style="bold white")
-    table.add_column("Key", style="white", justify="left", min_width=20)
-    table.add_column("Value", style="white", justify="left", min_width=50)
-
-    # Parsing the WHOIS data and adding it to the table
-    for line in whois_data.splitlines():
-        if ':' in line:
-            key, value = line.split(':', 1)
-            table.add_row(key.strip(), value.strip())
-
-    console.print(table)
-    console.print(f"\n{Fore.CYAN}[*] WHOIS lookup completed.{Style.RESET_ALL}")
-
-def whois_lookup(target):
-    """Perform the WHOIS lookup process for the given target."""
-    banner()
-    domain = clean_domain_input(target)
-    whois_data = perform_whois_lookup(domain)
-    display_whois_info(whois_data)
+        raise Exception(f"WHOIS lookup failed: {str(e)}")
 
 def main(target):
-    whois_lookup(target)
+    """Main execution with clean output"""
+    print(f"🔍 WHOIS Lookup - {target}")
+    print("=" * 50)
+    
+    start_time = datetime.now()
+    
+    try:
+        # Clean and validate input
+        domain = clean_domain_input(target)
+        
+        if not validate_domain(domain):
+            print("❌ FAILED: Invalid domain format")
+            return {"status": "FAILED", "error": "Invalid domain format"}
+        
+        print(f"🎯 Target: {domain}")
+        print()
+        
+        # Perform WHOIS lookup
+        whois_data = perform_whois_lookup(domain)
+        execution_time = (datetime.now() - start_time).total_seconds()
+        
+        if whois_data:
+            data_fields = len([k for k, v in whois_data.items() if v])
+            print(f"✅ SUCCESS: Found {data_fields} WHOIS data fields")
+            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print()
+            
+            # Display results
+            print("📋 WHOIS Information:")
+            if 'status' in whois_data:
+                print(f"   • Status: {whois_data['status']}")
+            if 'registrar' in whois_data:
+                print(f"   • Registrar: {whois_data['registrar']}")
+            if 'created' in whois_data:
+                print(f"   • Created: {whois_data['created']}")
+            if 'expires' in whois_data:
+                print(f"   • Expires: {whois_data['expires']}")
+            if 'organization' in whois_data:
+                print(f"   • Organization: {whois_data['organization']}")
+            if 'nameservers' in whois_data:
+                print(f"   • Name Servers ({len(whois_data['nameservers'])}):")
+                for ns in whois_data['nameservers']:
+                    print(f"     - {ns}")
+            
+            return {
+                "status": "SUCCESS",
+                "data": whois_data,
+                "count": data_fields,
+                "execution_time": execution_time
+            }
+        else:
+            print("ℹ️  NO DATA: No WHOIS information found")
+            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            return {"status": "NO_DATA", "execution_time": execution_time}
+            
+    except KeyboardInterrupt:
+        print("⚠️  INTERRUPTED: Lookup stopped by user")
+        return {"status": "INTERRUPTED"}
+        
+    except Exception as e:
+        execution_time = (datetime.now() - start_time).total_seconds()
+        print(f"❌ ERROR: {str(e)}")
+        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        return {"status": "ERROR", "error": str(e), "execution_time": execution_time}
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        try:
-            main(target)
-            sys.exit(0)  # Explicitly exit with code 0
-        except KeyboardInterrupt:
-            console.print(f"\n{Fore.RED}[!] Script interrupted by user.{Style.RESET_ALL}")
-            sys.exit(0)  # Exit with code 0 to prevent errors in argus.py
-        except Exception as e:
-            console.print(f"{Fore.RED}[!] An unexpected error occurred: {e}{Style.RESET_ALL}")
-            sys.exit(1)  # Exit with code 1 to indicate an error
+        main(target)
     else:
-        console.print(f"{Fore.RED}[!] No target provided. Please pass a domain or IP address.{Style.RESET_ALL}")
+        print("❌ ERROR: No target provided")
+        print("Usage: python whois_lookup.py <domain>")
         sys.exit(1)

@@ -1,132 +1,228 @@
-import sys
+#!/usr/bin/env python3
+"""
+Improved Email Harvester Module - Clean Output with Success/Failure Indicators
+"""
+
 import os
-import threading
+import sys
 import requests
-from bs4 import BeautifulSoup
 import re
+from datetime import datetime
 from urllib.parse import urljoin, urlparse
-from collections import deque
-from rich.console import Console
-from rich.table import Table
+from bs4 import BeautifulSoup
 
+# Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import HEADERS, DEFAULT_TIMEOUT
+from config.settings import USER_AGENT, DEFAULT_TIMEOUT
 
-console = Console()
+def extract_emails_from_content(content):
+    """Extract email addresses from content using regex"""
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    emails = set(re.findall(email_pattern, content, re.IGNORECASE))
+    
+    # Filter out common false positives
+    filtered_emails = set()
+    for email in emails:
+        email = email.lower()
+        # Skip obvious false positives
+        if not any(skip in email for skip in [
+            'example.com', 'test.com', 'placeholder', 'dummy',
+            'noreply@', 'no-reply@', '.png', '.jpg', '.gif', '.svg'
+        ]):
+            filtered_emails.add(email)
+    
+    return filtered_emails
 
-def banner():
-    console.print("""
-[green]
-=============================================
-       Argus - Email Harvesting Module
-=============================================
-[/green]
-""")
+def get_page_content(url, session, timeout=10):
+    """Get content from a single page"""
+    try:
+        headers = {'User-Agent': USER_AGENT}
+        response = session.get(url, headers=headers, timeout=timeout)
+        if response.status_code == 200:
+            return response.text
+    except:
+        pass
+    return None
 
-class EmailHarvester:
-    def __init__(self, base_url):
-        self.base_url = base_url
-        self.visited_urls = set()
-        self.emails_found = set()
-        self.urls_queue = deque()
-        self.headers = HEADERS
-        self.max_pages = 100
-        self.lock = threading.Lock()
-        self.num_threads = 10
-        self.page_count = 0
+def find_contact_pages(base_url, content):
+    """Find potential contact pages from main page"""
+    contact_urls = []
+    
+    try:
+        soup = BeautifulSoup(content, 'html.parser')
+        contact_keywords = ['contact', 'about', 'team', 'staff']
+        
+        for link in soup.find_all('a', href=True):
+            href = link['href'].lower()
+            link_text = link.get_text(strip=True).lower()
+            
+            if any(keyword in href or keyword in link_text for keyword in contact_keywords):
+                full_url = urljoin(base_url, link['href'])
+                if urlparse(full_url).netloc == urlparse(base_url).netloc:
+                    contact_urls.append(full_url)
+    except:
+        pass
+    
+    return contact_urls[:3]  # Limit to 3 contact pages
 
-    def crawl(self):
-        self.urls_queue.append(self.base_url)
-        threads = []
-        for _ in range(self.num_threads):
-            t = threading.Thread(target=self.worker)
-            t.daemon = True
-            t.start()
-            threads.append(t)
-        for t in threads:
-            t.join()
-
-    def worker(self):
-        while True:
-            with self.lock:
-                if not self.urls_queue or self.page_count >= self.max_pages:
-                    break
-                url = self.urls_queue.popleft()
-                if url in self.visited_urls:
-                    continue
-                self.visited_urls.add(url)
-                self.page_count += 1
-            try:
-                response = requests.get(url, headers=self.headers, timeout=DEFAULT_TIMEOUT)
-                if response.status_code == 200:
-                    self.extract_emails(response.text)
-                    self.extract_links(response.text, url)
-                    console.print(f"[cyan][*] Crawled: {url}[/cyan]")
-                else:
-                    console.print(f"[yellow][!] Skipped {url} (Status code: {response.status_code})[/yellow]")
-            except requests.exceptions.RequestException as e:
-                console.print(f"[red][!] Error crawling {url}: {e}[/red]")
-
-    def extract_emails(self, html_content):
-        emails = set(re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', html_content))
-        new_emails = emails - self.emails_found
-        if new_emails:
-            with self.lock:
-                self.emails_found.update(new_emails)
-            for email in new_emails:
-                console.print(f"[green][+] Found email: {email}[/green]")
-            console.print(f"[magenta]Total emails found so far: {len(self.emails_found)}[/magenta]")
-
-    def extract_links(self, html_content, current_url):
-        soup = BeautifulSoup(html_content, 'html.parser')
-        new_urls = set()
-        for link_tag in soup.find_all('a', href=True):
-            href = link_tag['href']
-            full_url = urljoin(current_url, href)
-            if self.is_valid_url(full_url):
-                if full_url not in self.visited_urls:
-                    new_urls.add(full_url)
-        with self.lock:
-            self.urls_queue.extend(new_urls - self.visited_urls)
-
-    def is_valid_url(self, url):
-        parsed_base = urlparse(self.base_url)
-        parsed_url = urlparse(url)
-        return parsed_url.scheme in ('http', 'https') and parsed_url.netloc == parsed_base.netloc
-
-    def display_results(self):
-        if self.emails_found:
-            table = Table(show_header=True, header_style="bold white")
-            table.add_column("Email Addresses Found", style="white", justify="left")
-            for email in sorted(self.emails_found):
-                table.add_row(email)
-            console.print(table)
-            console.print(f"\n[cyan][*] Email harvesting completed. Total emails found: {len(self.emails_found)}[/cyan]")
-        else:
-            console.print("[yellow][!] No email addresses found.[/yellow]")
-
-def main(target):
-    banner()
+def harvest_emails(target):
+    """Harvest email addresses from target website"""
     if not target.startswith(('http://', 'https://')):
         target = 'http://' + target
+    
+    all_emails = set()
+    pages_checked = []
+    
+    with requests.Session() as session:
+        # Get main page content
+        main_content = get_page_content(target, session)
+        if main_content:
+            pages_checked.append(target)
+            emails = extract_emails_from_content(main_content)
+            all_emails.update(emails)
+            
+            # Check contact pages
+            contact_pages = find_contact_pages(target, main_content)
+            for contact_url in contact_pages:
+                contact_content = get_page_content(contact_url, session)
+                if contact_content:
+                    pages_checked.append(contact_url)
+                    contact_emails = extract_emails_from_content(contact_content)
+                    all_emails.update(contact_emails)
+    
+    return {
+        "emails": sorted(list(all_emails)),
+        "pages_checked": pages_checked
+    }
 
-    harvester = EmailHarvester(target)
-    console.print(f"[cyan][*] Starting email harvesting on {target}...[/cyan]")
-    harvester.crawl()
-    harvester.display_results()
+def categorize_emails(emails):
+    """Categorize emails by domain type"""
+    categories = {
+        "organizational": [],
+        "personal": [],
+        "generic": []
+    }
+    
+    generic_prefixes = ['info', 'contact', 'support', 'admin', 'hello', 'mail']
+    personal_domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com']
+    
+    for email in emails:
+        local, domain = email.split('@', 1)
+        
+        if any(prefix in local.lower() for prefix in generic_prefixes):
+            categories["generic"].append(email)
+        elif domain.lower() in personal_domains:
+            categories["personal"].append(email)
+        else:
+            categories["organizational"].append(email)
+    
+    return categories
+
+def main(target):
+    """Main execution with clean output"""
+    print(f"🔍 Email Harvester - {target}")
+    print("=" * 50)
+    
+    start_time = datetime.now()
+    
+    try:
+        if not target:
+            print("❌ FAILED: Empty target provided")
+            return {"status": "FAILED", "error": "Empty target"}
+        
+        # Ensure target has protocol
+        if not target.startswith(('http://', 'https://')):
+            target = 'http://' + target
+        
+        print(f"🎯 Target: {target}")
+        print("📧 Harvesting email addresses...")
+        print()
+        
+        # Perform email harvesting
+        harvest_result = harvest_emails(target)
+        execution_time = (datetime.now() - start_time).total_seconds()
+        
+        emails = harvest_result["emails"]
+        pages_checked = harvest_result["pages_checked"]
+        
+        if emails:
+            print(f"✅ SUCCESS: Found {len(emails)} email addresses")
+            print(f"📄 Pages checked: {len(pages_checked)}")
+            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print()
+            
+            # Categorize and display emails
+            categories = categorize_emails(emails)
+            
+            if categories["organizational"]:
+                print(f"🏢 Organizational Emails ({len(categories['organizational'])}):")
+                for email in categories["organizational"]:
+                    print(f"   • {email}")
+                print()
+            
+            if categories["generic"]:
+                print(f"📬 Generic Emails ({len(categories['generic'])}):")
+                for email in categories["generic"]:
+                    print(f"   • {email}")
+                print()
+            
+            if categories["personal"]:
+                print(f"👤 Personal Emails ({len(categories['personal'])}):")
+                for email in categories["personal"]:
+                    print(f"   • {email}")
+                print()
+            
+            print("📄 Pages Scanned:")
+            for page in pages_checked:
+                print(f"   • {page}")
+            
+            return {
+                "status": "SUCCESS",
+                "data": {
+                    "emails": emails,
+                    "categories": categories,
+                    "pages_checked": pages_checked
+                },
+                "count": len(emails),
+                "execution_time": execution_time
+            }
+        else:
+            print("ℹ️  NO DATA: No email addresses found")
+            print(f"📄 Pages checked: {len(pages_checked)}")
+            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            return {
+                "status": "NO_DATA", 
+                "data": {"pages_checked": pages_checked},
+                "execution_time": execution_time
+            }
+            
+    except KeyboardInterrupt:
+        print("⚠️  INTERRUPTED: Harvesting stopped by user")
+        return {"status": "INTERRUPTED"}
+        
+    except Exception as e:
+        execution_time = (datetime.now() - start_time).total_seconds()
+        error_msg = str(e)
+        
+        if "timeout" in error_msg.lower():
+            print("⏰ TIMEOUT: Request timeout during email harvesting")
+            status = "TIMEOUT"
+        elif "connection" in error_msg.lower():
+            print("🌐 ERROR: Connection error - target may be unreachable")
+            status = "CONNECTION_ERROR"
+        else:
+            print(f"❌ ERROR: {error_msg}")
+            status = "ERROR"
+        
+        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        try:
-            main(target)
-            sys.exit(0)
-        except KeyboardInterrupt:
-            console.print("\n[red][!] Script interrupted by user.[/red]")
-            sys.exit(0)
-        except Exception as e:
-            console.print(f"[red][!] An unexpected error occurred: {e}[/red]")
-            sys.exit(1)
+        main(target)
     else:
-        console.print("[red][!] No target provided. Please pass a domain or URL.[/red]")
+        print("❌ ERROR: No target provided")
+        print("Usage: python email_harvester.py <url_or_domain>")
+        print("Example: python email_harvester.py example.com")
         sys.exit(1)
