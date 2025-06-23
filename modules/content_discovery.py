@@ -41,39 +41,39 @@ def structure_url(target, link):
     return None
 
 async def get_robots_txt(base_url):
-    console.print(Fore.WHITE + f"[*] Fetching robots.txt from: {base_url}/robots.txt")
+    console.print(Fore.WHITE + f"[I] Fetching robots.txt from: {base_url}/robots.txt")
     try:
         response = requests.get(f"{base_url}/robots.txt", timeout=DEFAULT_TIMEOUT)
         if response.status_code == 200:
-            console.print(Fore.GREEN + "[+] Found robots.txt")
+            console.print(Fore.GREEN + "[I] Found robots.txt")
             return response.text
         else:
-            console.print(Fore.YELLOW + "[!] robots.txt not found.")
+            console.print(Fore.YELLOW + "[I] robots.txt not found.")
             return None
     except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error fetching robots.txt: {e}")
+        console.print(Fore.RED + f"[E] Error fetching robots.txt: {e}")
         return None
 
 async def discover_sitemap(base_url):
     sitemap_url = f"{base_url}/sitemap.xml"
-    console.print(Fore.WHITE + f"[*] Checking {sitemap_url}")
+    console.print(Fore.WHITE + f"[I] Checking {sitemap_url}")
     try:
         response = requests.get(sitemap_url, timeout=DEFAULT_TIMEOUT)
         if response.status_code == 200:
-            console.print(Fore.GREEN + "[+] Found sitemap.xml")
+            console.print(Fore.GREEN + "[I] Found sitemap.xml")
             soup = BeautifulSoup(response.content, "html.parser")
             links = [loc.text for loc in soup.find_all("loc")]
             return links
         else:
-            console.print(Fore.YELLOW + "[!] sitemap.xml not found.")
+            console.print(Fore.YELLOW + "[I] sitemap.xml not found.")
             return []
     except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error fetching sitemap.xml: {e}")
+        console.print(Fore.RED + f"[E] Error fetching sitemap.xml: {e}")
         return []
 
 async def discover_internal_links(target, soup):
     internal_links = []
-    console.print(Fore.WHITE + "[*] Discovering internal links...")
+    console.print(Fore.WHITE + "[I] Discovering internal links...")
     for link in soup.find_all("a", href=True):
         url = structure_url(target, link.get("href"))
         if url:
@@ -83,7 +83,7 @@ async def discover_internal_links(target, soup):
 
 async def discover_external_links(target, soup):
     external_links = []
-    console.print(Fore.WHITE + "[*] Discovering external links...")
+    console.print(Fore.WHITE + "[I] Discovering external links...")
     for link in soup.find_all("a", href=True):
         url = link.get("href")
         if url and url.startswith("http") and target not in url:
@@ -94,7 +94,7 @@ async def discover_external_links(target, soup):
 async def discover_assets(target, soup, asset_type):
     assets = []
     tag, attr = ("link", "href") if asset_type == "css" else ("script", "src")
-    console.print(Fore.WHITE + f"[*] Discovering {asset_type.upper()} files...")
+    console.print(Fore.WHITE + f"[I] Discovering {asset_type.upper()} files...")
     for asset in soup.find_all(tag, **{attr: True}):
         url = structure_url(target, asset.get(attr))
         if url:
@@ -112,7 +112,7 @@ def display_results(robots_txt, sitemaps, internal_links, external_links, css_fi
         for js_file in js_files:
             asset_table.add_row("JS File", js_file)
 
-        console.print("\n" + Fore.WHITE + "[*] Asset Files Found:")
+        console.print("\n" + Fore.WHITE + "[I] Asset Files Found:")
         console.print(asset_table)
 
     summary_table = Table(show_header=True, header_style="bold magenta")
@@ -133,7 +133,7 @@ def display_results(robots_txt, sitemaps, internal_links, external_links, css_fi
 
 async def content_discovery(target, output):
     banner()
-    console.print(Fore.WHITE + f"[*] Starting content discovery for {target}")
+    console.print(Fore.WHITE + f"[I] Starting content discovery for {target}")
 
     target = ensure_url_format(target)
     parsed_url = urlparse(clean_url(target))
@@ -143,7 +143,7 @@ async def content_discovery(target, output):
         response = requests.get(target, timeout=DEFAULT_TIMEOUT)
         if response.status_code != 200:
             console.print(
-                Fore.RED + f"[!] Failed to access {target}, status code {response.status_code}"
+                Fore.RED + f"[E] Failed to access {target}, status code {response.status_code}"
             )
             return
 
@@ -193,7 +193,7 @@ async def content_discovery(target, output):
         # The 'target' variable in this function is the URL.
         if summary_parts:
             found_summary = ", ".join(summary_parts)
-            console.print(Fore.GREEN + f"[SUCCESS] Content discovery for {target} completed. Found: {found_summary}.")
+            console.print(Fore.GREEN + f"[I] Content discovery for {target} completed. Found: {found_summary}.")
         else:
             # This case implies that the initial request might have failed or nothing at all was discovered.
             # The display_results function already prints a table that would show "Not Found" or 0 counts.
@@ -201,17 +201,17 @@ async def content_discovery(target, output):
             # For now, a general message if summary_parts is empty.
             # Let's check if the initial response failed (status_code != 200), which is handled earlier.
             # The logic here assumes display_results was called, meaning the initial request was likely okay.
-            console.print(Fore.YELLOW + f"[INFO] Content discovery for {target} completed, but no specific items (robots.txt, sitemaps, links, assets) were found through parsing.")
+            console.print(Fore.YELLOW + f"[I] Content discovery for {target} completed, but no specific items (robots.txt, sitemaps, links, assets) were found through parsing.")
 
     except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error during content discovery for {target}: {e}")
+        console.print(Fore.RED + f"[E] Error during content discovery for {target}: {e}")
 
 def main(input_target):
     banner()
     domain = clean_domain_input(input_target)
 
     if not validate_domain(domain):
-        console.print(Fore.RED + "[!] Invalid domain provided. Please check and try again.")
+        console.print(Fore.RED + "[E] Invalid domain provided. Please check and try again.")
         return
 
     target = ensure_url_format(input_target)
@@ -227,5 +227,5 @@ if __name__ == "__main__":
         )
         main(target_domain)
     except KeyboardInterrupt:
-        console.print(Fore.RED + "\n[!] Content discovery interrupted by user.")
+        console.print(Fore.RED + "\n[E] Content discovery interrupted by user.")
         sys.exit(1)

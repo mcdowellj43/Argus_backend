@@ -27,7 +27,7 @@ def scan_ports(ip):
                 open_ports.extend(nm[host][proto].keys())
         return open_ports
     except Exception as e:
-        console.print(Fore.RED + f"[!] Error scanning ports: {e}")
+        console.print(Fore.RED + f"[E] Error scanning ports: {e}")
         return None
 
 def display_ports(open_ports):
@@ -41,14 +41,14 @@ def display_ports(open_ports):
 
 def main(target):
     banner()
-    console.print(Fore.WHITE + f"[*] Scanning open ports for: {target}")
+    console.print(Fore.WHITE + f"[I] Scanning open ports for: {target}")
     open_ports = scan_ports(target)
     if open_ports:
         display_ports(open_ports)
         num_open_ports = len(open_ports)
-        console.print(Fore.GREEN + f"[SUCCESS] Found {num_open_ports} open port(s) for {target}.")
+        console.print(Fore.GREEN + f"[I] Found {num_open_ports} open port(s) for {target}.")
     else:
-        console.print(Fore.YELLOW + f"[INFO] No open ports found for {target}.")
+        console.print(Fore.YELLOW + f"[I] No open ports found for {target}.")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
@@ -56,8 +56,8 @@ if __name__ == "__main__":
         try:
             main(target)
         except KeyboardInterrupt:
-            console.print(Fore.RED + "\n[!] Process interrupted by user.")
+            console.print(Fore.RED + "\n[E] Process interrupted by user.")
             sys.exit(1)
     else:
-        console.print(Fore.RED + "[!] No target provided. Please pass an IP address.")
+        console.print(Fore.RED + "[E] No target provided. Please pass an IP address.")
         sys.exit(1)

@@ -61,11 +61,11 @@ class EmailHarvester:
                 if response.status_code == 200:
                     self.extract_emails(response.text)
                     self.extract_links(response.text, url)
-                    console.print(f"[cyan][*] Crawled: {url}[/cyan]")
+                    console.print(f"[cyan][I] Crawled: {url}[/cyan]")
                 else:
-                    console.print(f"[yellow][!] Skipped {url} (Status code: {response.status_code})[/yellow]")
+                    console.print(f"[yellow][I] Skipped {url} (Status code: {response.status_code})[/yellow]")
             except requests.exceptions.RequestException as e:
-                console.print(f"[red][!] Error crawling {url}: {e}[/red]")
+                console.print(f"[red][E] Error crawling {url}: {e}[/red]")
 
     def extract_emails(self, html_content):
         emails = set(re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', html_content))
@@ -74,7 +74,7 @@ class EmailHarvester:
             with self.lock:
                 self.emails_found.update(new_emails)
             for email in new_emails:
-                console.print(f"[green][+] Found email: {email}[/green]")
+                console.print(f"[green][I] Found email: {email}[/green]")
             console.print(f"[magenta]Total emails found so far: {len(self.emails_found)}[/magenta]")
 
     def extract_links(self, html_content, current_url):
@@ -101,9 +101,9 @@ class EmailHarvester:
             for email in sorted(self.emails_found):
                 table.add_row(email)
             console.print(table)
-            console.print(f"\n[green][SUCCESS] Found {len(self.emails_found)} email address(es) for {self.base_url}.[/green]")
+            console.print(f"\n[green][I] Found {len(self.emails_found)} email address(es) for {self.base_url}.[/green]")
         else:
-            console.print(f"[yellow][INFO] No email addresses found for {self.base_url}.[/yellow]")
+            console.print(f"[yellow][I] No email addresses found for {self.base_url}.[/yellow]")
 
 def main(target):
     banner()
@@ -111,7 +111,7 @@ def main(target):
         target = 'http://' + target
 
     harvester = EmailHarvester(target)
-    console.print(f"[cyan][*] Starting email harvesting on {target}...[/cyan]")
+    console.print(f"[cyan][I] Starting email harvesting on {target}...[/cyan]")
     harvester.crawl()
     harvester.display_results()
 
@@ -122,11 +122,11 @@ if __name__ == "__main__":
             main(target)
             sys.exit(0)
         except KeyboardInterrupt:
-            console.print("\n[red][!] Script interrupted by user.[/red]")
+            console.print("\n[red][E] Script interrupted by user.[/red]")
             sys.exit(0)
         except Exception as e:
-            console.print(f"[red][!] An unexpected error occurred: {e}[/red]")
+            console.print(f"[red][E] An unexpected error occurred: {e}[/red]")
             sys.exit(1)
     else:
-        console.print("[red][!] No target provided. Please pass a domain or URL.[/red]")
+        console.print("[red][E] No target provided. Please pass a domain or URL.[/red]")
         sys.exit(1)

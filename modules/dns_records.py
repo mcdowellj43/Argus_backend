@@ -29,15 +29,15 @@ def get_dns_records(domain):
                 answers = dns.resolver.resolve(domain, record_type)
                 records[record_type] = [str(rdata) for rdata in answers]
             except dns.resolver.NoAnswer:
-                console.print(Fore.WHITE + f"[!] No {record_type} records found for {domain}.")
+                console.print(Fore.WHITE + f"[I] No {record_type} records found for {domain}.")
             except dns.resolver.NXDOMAIN:
-                console.print(Fore.RED + f"[!] Domain {domain} does not exist.")
+                console.print(Fore.YELLOW + f"[I] Domain {domain} does not exist.")
                 return None
             except dns.exception.DNSException as e:
-                console.print(Fore.RED + f"[!] Error retrieving {record_type} records: {e}")
+                console.print(Fore.RED + f"[E] Error retrieving {record_type} records: {e}")
         return records
     except dns.exception.DNSException as e:
-        console.print(Fore.RED + f"[!] Error retrieving DNS records for {domain}: {e}")
+        console.print(Fore.RED + f"[E] Error retrieving DNS records for {domain}: {e}")
         return None
 
 def display_dns_records(records):
@@ -51,7 +51,7 @@ def display_dns_records(records):
 
         console.print(table)
     else:
-        console.print(Fore.RED + "[!] No DNS records to display.")
+        console.print(Fore.YELLOW + "[I] No DNS records to display.")
 
 def main(target):
     banner()
@@ -60,20 +60,20 @@ def main(target):
     domain = clean_domain_input(target)
 
     if not validate_domain(domain):
-        console.print(Fore.RED + "[!] Invalid domain format. Please check the domain and try again.")
+        console.print(Fore.RED + "[E] Invalid domain format. Please check the domain and try again.")
         return
 
-    console.print(Fore.WHITE + f"[*] Fetching DNS records for: {domain}")
+    console.print(Fore.WHITE + f"[I] Fetching DNS records for: {domain}")
     dns_records = get_dns_records(domain)
 
     if dns_records:
         display_dns_records(dns_records)
         num_record_types = len(dns_records)
-        console.print(Fore.GREEN + f"[SUCCESS] Found {num_record_types} types of DNS records for {domain}.")
+        console.print(Fore.GREEN + f"[I] Found {num_record_types} types of DNS records for {domain}.")
     else:
         # This handles cases where dns_records is None (e.g., domain doesn't exist)
         # or dns_records is an empty dictionary (e.g. no records found after checking all types)
-        console.print(Fore.YELLOW + f"[INFO] No DNS records found for {domain}.")
+        console.print(Fore.YELLOW + f"[I] No DNS records found for {domain}.")
 
 
 if __name__ == "__main__":
@@ -81,5 +81,5 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        console.print(Fore.RED + "[!] No target provided. Please pass a domain.")
+        console.print(Fore.RED + "[E] No target provided. Please pass a domain.")
         sys.exit(1)

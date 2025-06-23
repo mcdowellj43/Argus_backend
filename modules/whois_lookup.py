@@ -23,28 +23,28 @@ def banner():
 def perform_whois_lookup(domain):
     """Perform WHOIS lookup for the given domain using subprocess."""
     try:
-        console.print(f"{Fore.CYAN}[*] Performing WHOIS lookup for domain: {domain}{Style.RESET_ALL}")
+        console.print(f"{Fore.CYAN}[I] Performing WHOIS lookup for domain: {domain}{Style.RESET_ALL}")
         result = subprocess.run(["whois", domain], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=30)
         
         if result.returncode != 0:
-            console.print(f"{Fore.RED}[!] Failed to perform WHOIS lookup for {domain}: {result.stderr.strip()}{Style.RESET_ALL}")
+            console.print(f"{Fore.RED}[E] Failed to perform WHOIS lookup for {domain}: {result.stderr.strip()}{Style.RESET_ALL}")
             return None
         
         return result.stdout.strip()
     except subprocess.TimeoutExpired:
-        console.print(f"{Fore.RED}[!] WHOIS lookup timed out for {domain}{Style.RESET_ALL}")
+        console.print(f"{Fore.RED}[E] WHOIS lookup timed out for {domain}{Style.RESET_ALL}")
         return None
     except FileNotFoundError:
-        console.print(f"{Fore.RED}[!] 'whois' command not found. Please ensure it is installed on your system.{Style.RESET_ALL}")
+        console.print(f"{Fore.RED}[E] 'whois' command not found. Please ensure it is installed on your system.{Style.RESET_ALL}")
         return None
     except Exception as e:
-        console.print(f"{Fore.RED}[!] An unexpected error occurred: {e}{Style.RESET_ALL}")
+        console.print(f"{Fore.RED}[E] An unexpected error occurred: {e}{Style.RESET_ALL}")
         return None
 
 def display_whois_info(whois_data):
     """Display the WHOIS information in a table format."""
     if not whois_data:
-        console.print(f"{Fore.YELLOW}[!] No WHOIS information found.{Style.RESET_ALL}")
+        console.print(f"{Fore.YELLOW}[I] No WHOIS information found.{Style.RESET_ALL}")
         return
 
     table = Table(show_header=True, header_style="bold white")
@@ -67,10 +67,10 @@ def whois_lookup(target):
     display_whois_info(whois_data)
 
     if whois_data:
-        console.print(f"{Fore.GREEN}[SUCCESS] Retrieved and displayed WHOIS information for {domain}.{Style.RESET_ALL}")
+        console.print(f"{Fore.GREEN}[I] Retrieved and displayed WHOIS information for {domain}.{Style.RESET_ALL}")
     else:
         # This handles cases where whois_data is None (error in lookup) or empty string (lookup successful but no data)
-        console.print(f"{Fore.YELLOW}[INFO] No WHOIS information found, or an error occurred during lookup for {domain}.{Style.RESET_ALL}")
+        console.print(f"{Fore.YELLOW}[I] No WHOIS information found, or an error occurred during lookup for {domain}.{Style.RESET_ALL}")
 
 def main(target):
     whois_lookup(target)
@@ -82,11 +82,11 @@ if __name__ == "__main__":
             main(target)
             sys.exit(0)  # Explicitly exit with code 0
         except KeyboardInterrupt:
-            console.print(f"\n{Fore.RED}[!] Script interrupted by user.{Style.RESET_ALL}")
+            console.print(f"\n{Fore.RED}[E] Script interrupted by user.{Style.RESET_ALL}")
             sys.exit(0)  # Exit with code 0 to prevent errors in argus.py
         except Exception as e:
-            console.print(f"{Fore.RED}[!] An unexpected error occurred: {e}{Style.RESET_ALL}")
+            console.print(f"{Fore.RED}[E] An unexpected error occurred: {e}{Style.RESET_ALL}")
             sys.exit(1)  # Exit with code 1 to indicate an error
     else:
-        console.print(f"{Fore.RED}[!] No target provided. Please pass a domain or IP address.{Style.RESET_ALL}")
+        console.print(f"{Fore.RED}[E] No target provided. Please pass a domain or IP address.{Style.RESET_ALL}")
         sys.exit(1)
