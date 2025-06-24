@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Shodan Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 Note: This module requires a Shodan API key for full functionality
 """
 
@@ -11,16 +12,83 @@ import socket
 from datetime import datetime
 import json
 
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import DEFAULT_TIMEOUT
 
-# Try to import API keys
 try:
-    from config.settings import API_KEYS
-    SHODAN_API_KEY = API_KEYS.get("SHODAN_API_KEY")
+    from config.settings import DEFAULT_TIMEOUT, API_KEYS
+    SHODAN_API_KEY = API_KEYS.get("SHODAN_API_KEY") if hasattr(API_KEYS, 'get') else None
 except (ImportError, AttributeError):
+    DEFAULT_TIMEOUT = 30
     SHODAN_API_KEY = None
+
+def assess_shodan_security_risk(shodan_data, fallback_data=None):
+    """Assess security risk based on Shodan findings"""
+    findings = []
+    severity = "I"
+    
+    # Use Shodan data if available, otherwise fallback data
+    data = shodan_data if shodan_data and not shodan_data.get("error") else fallback_data
+    
+    if not data:
+        return findings, severity
+    
+    ports = data.get("ports", [])
+    services = data.get("services", [])
+    vulns = data.get("vulnerabilities", [])
+    
+    # Critical vulnerabilities found
+    if vulns:
+        severity = "C"
+        findings.append(f"CRITICAL: {len(vulns)} known vulnerabilities detected")
+        for vuln in vulns[:3]:  # Show first 3
+            findings.append(f"Vulnerability: {vuln}")
+    
+    # High-risk ports analysis
+    critical_ports = {21: "FTP", 23: "Telnet", 135: "RPC", 139: "NetBIOS", 445: "SMB", 3389: "RDP"}
+    high_risk_ports = {22: "SSH", 25: "SMTP", 53: "DNS", 110: "POP3", 143: "IMAP"}
+    
+    critical_found = [port for port in ports if port in critical_ports]
+    high_risk_found = [port for port in ports if port in high_risk_ports]
+    
+    if critical_found and severity not in ["C"]:
+        severity = "H"
+        findings.append(f"High-risk ports exposed: {', '.join(f'{p} ({critical_ports[p]})' for p in critical_found)}")
+    
+    if high_risk_found and severity not in ["C", "H"]:
+        severity = "W"
+        findings.append(f"Network services exposed: {', '.join(f'{p} ({high_risk_ports[p]})' for p in high_risk_found)}")
+    
+    # Service version analysis
+    outdated_services = []
+    for service in services:
+        service_name = service.get('service', 'unknown').lower()
+        version = service.get('version', '')
+        
+        # Basic checks for potentially outdated services
+        if version and any(old_ver in version.lower() for old_ver in ['1.0', '2.0', '2004', '2008', '2012']):
+            outdated_services.append(f"Port {service.get('port')}: {service_name} {version}")
+    
+    if outdated_services:
+        if severity not in ["C", "H"]:
+            severity = "W"
+        findings.append(f"Potentially outdated services detected: {len(outdated_services)} services")
+    
+    # Exposure assessment
+    if len(ports) > 10:
+        findings.append(f"High exposure: {len(ports)} open ports detected")
+        if severity == "I":
+            severity = "W"
+    elif len(ports) > 5:
+        findings.append(f"Moderate exposure: {len(ports)} open ports detected")
+    
+    return findings, severity
 
 def resolve_hostname(target):
     """Resolve hostname to IP address"""
@@ -127,7 +195,7 @@ def fallback_port_scan(ip_address):
     common_ports = [21, 22, 23, 25, 53, 80, 110, 143, 443, 993, 995, 8080, 8443, 3389, 5432, 3306]
     open_ports = []
     
-    print("🔄 Performing basic port scan (Shodan API unavailable)...")
+    print("[I] Performing basic port scan (Shodan API unavailable)...")
     
     for port in common_ports:
         try:
@@ -176,7 +244,7 @@ def perform_shodan_reconnaissance(target):
     
     if SHODAN_API_KEY:
         # Perform Shodan host lookup
-        print(f"🔍 Querying Shodan for {ip_address}...")
+        print(f"[I] Querying Shodan for {ip_address}...")
         host_result = shodan_host_lookup(ip_address)
         
         if host_result["error"]:
@@ -186,34 +254,34 @@ def perform_shodan_reconnaissance(target):
         
         # Search for related hosts/services
         if hostname != ip_address:
-            print(f"🔍 Searching for related hosts...")
+            print(f"[I] Searching for related hosts...")
             search_result = shodan_search_query(f'hostname:"{hostname}"', limit=5)
             results["search_results"] = search_result
     else:
         # Use fallback method
-        print("🔑 Shodan API key not available, using fallback scan...")
+        print("[W] Shodan API key not available, using fallback scan...")
         results["fallback_data"] = fallback_port_scan(ip_address)
     
     return results
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 Shodan Reconnaissance - {target}")
+    print(f"[I] Shodan Reconnaissance - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         # Check API availability
         if not SHODAN_API_KEY:
-            print("🔑 LIMITED: Shodan API key not configured")
-            print("ℹ️  FALLBACK: Using basic reconnaissance methods")
+            print("[W] LIMITED: Shodan API key not configured")
+            print("[I] FALLBACK: Using basic reconnaissance methods")
         
-        print(f"🎯 Target: {target}")
+        print(f"[I] Target: {target}")
         print()
         
         # Perform reconnaissance
@@ -222,8 +290,8 @@ def main(target):
         
         # Check for resolution errors
         if results.get("error"):
-            print(f"❌ ERROR: {results['error']}")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print(f"[E] ERROR: {results['error']}")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": "FAILED", "error": results["error"], "execution_time": execution_time}
         
         # Analyze results
@@ -232,116 +300,161 @@ def main(target):
         search_results = results.get("search_results", {})
         
         if shodan_data and not shodan_data.get("error"):
-            # Shodan data available
+            # Shodan data available - perform security assessment
+            security_findings, severity = assess_shodan_security_risk(shodan_data)
+            
             ports = shodan_data.get("ports", [])
             services = shodan_data.get("services", [])
             vulns = shodan_data.get("vulnerabilities", [])
             
-            print(f"✅ SUCCESS: Found Shodan data for {results['ip_address']}")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
+            print(f"[{severity}] SHODAN DATA: Found comprehensive intelligence for {results['ip_address']}")
+            
+            # Display security analysis
+            if security_findings:
+                print(f"[{severity}] Security Risk Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
             
             # Display basic info
-            print("🏢 Host Information:")
-            print(f"   • IP Address: {shodan_data.get('ip')}")
+            print("[I] Host Information:")
+            print(f"  [I] IP Address: {shodan_data.get('ip')}")
             if shodan_data.get('organization'):
-                print(f"   • Organization: {shodan_data.get('organization')}")
+                print(f"  [I] Organization: {shodan_data.get('organization')}")
             if shodan_data.get('isp'):
-                print(f"   • ISP: {shodan_data.get('isp')}")
+                print(f"  [I] ISP: {shodan_data.get('isp')}")
             if shodan_data.get('country'):
                 location = shodan_data.get('city', '') + ', ' + shodan_data.get('country', '')
-                print(f"   • Location: {location.strip(', ')}")
+                print(f"  [I] Location: {location.strip(', ')}")
             print()
+            
+            # Display vulnerabilities (critical first)
+            if vulns:
+                print(f"[C] VULNERABILITIES ({len(vulns)}):")
+                for vuln in vulns[:5]:  # Show first 5
+                    print(f"  [C] {vuln}")
+                if len(vulns) > 5:
+                    print(f"  [C] ... and {len(vulns) - 5} more vulnerabilities")
+                print()
             
             # Display ports and services
             if ports:
-                print(f"🔓 Open Ports ({len(ports)}):")
-                for port in sorted(ports)[:10]:  # Show first 10
-                    print(f"   • {port}")
+                print(f"[W] OPEN PORTS ({len(ports)}):")
+                # Group by risk level
+                critical_ports = {21: "FTP", 23: "Telnet", 135: "RPC", 139: "NetBIOS", 445: "SMB", 3389: "RDP"}
+                high_risk_ports = {22: "SSH", 25: "SMTP", 53: "DNS"}
+                
+                critical_found = [p for p in ports if p in critical_ports]
+                high_risk_found = [p for p in ports if p in high_risk_ports]
+                other_ports = [p for p in ports if p not in critical_ports and p not in high_risk_ports]
+                
+                if critical_found:
+                    for port in critical_found:
+                        print(f"  [C] {port} - {critical_ports[port]} (High Risk)")
+                
+                if high_risk_found:
+                    for port in high_risk_found:
+                        print(f"  [H] {port} - {high_risk_ports[port]}")
+                
+                if other_ports:
+                    for port in other_ports[:5]:  # Show first 5 others
+                        print(f"  [I] {port}")
+                    if len(other_ports) > 5:
+                        print(f"  [I] ... and {len(other_ports) - 5} more ports")
                 print()
             
             if services:
-                print(f"🖥️ Services ({len(services)}):")
+                print(f"[I] SERVICES ({len(services)}):")
                 for service in services[:5]:  # Show first 5
                     service_name = service.get('service', 'unknown')
                     version = service.get('version', '')
                     version_str = f" {version}" if version else ""
-                    print(f"   • Port {service.get('port')}: {service_name}{version_str}")
-                print()
-            
-            # Display vulnerabilities
-            if vulns:
-                print(f"⚠️ Vulnerabilities ({len(vulns)}):")
-                for vuln in vulns[:5]:  # Show first 5
-                    print(f"   • {vuln}")
+                    print(f"  [I] Port {service.get('port')}: {service_name}{version_str}")
+                if len(services) > 5:
+                    print(f"  [I] ... and {len(services) - 5} more services")
                 print()
             
             # Display hostnames
             hostnames = shodan_data.get('hostnames', [])
             if hostnames:
-                print(f"🌐 Hostnames ({len(hostnames)}):")
+                print(f"[I] HOSTNAMES ({len(hostnames)}):")
                 for hostname in hostnames[:5]:
-                    print(f"   • {hostname}")
+                    print(f"  [I] {hostname}")
+                if len(hostnames) > 5:
+                    print(f"  [I] ... and {len(hostnames) - 5} more hostnames")
                 print()
+            
+            print(f"[I] Execution time: {execution_time:.2f}s")
             
             return {
                 "status": "SUCCESS",
                 "data": results,
+                "security_findings": security_findings,
+                "severity": severity,
                 "count": len(ports) + len(services) + len(vulns),
-                "execution_time": execution_time,
-                "severity": "HIGH" if vulns else "MEDIUM" if services else "LOW"
+                "execution_time": execution_time
             }
         
         elif fallback_data and fallback_data.get("ports"):
             # Fallback data available
+            security_findings, severity = assess_shodan_security_risk(None, fallback_data)
+            
             ports = fallback_data.get("ports", [])
             services = fallback_data.get("services", [])
             
-            print(f"✅ BASIC SCAN: Found {len(ports)} open ports on {results['ip_address']}")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
+            print(f"[{severity}] BASIC SCAN: Found {len(ports)} open ports on {results['ip_address']}")
             
-            print("🔓 Open Ports (Basic Scan):")
+            if security_findings:
+                print(f"[{severity}] Security Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
+            
+            print("[I] Open Ports (Basic Scan):")
             for service in services:
-                print(f"   • Port {service['port']}: {service['service']}")
+                port_risk = "C" if service['port'] in [21, 23, 135, 139, 445, 3389] else "I"
+                print(f"  [{port_risk}] Port {service['port']}: {service['service']}")
             print()
-            print("ℹ️  NOTE: Limited data - Shodan API provides comprehensive information")
+            print("[I] NOTE: Limited data - Shodan API provides comprehensive vulnerability intelligence")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             
             return {
                 "status": "LIMITED",
                 "data": results,
+                "security_findings": security_findings,
+                "severity": severity,
                 "count": len(ports),
                 "execution_time": execution_time,
-                "note": "Basic scan only - API key required for full data"
+                "note": "Basic scan only - API key required for full intelligence"
             }
         
         elif shodan_data.get("error"):
             # Shodan API error
             error_msg = shodan_data["error"]
             if "API key" in error_msg:
-                print("🔑 API ERROR: Invalid or missing Shodan API key")
-                print("ℹ️  SETUP: Configure SHODAN_API_KEY in config/settings.py")
+                print("[E] API ERROR: Invalid or missing Shodan API key")
+                print("[I] SETUP: Configure SHODAN_API_KEY in config/settings.py")
                 status = "API_ERROR"
             elif "rate limit" in error_msg.lower():
-                print("⏰ RATE LIMIT: Shodan API rate limit exceeded")
+                print("[W] RATE LIMIT: Shodan API rate limit exceeded")
                 status = "RATE_LIMITED"
             elif "No information" in error_msg:
-                print("ℹ️  NO DATA: No Shodan data available for this target")
+                print("[I] NO DATA: No Shodan intelligence available for this target")
                 status = "NO_DATA"
             else:
-                print(f"❌ ERROR: {error_msg}")
+                print(f"[E] ERROR: {error_msg}")
                 status = "ERROR"
             
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": status, "error": error_msg, "execution_time": execution_time}
         
         else:
-            print("ℹ️  NO DATA: No reconnaissance data found")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print("[I] NO DATA: No reconnaissance intelligence found")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": "NO_DATA", "execution_time": execution_time}
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Reconnaissance stopped by user")
+        print("[I] INTERRUPTED: Reconnaissance stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -349,16 +462,16 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during reconnaissance")
+            print("[T] TIMEOUT: Request timeout during reconnaissance")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error during API requests")
+            print("[E] ERROR: Connection error during API requests")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -366,9 +479,9 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python shodan.py <ip_or_domain>")
         print("Example: python shodan.py example.com")
         print()
-        print("Note: Requires Shodan API key for comprehensive data")
+        print("Note: Requires Shodan API key for comprehensive vulnerability intelligence")
         sys.exit(1)

@@ -1,0 +1,29 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - decian.com
+==================================================
+[I] Target: decian.com
+
+[I] Testing 18 subdomains for takeover vulnerabilities...
+[W] WARNING: Found 17 potentially vulnerable subdomains
+[W] test.decian.com - Potential vulnerability: not found
+[W] dev.decian.com - Potential vulnerability: not found
+[W] dashboard.decian.com - Potential vulnerability: not found
+[W] api.decian.com - Potential vulnerability: not found
+[W] staging.decian.com - Potential vulnerability: not found
+[W] admin.decian.com - Potential vulnerability: not found
+[W] app.decian.com - Potential vulnerability: not found
+[W] blog.decian.com - Potential vulnerability: not found
+[W] portal.decian.com - Potential vulnerability: not found
+[W] support.decian.com - Potential vulnerability: not found
+[W] cdn.decian.com - Potential vulnerability: not found
+[W] wiki.decian.com - Potential vulnerability: not found
+[W] docs.decian.com - Potential vulnerability: not found
+[W] static.decian.com - Potential vulnerability: not found
+[W] help.decian.com - Potential vulnerability: not found
+[W] assets.decian.com - Potential vulnerability: not found
+[W] files.decian.com - Potential vulnerability: not found
+[S] 1 subdomains appear secure
+[I] 18 unverified HTTPS requests made during scan
+[I] Execution time: 1.18s
+
+

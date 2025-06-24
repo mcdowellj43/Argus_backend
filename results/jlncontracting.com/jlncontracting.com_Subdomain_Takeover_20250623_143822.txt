@@ -1,0 +1,12 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - jlncontracting.com
+==================================================
+[I] Target: jlncontracting.com
+
+[I] Testing 18 subdomains for takeover vulnerabilities...
+[I] Scan completed: 0 critical, 0 warnings, 2 secure, 0 errors
+[S] 2 subdomains appear secure
+[I] 2 unverified HTTPS requests made during scan
+[I] Execution time: 20.28s
+
+

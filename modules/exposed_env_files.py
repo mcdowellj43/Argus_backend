@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Exposed Environment Files Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 """
 
 import os
@@ -11,9 +12,20 @@ from datetime import datetime
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+
+try:
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+except ImportError:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
 
 def get_env_file_patterns():
     """Get list of environment files to check"""
@@ -62,6 +74,44 @@ def get_env_file_patterns():
         'config.json'
     ]
 
+def assess_file_security_risk(filename, analysis):
+    """Assess security risk level of exposed file"""
+    high_risk_files = [
+        '.env', '.env.production', '.env.local', 'config.php', 'wp-config.php',
+        'settings.py', 'secrets.json', 'credentials.json', 'keys.json'
+    ]
+    
+    medium_risk_files = [
+        '.env.development', '.env.staging', '.env.test', 'config.yml', 
+        'application.yml', 'database.json'
+    ]
+    
+    # Base risk from filename
+    if filename in high_risk_files:
+        base_risk = "H"
+    elif filename in medium_risk_files:
+        base_risk = "W"
+    else:
+        base_risk = "I"
+    
+    # Elevate risk based on content analysis
+    content_risk = analysis.get('risk_level', 'LOW')
+    sensitive_count = len(analysis.get('sensitive_items', []))
+    
+    # Critical conditions
+    if content_risk == 'CRITICAL' or sensitive_count >= 10:
+        return "C"
+    
+    # High risk conditions
+    if content_risk == 'HIGH' or sensitive_count >= 5 or base_risk == "H":
+        return "H"
+    
+    # Warning conditions
+    if content_risk == 'MEDIUM' or sensitive_count >= 1 or base_risk == "W":
+        return "W"
+    
+    return "I"
+
 def analyze_file_content(content, filename):
     """Analyze file content for sensitive information"""
     if not content:
@@ -91,6 +141,10 @@ def analyze_file_content(content, filename):
             r'encryption[_-]?key[_-]?=[\s]*["\']?([A-Za-z0-9/+=]{32,})["\']?',
             r'cipher[_-]?key[_-]?=[\s]*["\']?([A-Za-z0-9/+=]{32,})["\']?',
             r'jwt[_-]?secret[_-]?=[\s]*["\']?([A-Za-z0-9/+=]{32,})["\']?'
+        ],
+        'Payment Credentials': [
+            r'stripe[_-]?secret[_-]?=[\s]*["\']?([A-Za-z0-9_-]{32,})["\']?',
+            r'paypal[_-]?secret[_-]?=[\s]*["\']?([A-Za-z0-9_-]{32,})["\']?'
         ]
     }
     
@@ -148,7 +202,8 @@ def check_env_file(base_url, filename, session):
                 "file_size": len(content),
                 "content_type": response.headers.get('content-type', 'unknown'),
                 "analysis": analysis,
-                "accessible": True
+                "accessible": True,
+                "security_risk": assess_file_security_risk(filename, analysis)
             }
         elif response.status_code in [403, 401]:
             # File exists but access denied
@@ -185,26 +240,26 @@ def scan_exposed_files(target, max_workers=10):
                 if result:
                     found_files.append(result)
     
-    return sorted(found_files, key=lambda x: x.get('analysis', {}).get('risk_level', 'LOW'), reverse=True)
+    return sorted(found_files, key=lambda x: x.get('security_risk', 'I'), reverse=True)
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 Exposed Environment Files Check - {target}")
+    print(f"[I] Exposed Environment Files Check - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         # Ensure target has protocol
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target
         
-        print(f"🎯 Target: {target}")
-        print("🔍 Scanning for exposed environment files...")
+        print(f"[I] Target: {target}")
+        print("[I] Scanning for exposed environment files...")
         print()
         
         # Scan for exposed files
@@ -217,58 +272,75 @@ def main(target):
             protected_files = [f for f in found_files if not f.get('accessible', False)]
             
             if accessible_files:
-                print(f"⚠️  CRITICAL: Found {len(accessible_files)} exposed environment files")
-                print(f"🔒 Protected: {len(protected_files)} files exist but are protected")
-                print(f"⏱️  Execution time: {execution_time:.2f}s")
+                # Determine overall severity
+                risk_levels = [f.get('security_risk', 'I') for f in accessible_files]
+                if 'C' in risk_levels:
+                    overall_severity = "C"
+                elif 'H' in risk_levels:
+                    overall_severity = "H"
+                elif 'W' in risk_levels:
+                    overall_severity = "W"
+                else:
+                    overall_severity = "I"
+                
+                print(f"[{overall_severity}] EXPOSED FILES: Found {len(accessible_files)} accessible environment files")
+                if protected_files:
+                    print(f"[I] Protected: {len(protected_files)} files exist but are access-denied")
+                
+                # Security analysis
+                total_secrets = sum(len(f.get('analysis', {}).get('sensitive_items', [])) for f in accessible_files)
+                if total_secrets > 0:
+                    print(f"[C] Security Impact: {total_secrets} sensitive credentials exposed")
                 print()
                 
-                # Display accessible files by risk level
-                risk_groups = {}
+                # Group files by security risk
+                risk_groups = {"C": [], "H": [], "W": [], "I": []}
                 for file_info in accessible_files:
-                    risk = file_info.get('analysis', {}).get('risk_level', 'LOW')
-                    if risk not in risk_groups:
-                        risk_groups[risk] = []
+                    risk = file_info.get('security_risk', 'I')
                     risk_groups[risk].append(file_info)
                 
                 # Display by risk level (highest first)
-                for risk_level in ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']:
-                    if risk_level in risk_groups:
+                for risk_level in ['C', 'H', 'W', 'I']:
+                    if risk_groups[risk_level]:
                         files = risk_groups[risk_level]
-                        risk_emoji = {
-                            'CRITICAL': '🚨',
-                            'HIGH': '⚠️',
-                            'MEDIUM': '⚡',
-                            'LOW': 'ℹ️'
-                        }[risk_level]
+                        risk_names = {'C': 'CRITICAL', 'H': 'HIGH RISK', 'W': 'WARNING', 'I': 'INFORMATIONAL'}
                         
-                        print(f"{risk_emoji} {risk_level} Risk Files ({len(files)}):")
+                        print(f"[{risk_level}] {risk_names[risk_level]} FILES ({len(files)}):")
                         for file_info in files:
                             analysis = file_info.get('analysis', {})
                             sensitive_count = len(analysis.get('sensitive_items', []))
                             
-                            print(f"   • {file_info['filename']} ({file_info['file_size']} bytes)")
+                            print(f"  [{risk_level}] {file_info['filename']} ({file_info['file_size']} bytes)")
+                            print(f"    - URL: {file_info['url']}")
+                            
                             if sensitive_count > 0:
-                                print(f"     └─ {sensitive_count} sensitive items detected")
+                                print(f"    - Secrets: {sensitive_count} sensitive items detected")
                                 
-                                # Show first few sensitive items
+                                # Show critical sensitive items
                                 for item in analysis.get('sensitive_items', [])[:3]:
-                                    print(f"        - {item['category']}: {item['masked_value']}")
+                                    print(f"      * {item['category']}: {item['masked_value']} (line {item['line_number']})")
+                            
+                            if sensitive_count > 3:
+                                print(f"      * ... and {sensitive_count - 3} more items")
                         print()
+                
+                print(f"[I] Execution time: {execution_time:.2f}s")
                 
                 return {
                     "status": "SUCCESS",
                     "data": {
                         "accessible_files": accessible_files,
                         "protected_files": protected_files,
-                        "risk_summary": {level: len(files) for level, files in risk_groups.items()}
+                        "risk_summary": {level: len(files) for level, files in risk_groups.items() if files}
                     },
+                    "severity": overall_severity,
                     "count": len(accessible_files),
-                    "execution_time": execution_time,
-                    "severity": "CRITICAL" if any(f.get('analysis', {}).get('risk_level') == 'CRITICAL' for f in accessible_files) else "HIGH"
+                    "secrets_count": total_secrets,
+                    "execution_time": execution_time
                 }
             else:
-                print(f"🔒 PROTECTED: Found {len(protected_files)} files but they are properly protected")
-                print(f"⏱️  Execution time: {execution_time:.2f}s")
+                print(f"[S] PROTECTED: Found {len(protected_files)} files but they are properly protected")
+                print(f"[I] Execution time: {execution_time:.2f}s")
                 return {
                     "status": "PROTECTED",
                     "data": {"protected_files": protected_files},
@@ -276,12 +348,12 @@ def main(target):
                     "execution_time": execution_time
                 }
         else:
-            print("✅ SECURE: No exposed environment files found")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print("[S] SECURE: No exposed environment files found")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": "NO_DATA", "execution_time": execution_time}
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Scan stopped by user")
+        print("[I] INTERRUPTED: Scan stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -289,16 +361,16 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during file scanning")
+            print("[T] TIMEOUT: Request timeout during file scanning")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error - target may be unreachable")
+            print("[E] ERROR: Connection error - target may be unreachable")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -306,7 +378,7 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python exposed_env_files.py <url_or_domain>")
         print("Example: python exposed_env_files.py example.com")
         sys.exit(1)

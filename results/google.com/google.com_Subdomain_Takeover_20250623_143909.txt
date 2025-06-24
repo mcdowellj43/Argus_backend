@@ -1,0 +1,19 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - google.com
+==================================================
+[I] Target: google.com
+
+[I] Testing 18 subdomains for takeover vulnerabilities...
+[I] Scan completed: 0 critical, 6 warnings, 2 secure, 0 errors
+[W] WARNING: Found 6 potentially vulnerable subdomains
+[W] www.google.com - Potential vulnerability: unavailable
+[W] api.google.com - Potential vulnerability: not found
+[W] support.google.com - Potential vulnerability: not found
+[W] docs.google.com - Potential vulnerability: unavailable
+[W] help.google.com - Potential vulnerability: not found
+[W] admin.google.com - Potential vulnerability: unavailable
+[S] 2 subdomains appear secure
+[I] 20 unverified HTTPS requests made during scan
+[I] Execution time: 1.88s
+
+

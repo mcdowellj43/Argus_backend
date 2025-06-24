@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Technology Stack Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 """
 
 import os
@@ -10,9 +11,114 @@ import re
 from datetime import datetime
 from urllib.parse import urljoin
 
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+
+try:
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+except ImportError:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
+
+def assess_technology_security_risk(technologies):
+    """Assess security risk of detected technologies"""
+    findings = []
+    severity = "I"
+    
+    if not technologies:
+        return findings, severity
+    
+    # High-risk/outdated technologies
+    high_risk_tech = {
+        'PHP': 'Potential version vulnerabilities if outdated',
+        'ASP': 'Legacy technology with known security issues',
+        'jQuery': 'Often outdated versions with XSS vulnerabilities',
+        'WordPress': 'Common target for attacks, requires updates',
+        'Joomla': 'Frequent security vulnerabilities',
+        'Magento': 'Complex platform with security challenges'
+    }
+    
+    # Positive security indicators
+    security_positives = [
+        'Strict Transport Security', 'Content Security Policy',
+        'X Frame Options', 'X Content Type Options', 'Security.txt'
+    ]
+    
+    # Framework security considerations
+    framework_risks = {
+        'React': 'Generally secure but depends on implementation',
+        'Vue.js': 'Good security model with proper usage',
+        'Angular': 'Built-in XSS protection',
+        'Express.js': 'Requires careful configuration'
+    }
+    
+    high_risk_found = []
+    security_headers_found = []
+    outdated_tech_found = []
+    
+    # Check all technologies for risks
+    for category, tech_list in technologies.items():
+        for tech in tech_list:
+            if tech in high_risk_tech:
+                high_risk_found.append(tech)
+                
+            if tech in security_positives:
+                security_headers_found.append(tech)
+                
+            # Check for potentially outdated technologies
+            if tech in ['ASP', 'jQuery'] or 'old' in tech.lower():
+                outdated_tech_found.append(tech)
+    
+    # Determine severity based on findings
+    if outdated_tech_found or len(high_risk_found) >= 3:
+        severity = "H"
+        findings.append(f"High-risk technologies detected: {len(high_risk_found + outdated_tech_found)} concerning technologies")
+        
+    elif high_risk_found:
+        severity = "W"
+        findings.append(f"Moderate security concerns: {len(high_risk_found)} technologies require attention")
+    
+    # Specific technology warnings
+    for tech in high_risk_found[:3]:  # Show first 3
+        if tech in high_risk_tech:
+            findings.append(f"Security concern: {tech} - {high_risk_tech[tech]}")
+    
+    # Security header assessment
+    if len(security_headers_found) >= 3:
+        findings.append(f"Good security posture: {len(security_headers_found)} security headers implemented")
+    elif len(security_headers_found) >= 1:
+        findings.append(f"Basic security measures: {len(security_headers_found)} security headers found")
+    else:
+        if severity == "I":
+            severity = "W"
+        findings.append("Missing security headers: No security headers detected")
+    
+    # Technology stack complexity assessment
+    total_technologies = sum(len(tech_list) for tech_list in technologies.values())
+    if total_technologies >= 15:
+        findings.append(f"Complex technology stack: {total_technologies} technologies detected (increased attack surface)")
+    
+    return findings, severity
+
+def get_technology_risk_level(tech_name, category):
+    """Determine risk level for individual technologies"""
+    high_risk_technologies = ['PHP', 'ASP', 'WordPress', 'Joomla', 'Magento']
+    medium_risk_technologies = ['jQuery', 'Express.js', 'IIS']
+    
+    if tech_name in high_risk_technologies:
+        return "H"
+    elif tech_name in medium_risk_technologies:
+        return "W"
+    elif category == 'security':
+        return "S"  # Security features are positive
+    else:
+        return "I"
 
 def detect_from_headers(headers):
     """Detect technologies from HTTP headers"""
@@ -47,12 +153,16 @@ def detect_from_headers(headers):
     
     # Security headers
     security_headers = [
-        'strict-transport-security', 'content-security-policy',
-        'x-frame-options', 'x-content-type-options'
+        ('strict-transport-security', 'Strict Transport Security'),
+        ('content-security-policy', 'Content Security Policy'),
+        ('x-frame-options', 'X Frame Options'),
+        ('x-content-type-options', 'X Content Type Options'),
+        ('referrer-policy', 'Referrer Policy'),
+        ('permissions-policy', 'Permissions Policy')
     ]
-    for header in security_headers:
+    for header, display_name in security_headers:
         if header in headers:
-            technologies['security'].append(header.replace('-', ' ').title())
+            technologies['security'].append(display_name)
     
     return technologies
 
@@ -70,11 +180,13 @@ def detect_from_content(content):
     
     # CMS Detection
     cms_patterns = {
-        'WordPress': ['/wp-content/', '/wp-includes/', 'wp-json'],
-        'Joomla': ['/components/', '/modules/', 'joomla'],
+        'WordPress': ['/wp-content/', '/wp-includes/', 'wp-json', 'wp-admin'],
+        'Joomla': ['/components/', '/modules/', 'joomla', '/administrator/'],
         'Drupal': ['/sites/default/', '/modules/', 'drupal'],
         'Magento': ['/skin/frontend/', 'magento', 'mage/cookies'],
-        'Shopify': ['shopify', 'shop.js', 'shopify-features']
+        'Shopify': ['shopify', 'shop.js', 'shopify-features'],
+        'Wix': ['wix.com', 'wixstatic'],
+        'Squarespace': ['squarespace', 'squarespace.com']
     }
     
     for cms, patterns in cms_patterns.items():
@@ -88,22 +200,26 @@ def detect_from_content(content):
         'Angular': ['angular', 'ng-version', '@angular'],
         'jQuery': ['jquery', '$/', 'jquery-'],
         'Bootstrap': ['bootstrap', 'btn-', 'col-md-'],
-        'Tailwind CSS': ['tailwind', 'tw-', 'tailwindcss']
+        'Tailwind CSS': ['tailwind', 'tw-', 'tailwindcss'],
+        'Foundation': ['foundation', 'zurb'],
+        'Materialize': ['materialize']
     }
     
     for framework, patterns in js_patterns.items():
         if any(pattern in content_lower for pattern in patterns):
-            if framework in ['jQuery', 'Bootstrap', 'Tailwind CSS']:
+            if framework in ['jQuery', 'Bootstrap', 'Tailwind CSS', 'Foundation', 'Materialize']:
                 technologies['libraries'].append(framework)
             else:
                 technologies['frameworks'].append(framework)
     
-    # Analytics
+    # Analytics and Tracking
     analytics_patterns = {
         'Google Analytics': ['google-analytics', 'gtag(', 'ga('],
         'Google Tag Manager': ['googletagmanager', 'gtm.js'],
         'Facebook Pixel': ['facebook.com/pixel', 'fbevents.js'],
-        'Hotjar': ['hotjar', 'hj(']
+        'Hotjar': ['hotjar', 'hj('],
+        'Adobe Analytics': ['adobe analytics', 's_code.js'],
+        'Mixpanel': ['mixpanel']
     }
     
     for analytics, patterns in analytics_patterns.items():
@@ -117,6 +233,8 @@ def detect_from_content(content):
         technologies['languages'].append('ASP')
     if '.jsp' in content_lower:
         technologies['languages'].append('Java')
+    if '.py' in content_lower or 'django' in content_lower:
+        technologies['languages'].append('Python')
     
     return technologies
 
@@ -201,22 +319,22 @@ def detect_technology_stack(target):
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 Technology Stack Detection - {target}")
+    print(f"[I] Technology Stack Detection - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         # Ensure target has protocol
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target
         
-        print(f"🎯 Target: {target}")
-        print("🔍 Detecting technologies...")
+        print(f"[I] Target: {target}")
+        print("[I] Detecting technologies...")
         print()
         
         # Detect technology stack
@@ -228,47 +346,79 @@ def main(target):
             total_count = sum(len(techs) for techs in technologies.values())
             
             if total_count > 0:
-                print(f"✅ SUCCESS: Detected {total_count} technologies")
-                print(f"⏱️  Execution time: {execution_time:.2f}s")
-                print()
+                # Assess security risk
+                security_findings, severity = assess_technology_security_risk(technologies)
                 
-                # Display results by category
-                category_icons = {
-                    'servers': '🖥️',
-                    'frameworks': '🏗️',
-                    'cms': '📝',
-                    'languages': '💻',
-                    'libraries': '📚',
-                    'analytics': '📊',
-                    'security': '🔒'
+                print(f"[{severity}] TECHNOLOGIES DETECTED: {total_count} technologies identified")
+                
+                # Display security analysis
+                if security_findings:
+                    print(f"[{severity}] Security Risk Analysis:")
+                    for finding in security_findings:
+                        print(f"  [{severity}] {finding}")
+                    print()
+                
+                # Display results by category with risk assessment
+                category_names = {
+                    'servers': 'WEB SERVERS',
+                    'frameworks': 'FRAMEWORKS',
+                    'cms': 'CONTENT MANAGEMENT',
+                    'languages': 'PROGRAMMING LANGUAGES',
+                    'libraries': 'LIBRARIES & UI',
+                    'analytics': 'ANALYTICS & TRACKING',
+                    'security': 'SECURITY FEATURES'
                 }
                 
                 for category, techs in technologies.items():
                     if techs:
-                        icon = category_icons.get(category, '🔧')
-                        category_name = category.replace('_', ' ').title()
-                        print(f"{icon} {category_name} ({len(techs)}):")
+                        category_name = category_names.get(category, category.upper())
+                        print(f"[I] {category_name} ({len(techs)}):")
                         for tech in sorted(techs):
-                            print(f"   • {tech}")
+                            tech_risk = get_technology_risk_level(tech, category)
+                            print(f"  [{tech_risk}] {tech}")
                         print()
+                
+                # Technology risk summary
+                high_risk_techs = []
+                security_features = []
+                
+                for category, techs in technologies.items():
+                    for tech in techs:
+                        risk = get_technology_risk_level(tech, category)
+                        if risk == "H":
+                            high_risk_techs.append(tech)
+                        elif risk == "S":
+                            security_features.append(tech)
+                
+                print("[I] TECHNOLOGY SUMMARY:")
+                if high_risk_techs:
+                    print(f"  [H] High-risk technologies: {', '.join(high_risk_techs)}")
+                if security_features:
+                    print(f"  [S] Security features: {', '.join(security_features)}")
+                print(f"  [I] Total technologies: {total_count}")
+                
+                print()
+                print(f"[I] Execution time: {execution_time:.2f}s")
                 
                 return {
                     "status": "SUCCESS",
                     "data": technologies,
+                    "security_findings": security_findings,
+                    "severity": severity,
                     "count": total_count,
                     "execution_time": execution_time
                 }
             else:
-                print("ℹ️  NO DATA: No technologies detected")
-                print(f"⏱️  Execution time: {execution_time:.2f}s")
+                print("[I] NO DATA: No technologies detected")
+                print(f"[I] Execution time: {execution_time:.2f}s")
                 return {"status": "NO_DATA", "execution_time": execution_time}
         else:
-            print("ℹ️  NO DATA: Unable to analyze target")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print("[I] NO DATA: Unable to analyze target")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": "NO_DATA", "execution_time": execution_time}
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Detection stopped by user")
+        print("[I] INTERRUPTED: Detection stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -276,16 +426,16 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during technology detection")
+            print("[T] TIMEOUT: Request timeout during technology detection")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error - target may be unreachable")
+            print("[E] ERROR: Connection error - target may be unreachable")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -293,7 +443,7 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python technology_stack.py <url_or_domain>")
         print("Example: python technology_stack.py example.com")
         sys.exit(1)

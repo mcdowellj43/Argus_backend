@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Social Media Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 """
 
 import os
@@ -9,11 +10,97 @@ import requests
 import re
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
-from bs4 import BeautifulSoup
+
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+
+try:
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+except ImportError:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
+
+# Try to import BeautifulSoup with fallback
+try:
+    from bs4 import BeautifulSoup
+    BEAUTIFULSOUP_AVAILABLE = True
+except ImportError:
+    BEAUTIFULSOUP_AVAILABLE = False
+
+def assess_social_media_security_risk(profiles, platform_groups):
+    """Assess security risk of discovered social media profiles"""
+    findings = []
+    severity = "I"
+    
+    if not profiles:
+        return findings, severity
+    
+    # High-risk platforms (often targeted for social engineering)
+    high_risk_platforms = ['LinkedIn', 'Twitter', 'X (Twitter)', 'Facebook']
+    
+    # Professional/business platforms
+    business_platforms = ['LinkedIn', 'GitHub']
+    
+    # Social platforms (personal information exposure)
+    social_platforms = ['Facebook', 'Instagram', 'TikTok', 'Snapchat']
+    
+    high_risk_found = []
+    business_found = []
+    social_found = []
+    
+    for platform in platform_groups.keys():
+        if platform in high_risk_platforms:
+            high_risk_found.append(platform)
+        if platform in business_platforms:
+            business_found.append(platform)
+        if platform in social_platforms:
+            social_found.append(platform)
+    
+    # Determine severity and findings
+    if len(profiles) >= 8:
+        severity = "H"
+        findings.append(f"High social media exposure: {len(profiles)} profiles across {len(platform_groups)} platforms")
+    elif len(profiles) >= 5:
+        severity = "W"
+        findings.append(f"Moderate social media presence: {len(profiles)} profiles discovered")
+    
+    if high_risk_found:
+        if severity not in ["H"]:
+            severity = "W"
+        findings.append(f"High-risk platforms identified: {', '.join(high_risk_found)} (social engineering targets)")
+    
+    if business_found:
+        findings.append(f"Professional platforms found: {', '.join(business_found)} (business intelligence risk)")
+    
+    if social_found:
+        findings.append(f"Personal platforms discovered: {', '.join(social_found)} (privacy exposure risk)")
+    
+    # OSINT and social engineering risks
+    if len(platform_groups) >= 4:
+        findings.append("OSINT risk: Multiple platforms enable comprehensive profile building")
+    
+    if 'LinkedIn' in platform_groups and ('Facebook' in platform_groups or 'Instagram' in platform_groups):
+        findings.append("Cross-platform correlation risk: Professional and personal profiles linked")
+    
+    return findings, severity
+
+def get_platform_risk_level(platform):
+    """Determine risk level for individual platforms"""
+    high_risk_platforms = ['LinkedIn', 'Twitter', 'X (Twitter)', 'Facebook']
+    medium_risk_platforms = ['Instagram', 'GitHub', 'YouTube']
+    
+    if platform in high_risk_platforms:
+        return "H"
+    elif platform in medium_risk_platforms:
+        return "W"
+    else:
+        return "I"
 
 def get_social_platforms():
     """Define social media platforms to search for"""
@@ -29,11 +116,45 @@ def get_social_platforms():
         'tiktok.com': 'TikTok',
         'snapchat.com': 'Snapchat',
         'reddit.com': 'Reddit',
-        'discord.com': 'Discord'
+        'discord.com': 'Discord',
+        'telegram.org': 'Telegram',
+        'whatsapp.com': 'WhatsApp'
     }
+
+def extract_social_links_regex(content, base_url):
+    """Extract social media links using regex (fallback when BeautifulSoup unavailable)"""
+    social_platforms = get_social_platforms()
+    found_profiles = []
+    
+    try:
+        # Simple regex to find links
+        link_pattern = r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>([^<]*)</a>'
+        matches = re.findall(link_pattern, content, re.IGNORECASE)
+        
+        for href, link_text in matches:
+            # Convert relative URLs to absolute
+            if href.startswith('/'):
+                href = urljoin(base_url, href)
+            
+            # Check if link contains social media domain
+            for domain, platform in social_platforms.items():
+                if domain in href.lower():
+                    found_profiles.append({
+                        "platform": platform,
+                        "url": href,
+                        "link_text": link_text[:100],
+                        "source": "link"
+                    })
+    except Exception:
+        pass
+    
+    return found_profiles
 
 def extract_social_links(content, base_url):
     """Extract social media links from HTML content"""
+    if not BEAUTIFULSOUP_AVAILABLE:
+        return extract_social_links_regex(content, base_url)
+    
     social_platforms = get_social_platforms()
     found_profiles = []
     
@@ -166,22 +287,24 @@ def discover_social_media(target):
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 Social Media Discovery - {target}")
+    print(f"[I] Social Media Discovery - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         # Ensure target has protocol
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target
         
-        print(f"🎯 Target: {target}")
-        print("🔍 Searching for social media profiles...")
+        print(f"[I] Target: {target}")
+        if not BEAUTIFULSOUP_AVAILABLE:
+            print("[W] BeautifulSoup not available - using basic parsing")
+        print("[I] Searching for social media profiles...")
         print()
         
         # Discover social media profiles
@@ -189,11 +312,7 @@ def main(target):
         execution_time = (datetime.now() - start_time).total_seconds()
         
         if profiles:
-            print(f"✅ SUCCESS: Found {len(profiles)} social media profiles")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
-            
-            # Group by platform for better display
+            # Group by platform for analysis
             platform_groups = {}
             for profile in profiles:
                 platform = profile['platform']
@@ -201,16 +320,49 @@ def main(target):
                     platform_groups[platform] = []
                 platform_groups[platform].append(profile)
             
-            # Display results grouped by platform
+            # Assess security risk
+            security_findings, severity = assess_social_media_security_risk(profiles, platform_groups)
+            
+            print(f"[{severity}] SOCIAL PROFILES: Found {len(profiles)} social media profiles")
+            
+            # Display security analysis
+            if security_findings:
+                print(f"[{severity}] Security Risk Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
+            
+            # Display results grouped by platform with risk assessment
             for platform in sorted(platform_groups.keys()):
                 platform_profiles = platform_groups[platform]
-                print(f"📱 {platform} ({len(platform_profiles)}):")
+                platform_risk = get_platform_risk_level(platform)
+                
+                print(f"[{platform_risk}] {platform.upper()} ({len(platform_profiles)}):")
                 for profile in platform_profiles:
-                    source_emoji = {"link": "🔗", "meta": "🏷️", "pattern": "🔍"}.get(profile['source'], "📄")
-                    print(f"   {source_emoji} {profile['url']}")
+                    source_names = {"link": "Direct Link", "meta": "Meta Tag", "pattern": "Pattern Match"}
+                    source_name = source_names.get(profile['source'], "Unknown")
+                    
+                    print(f"  [{platform_risk}] {profile['url']}")
+                    print(f"    - Source: {source_name}")
                     if profile['link_text'] and profile['link_text'] != "Meta tag":
-                        print(f"      └─ Text: {profile['link_text']}")
+                        print(f"    - Context: {profile['link_text']}")
                 print()
+            
+            # Platform summary
+            print("[I] PLATFORM SUMMARY:")
+            high_risk = [p for p in platform_groups.keys() if get_platform_risk_level(p) == "H"]
+            medium_risk = [p for p in platform_groups.keys() if get_platform_risk_level(p) == "W"]
+            low_risk = [p for p in platform_groups.keys() if get_platform_risk_level(p) == "I"]
+            
+            if high_risk:
+                print(f"  [H] High-risk platforms: {', '.join(high_risk)}")
+            if medium_risk:
+                print(f"  [W] Medium-risk platforms: {', '.join(medium_risk)}")
+            if low_risk:
+                print(f"  [I] Low-risk platforms: {', '.join(low_risk)}")
+            
+            print()
+            print(f"[I] Execution time: {execution_time:.2f}s")
             
             return {
                 "status": "SUCCESS",
@@ -219,16 +371,18 @@ def main(target):
                     "platforms": list(platform_groups.keys()),
                     "platform_groups": platform_groups
                 },
+                "security_findings": security_findings,
+                "severity": severity,
                 "count": len(profiles),
                 "execution_time": execution_time
             }
         else:
-            print("ℹ️  NO DATA: No social media profiles found")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print("[I] NO DATA: No social media profiles found")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": "NO_DATA", "execution_time": execution_time}
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Discovery stopped by user")
+        print("[I] INTERRUPTED: Discovery stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -236,16 +390,16 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during social media discovery")
+            print("[T] TIMEOUT: Request timeout during social media discovery")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error - target may be unreachable")
+            print("[E] ERROR: Connection error - target may be unreachable")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -253,7 +407,7 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python social_media.py <url_or_domain>")
         print("Example: python social_media.py example.com")
         sys.exit(1)

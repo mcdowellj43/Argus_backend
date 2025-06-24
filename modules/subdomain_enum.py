@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Subdomain Enumeration Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 """
 
 import os
@@ -12,10 +13,121 @@ from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import socket
 
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.util import clean_domain_input, validate_domain
-from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+
+try:
+    from utils.util import clean_domain_input
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+except ImportError:
+    # Fallback implementations
+    def clean_domain_input(domain):
+        """Clean domain input"""
+        if not domain:
+            return ""
+        domain = domain.strip().lower()
+        domain = domain.replace('http://', '').replace('https://', '')
+        domain = domain.replace('www.', '')
+        if '/' in domain:
+            domain = domain.split('/')[0]
+        return domain
+    
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
+
+# Use our own working validation function
+def validate_domain(domain):
+    """Proper domain validation that actually works"""
+    if not domain or len(domain) < 3 or len(domain) > 255:
+        return False
+    
+    # Check for obvious invalid patterns
+    if '..' in domain or domain.startswith('.') or domain.endswith('.'):
+        return False
+    if domain.startswith('-') or domain.endswith('-'):
+        return False
+    
+    # Split into parts and validate each
+    parts = domain.split('.')
+    if len(parts) < 2:  # Need at least domain.tld
+        return False
+        
+    for part in parts:
+        if not part or len(part) > 63:  # Each part max 63 chars
+            return False
+        # Each part must start/end with alphanumeric, can contain hyphens in middle
+        if not part[0].isalnum() or not part[-1].isalnum():
+            return False
+        # Check all characters are valid
+        for char in part:
+            if not (char.isalnum() or char == '-'):
+                return False
+    
+    return True
+
+def assess_subdomain_security_risk(results):
+    """Assess security risk of discovered subdomains"""
+    findings = []
+    severity = "I"
+    
+    all_subdomains = results.get("brute_force", []) + results.get("certificate_transparency_verified", [])
+    
+    if not all_subdomains:
+        return findings, severity
+    
+    # High-risk subdomain patterns
+    high_risk_patterns = ['admin', 'test', 'dev', 'staging', 'backup', 'database', 'db', 'api', 'vpn']
+    medium_risk_patterns = ['ftp', 'ssh', 'mail', 'webmail', 'portal', 'dashboard', 'auth', 'login']
+    
+    high_risk_found = []
+    medium_risk_found = []
+    exposed_services = []
+    
+    for subdomain_info in all_subdomains:
+        subdomain = subdomain_info.get("subdomain", "")
+        subdomain_name = subdomain.split('.')[0].lower()
+        
+        # Check for high-risk patterns
+        if any(pattern in subdomain_name for pattern in high_risk_patterns):
+            high_risk_found.append(subdomain)
+        elif any(pattern in subdomain_name for pattern in medium_risk_patterns):
+            medium_risk_found.append(subdomain)
+        
+        # Check for exposed services
+        http_status = subdomain_info.get("http_status")
+        if http_status and http_status != 404:
+            exposed_services.append(f"{subdomain} [{http_status}]")
+    
+    # Determine severity and findings
+    if high_risk_found:
+        severity = "C"
+        findings.append(f"High-risk subdomains exposed: {len(high_risk_found)} critical subdomains")
+        for subdomain in high_risk_found[:3]:  # Show first 3
+            findings.append(f"Critical exposure: {subdomain}")
+    
+    if medium_risk_found and severity not in ["C"]:
+        severity = "H"
+        findings.append(f"Sensitive subdomains found: {len(medium_risk_found)} potentially sensitive")
+    
+    if len(all_subdomains) >= 20 and severity not in ["C", "H"]:
+        severity = "W"
+        findings.append(f"Large attack surface: {len(all_subdomains)} subdomains discovered")
+    elif len(all_subdomains) >= 10 and severity == "I":
+        severity = "W"
+        findings.append(f"Moderate attack surface: {len(all_subdomains)} subdomains discovered")
+    
+    if exposed_services:
+        if severity == "I":
+            severity = "W"
+        findings.append(f"Active web services: {len(exposed_services)} responding subdomains")
+    
+    return findings, severity
 
 def get_common_subdomains():
     """Get list of common subdomain prefixes"""
@@ -58,6 +170,23 @@ def get_common_subdomains():
         'aws', 'azure', 'gcp', 'cloud', 's3', 'storage'
     ]
 
+def get_subdomain_risk_level(subdomain):
+    """Assess individual subdomain risk level"""
+    subdomain_name = subdomain.split('.')[0].lower()
+    
+    critical_patterns = ['admin', 'root', 'administrator', 'test', 'dev', 'staging', 'backup', 'database', 'db']
+    high_patterns = ['api', 'ftp', 'ssh', 'vpn', 'mail', 'webmail', 'portal', 'dashboard', 'auth', 'login']
+    medium_patterns = ['support', 'help', 'blog', 'forum', 'shop', 'store']
+    
+    if any(pattern in subdomain_name for pattern in critical_patterns):
+        return "C"
+    elif any(pattern in subdomain_name for pattern in high_patterns):
+        return "H"
+    elif any(pattern in subdomain_name for pattern in medium_patterns):
+        return "W"
+    else:
+        return "I"
+
 def dns_lookup_subdomain(subdomain, domain):
     """Perform DNS lookup for a single subdomain"""
     full_domain = f"{subdomain}.{domain}"
@@ -79,7 +208,8 @@ def dns_lookup_subdomain(subdomain, domain):
             "subdomain": full_domain,
             "ip_addresses": ip_addresses,
             "cname": cname,
-            "status": "active"
+            "status": "active",
+            "risk_level": get_subdomain_risk_level(full_domain)
         }
         
     except (dns.resolver.NXDOMAIN, dns.resolver.NoAnswer):
@@ -138,7 +268,7 @@ def brute_force_subdomains(domain, wordlist=None, max_workers=20):
     found_subdomains = []
     
     # DNS enumeration phase
-    print(f"🔍 Testing {len(wordlist)} common subdomains...")
+    print(f"[I] Testing {len(wordlist)} common subdomains...")
     
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_subdomain = {
@@ -153,7 +283,7 @@ def brute_force_subdomains(domain, wordlist=None, max_workers=20):
     
     # HTTP verification phase
     if found_subdomains:
-        print(f"🌐 Verifying HTTP status for {len(found_subdomains)} subdomains...")
+        print(f"[I] Verifying HTTP status for {len(found_subdomains)} subdomains...")
         
         verified_subdomains = []
         with ThreadPoolExecutor(max_workers=10) as executor:
@@ -218,15 +348,15 @@ def perform_subdomain_enumeration(target):
     }
     
     # Brute force enumeration
-    print("🚀 Starting brute force enumeration...")
+    print("[I] Starting brute force enumeration...")
     results["brute_force"] = brute_force_subdomains(domain)
     
     # Certificate transparency search
-    print("🔍 Searching certificate transparency logs...")
+    print("[I] Searching certificate transparency logs...")
     results["certificate_transparency"] = certificate_transparency_search(domain)
     
     # Search engine enumeration (placeholder)
-    print("🔎 Performing search engine enumeration...")
+    print("[I] Performing search engine enumeration...")
     results["search_engines"] = search_engine_enumeration(domain)
     
     # Combine and deduplicate results
@@ -274,23 +404,23 @@ def perform_subdomain_enumeration(target):
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 Subdomain Enumeration - {target}")
+    print(f"[I] Subdomain Enumeration - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         domain = clean_domain_input(target)
         
         if not validate_domain(domain):
-            print("❌ FAILED: Invalid domain format")
+            print("[E] FAILED: Invalid domain format")
             return {"status": "FAILED", "error": "Invalid domain format"}
         
-        print(f"🎯 Target: {domain}")
+        print(f"[I] Target: {domain}")
         print()
         
         # Perform subdomain enumeration
@@ -301,60 +431,83 @@ def main(target):
         total_found = summary["active_subdomains"]
         
         if total_found > 0:
-            print(f"✅ SUCCESS: Found {total_found} active subdomains")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
+            # Assess security risk
+            security_findings, severity = assess_subdomain_security_risk(results)
             
-            # Display brute force results
+            print(f"[{severity}] SUBDOMAINS FOUND: {total_found} active subdomains discovered")
+            
+            # Display security analysis
+            if security_findings:
+                print(f"[{severity}] Security Risk Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
+            
+            # Display brute force results by risk level
             brute_force = results["brute_force"]
             if brute_force:
-                print(f"🚀 Brute Force Results ({len(brute_force)}):")
-                for subdomain in brute_force[:10]:  # Show first 10
-                    status_info = ""
-                    if subdomain.get("http_status"):
-                        status_info = f" [{subdomain['http_status']}]"
-                    if subdomain.get("title"):
-                        status_info += f" - {subdomain['title'][:50]}"
-                    
-                    print(f"   • {subdomain['subdomain']}{status_info}")
-                    if len(subdomain.get("ip_addresses", [])) > 0:
-                        print(f"     └─ IP: {', '.join(subdomain['ip_addresses'][:3])}")
+                # Group by risk level
+                risk_groups = {"C": [], "H": [], "W": [], "I": []}
+                for subdomain in brute_force:
+                    risk = subdomain.get("risk_level", "I")
+                    risk_groups[risk].append(subdomain)
                 
-                if len(brute_force) > 10:
-                    print(f"   ... and {len(brute_force) - 10} more")
-                print()
+                # Display critical subdomains first
+                for risk_level in ["C", "H", "W", "I"]:
+                    if risk_groups[risk_level]:
+                        risk_names = {"C": "CRITICAL", "H": "HIGH RISK", "W": "WARNING", "I": "INFORMATIONAL"}
+                        print(f"[{risk_level}] {risk_names[risk_level]} SUBDOMAINS ({len(risk_groups[risk_level])}):")
+                        
+                        for subdomain in risk_groups[risk_level][:5]:  # Show first 5 per category
+                            status_info = ""
+                            if subdomain.get("http_status"):
+                                status_info = f" [{subdomain['http_status']}]"
+                            if subdomain.get("title"):
+                                status_info += f" - {subdomain['title'][:50]}"
+                            
+                            print(f"  [{risk_level}] {subdomain['subdomain']}{status_info}")
+                            if len(subdomain.get("ip_addresses", [])) > 0:
+                                print(f"    - IP: {', '.join(subdomain['ip_addresses'][:2])}")
+                        
+                        if len(risk_groups[risk_level]) > 5:
+                            print(f"  [{risk_level}] ... and {len(risk_groups[risk_level]) - 5} more")
+                        print()
             
             # Display certificate transparency results
             ct_results = results["certificate_transparency"]
             if ct_results:
-                print(f"📜 Certificate Transparency ({len(ct_results)}):")
+                print(f"[I] CERTIFICATE TRANSPARENCY ({len(ct_results)}):")
                 for subdomain in ct_results[:10]:
-                    print(f"   • {subdomain}")
+                    ct_risk = get_subdomain_risk_level(subdomain)
+                    print(f"  [{ct_risk}] {subdomain}")
                 if len(ct_results) > 10:
-                    print(f"   ... and {len(ct_results) - 10} more")
+                    print(f"  [I] ... and {len(ct_results) - 10} more")
                 print()
             
             # Display summary statistics
-            print("📊 Summary:")
-            print(f"   • Total unique subdomains: {summary['total_unique_subdomains']}")
-            print(f"   • Active subdomains: {summary['active_subdomains']}")
-            print(f"   • Brute force discovered: {summary['brute_force_found']}")
-            print(f"   • Certificate transparency: {summary['certificate_transparency_found']}")
+            print("[I] ENUMERATION SUMMARY:")
+            print(f"  [I] Total unique subdomains: {summary['total_unique_subdomains']}")
+            print(f"  [I] Active subdomains: {summary['active_subdomains']}")
+            print(f"  [I] Brute force discovered: {summary['brute_force_found']}")
+            print(f"  [I] Certificate transparency: {summary['certificate_transparency_found']}")
+            print()
+            print(f"[I] Execution time: {execution_time:.2f}s")
             
             return {
                 "status": "SUCCESS",
                 "data": results,
+                "security_findings": security_findings,
+                "severity": severity,
                 "count": total_found,
-                "execution_time": execution_time,
-                "severity": "HIGH" if total_found > 20 else "MEDIUM" if total_found > 5 else "LOW"
+                "execution_time": execution_time
             }
         else:
-            print("ℹ️  NO DATA: No subdomains found")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print("[I] NO DATA: No subdomains found")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": "NO_DATA", "execution_time": execution_time}
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Enumeration stopped by user")
+        print("[I] INTERRUPTED: Enumeration stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -362,16 +515,16 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during enumeration")
+            print("[T] TIMEOUT: Request timeout during enumeration")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error during DNS lookups")
+            print("[E] ERROR: Connection error during DNS lookups")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -379,7 +532,7 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python subdomain_enum.py <domain>")
         print("Example: python subdomain_enum.py example.com")
         sys.exit(1)

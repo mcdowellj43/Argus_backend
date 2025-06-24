@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Data Leak Detection Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 Note: This module requires API keys for full functionality
 """
 
@@ -11,16 +12,78 @@ import hashlib
 import time
 from datetime import datetime
 
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import DEFAULT_TIMEOUT
 
-# Try to import API keys
 try:
-    from config.settings import API_KEYS
-    HIBP_API_KEY = API_KEYS.get("HIBP_API_KEY")
+    from config.settings import DEFAULT_TIMEOUT, API_KEYS
+    HIBP_API_KEY = API_KEYS.get("HIBP_API_KEY") if hasattr(API_KEYS, 'get') else None
 except (ImportError, AttributeError):
+    DEFAULT_TIMEOUT = 30
     HIBP_API_KEY = None
+
+def assess_breach_severity(breach_data):
+    """Assess the severity of breach findings"""
+    domain_breaches = breach_data.get("domain_breaches", {}).get("breaches", [])
+    email_breaches = breach_data.get("email_breaches", {}).get("emails", [])
+    
+    total_breaches = len(domain_breaches) + len(email_breaches)
+    
+    # Calculate severity based on breach characteristics
+    severity_score = 0
+    findings = []
+    
+    # Assess domain breaches
+    for breach in domain_breaches:
+        pwn_count = breach.get('pwn_count', 0)
+        data_classes = breach.get('data_classes', [])
+        
+        # High impact data types
+        sensitive_data = ['Passwords', 'Credit cards', 'Social security numbers', 
+                         'Government IDs', 'Medical records', 'Financial data']
+        
+        if any(sensitive in data_classes for sensitive in sensitive_data):
+            severity_score += 3
+            findings.append(f"Sensitive data exposed in {breach['name']} breach")
+        
+        if pwn_count > 1000000:  # Large breach
+            severity_score += 2
+            findings.append(f"Large-scale breach: {breach['name']} ({pwn_count:,} accounts)")
+        
+        if not breach.get('verified', True):
+            findings.append(f"Unverified breach: {breach['name']} - verify legitimacy")
+    
+    # Assess email breaches
+    critical_emails = ['admin', 'root', 'administrator', 'ceo', 'cto']
+    for email_data in email_breaches:
+        email = email_data['email']
+        prefix = email.split('@')[0].lower()
+        
+        if prefix in critical_emails:
+            severity_score += 2
+            findings.append(f"Critical account compromised: {email}")
+        
+        if email_data['breach_count'] > 3:
+            severity_score += 1
+            findings.append(f"Multiple breaches for {email} ({email_data['breach_count']} total)")
+    
+    # Determine overall severity
+    if severity_score >= 5 or total_breaches >= 10:
+        severity = "C"  # Critical
+    elif severity_score >= 3 or total_breaches >= 5:
+        severity = "H"  # High
+    elif severity_score >= 1 or total_breaches >= 1:
+        severity = "W"  # Warning
+    else:
+        severity = "I"  # Info
+    
+    return severity, findings
 
 def check_haveibeenpwned_domain(domain):
     """Check domain breaches using HaveIBeenPwned API"""
@@ -150,15 +213,15 @@ def perform_data_leak_check(target):
     }
     
     # Check domain-specific breaches
-    print("🔍 Checking domain breaches...")
+    print("[I] Checking domain breaches...")
     results["domain_breaches"] = check_haveibeenpwned_domain(domain)
     
     # Check common email addresses
-    print("📧 Checking common email addresses...")
+    print("[I] Checking common email addresses...")
     results["email_breaches"] = check_common_emails(domain)
     
     # Check public leaks
-    print("🌐 Checking public leak sources...")
+    print("[I] Checking public leak sources...")
     results["public_leaks"] = check_public_leaks(domain)
     
     # Create summary
@@ -175,23 +238,23 @@ def perform_data_leak_check(target):
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 Data Leak Detection - {target}")
+    print(f"[I] Data Leak Detection - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         domain = target.replace('http://', '').replace('https://', '').split('/')[0]
-        print(f"🎯 Target: {domain}")
+        print(f"[I] Target: {domain}")
         
         # Check if API key is available
         if not HIBP_API_KEY:
-            print("🔑 API KEY: HaveIBeenPwned API key not configured")
-            print("ℹ️  LIMITED: Running in limited mode without breach checking")
+            print("[W] API KEY: HaveIBeenPwned API key not configured")
+            print("[I] LIMITED: Running in limited mode without breach checking")
             print()
         
         print()
@@ -205,56 +268,72 @@ def main(target):
         total_findings = summary["total_domain_breaches"] + summary["total_compromised_emails"]
         
         if summary["has_breaches"]:
-            print(f"⚠️  BREACH DATA FOUND: {total_findings} potential data exposures detected")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
+            # Assess severity of findings
+            severity, security_findings = assess_breach_severity(results)
+            
+            print(f"[{severity}] BREACH DATA FOUND: {total_findings} potential data exposures detected")
+            
+            # Display security analysis
+            if security_findings:
+                print(f"[{severity}] Security Impact Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
             
             # Display domain breaches
             domain_breaches = results["domain_breaches"].get("breaches", [])
             if domain_breaches:
-                print(f"🏢 Domain Breaches ({len(domain_breaches)}):")
+                print(f"[W] Domain Breaches ({len(domain_breaches)}):")
                 for breach in domain_breaches[:5]:  # Show first 5
-                    print(f"   • {breach['title']} ({breach['breach_date']})")
-                    print(f"     └─ Affected: {breach['pwn_count']:,} accounts")
-                    print(f"     └─ Data: {', '.join(breach['data_classes'][:3])}")
+                    verified_status = "[VERIFIED]" if breach['verified'] else "[UNVERIFIED]"
+                    print(f"  [W] {breach['title']} ({breach['breach_date']}) {verified_status}")
+                    print(f"    - Affected: {breach['pwn_count']:,} accounts")
+                    print(f"    - Data: {', '.join(breach['data_classes'][:3])}")
+                if len(domain_breaches) > 5:
+                    print(f"  [I] ... and {len(domain_breaches) - 5} more breaches")
                 print()
             
             # Display email breaches
             email_breaches = results["email_breaches"].get("emails", [])
             if email_breaches:
-                print(f"📧 Compromised Emails ({len(email_breaches)}):")
+                print(f"[W] Compromised Emails ({len(email_breaches)}):")
                 for email_data in email_breaches:
-                    print(f"   • {email_data['email']} - {email_data['breach_count']} breaches")
+                    email_severity = "C" if email_data['email'].startswith(('admin@', 'root@')) else "W"
+                    print(f"  [{email_severity}] {email_data['email']} - {email_data['breach_count']} breaches")
+                    print(f"    - Found in: {', '.join(email_data['breaches'][:3])}")
                 print()
+            
+            print(f"[I] Execution time: {execution_time:.2f}s")
             
             return {
                 "status": "SUCCESS",
                 "data": results,
+                "security_findings": security_findings,
+                "severity": severity,
                 "count": total_findings,
-                "execution_time": execution_time,
-                "severity": "HIGH" if total_findings > 5 else "MEDIUM"
+                "execution_time": execution_time
             }
         
         elif results["domain_breaches"].get("error") or results["email_breaches"].get("error"):
             # API errors occurred
             error_msg = results["domain_breaches"].get("error") or results["email_breaches"].get("error")
             if "API key" in error_msg:
-                print("🔑 API ERROR: Valid API key required for breach checking")
-                print("ℹ️  SETUP: Configure HIBP_API_KEY in config/settings.py")
+                print("[E] API ERROR: Valid API key required for breach checking")
+                print("[I] SETUP: Configure HIBP_API_KEY in config/settings.py")
                 status = "API_ERROR"
             elif "rate limit" in error_msg.lower():
-                print("⏰ RATE LIMIT: API rate limit exceeded, try again later")
+                print("[W] RATE LIMIT: API rate limit exceeded, try again later")
                 status = "RATE_LIMITED"
             else:
-                print(f"❌ ERROR: {error_msg}")
+                print(f"[E] ERROR: {error_msg}")
                 status = "ERROR"
             
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": status, "error": error_msg, "execution_time": execution_time}
         
         else:
-            print("✅ NO BREACHES: No data breaches found for target")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print("[S] NO BREACHES: No data breaches found for target")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {
                 "status": "NO_DATA",
                 "data": results,
@@ -263,7 +342,7 @@ def main(target):
             }
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Check stopped by user")
+        print("[I] INTERRUPTED: Check stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -271,16 +350,16 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during data leak check")
+            print("[T] TIMEOUT: Request timeout during data leak check")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error during API requests")
+            print("[E] ERROR: Connection error during API requests")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -288,7 +367,7 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python data_leak.py <domain>")
         print("Example: python data_leak.py example.com")
         print()

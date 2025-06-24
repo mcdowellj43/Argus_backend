@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Subdomain Takeover Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 """
 
 import os
@@ -11,11 +12,87 @@ import requests
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import re
+import warnings
+
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+# Suppress SSL warnings and count them
+ssl_warning_count = 0
+original_warn = warnings.warn
+
+def custom_warn(message, category=None, filename='', lineno=-1, file=None, stacklevel=1):
+    global ssl_warning_count
+    if category == requests.packages.urllib3.exceptions.InsecureRequestWarning:
+        ssl_warning_count += 1
+        return  # Don't show individual warnings
+    return original_warn(message, category, filename, lineno, file, stacklevel)
+
+warnings.warn = custom_warn
+warnings.filterwarnings('ignore', category=requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.util import clean_domain_input, validate_domain
-from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+
+try:
+    from utils.util import clean_domain_input
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+    # Don't import validate_domain - we'll use our own
+except ImportError:
+    # Fallback implementations
+    def clean_domain_input(domain):
+        """Clean domain input with debug output"""
+        print(f"[DEBUG] Original input: '{domain}'")
+        if not domain:
+            print(f"[DEBUG] Empty domain, returning empty string")
+            return ""
+        domain = domain.strip().lower()
+        print(f"[DEBUG] After strip/lower: '{domain}'")
+        domain = domain.replace('http://', '').replace('https://', '')
+        print(f"[DEBUG] After removing protocols: '{domain}'")
+        domain = domain.replace('www.', '')
+        print(f"[DEBUG] After removing www: '{domain}'")
+        if '/' in domain:
+            domain = domain.split('/')[0]
+            print(f"[DEBUG] After removing path: '{domain}'")
+        print(f"[DEBUG] Final cleaned domain: '{domain}'")
+        return domain
+    
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
+
+# Always use our own validation function (ignore the broken imported one)
+def validate_domain(domain):
+    """Proper domain validation that actually works"""
+    if not domain or len(domain) < 3 or len(domain) > 255:
+        return False
+    
+    # Check for obvious invalid patterns
+    if '..' in domain or domain.startswith('.') or domain.endswith('.'):
+        return False
+    if domain.startswith('-') or domain.endswith('-'):
+        return False
+    
+    # Split into parts and validate each
+    parts = domain.split('.')
+    if len(parts) < 2:  # Need at least domain.tld
+        return False
+        
+    for part in parts:
+        if not part or len(part) > 63:  # Each part max 63 chars
+            return False
+        # Each part must start/end with alphanumeric, can contain hyphens in middle
+        if not part[0].isalnum() or not part[-1].isalnum():
+            return False
+        # Check all characters are valid
+        for char in part:
+            if not (char.isalnum() or char == '-'):
+                return False
+    
+    return True
 
 def get_vulnerable_services():
     """Get list of services vulnerable to subdomain takeover"""
@@ -141,14 +218,20 @@ def check_http_response(subdomain):
         try:
             url = f"{protocol}://{subdomain}"
             headers = {'User-Agent': USER_AGENT}
-            response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+            
+            response = requests.get(
+                url, 
+                headers=headers, 
+                timeout=DEFAULT_TIMEOUT,
+                allow_redirects=True,
+                verify=False
+            )
             
             content = response.text.lower()
             
             # Check for vulnerable service signatures
             for service_domain, service_info in vulnerable_services.items():
                 if service_domain in subdomain.lower():
-                    # Check if any signature matches
                     for signature in service_info['signatures']:
                         if signature.lower() in content:
                             return {
@@ -161,16 +244,12 @@ def check_http_response(subdomain):
                                 "response_size": len(content)
                             }
             
-            # Check for general takeover indicators
+            # Check for generic takeover indicators
             takeover_indicators = [
-                'domain not found',
-                'no such host',
-                'project not found',
-                'repository not found',
-                'page not found',
-                'this domain is for sale',
-                'parked domain',
-                'suspended domain'
+                'domain not found', 'no such bucket', 'not found',
+                'page not found', 'repository not found', 
+                'project not found', 'doesn\'t exist',
+                'no longer exists', 'unavailable'
             ]
             
             for indicator in takeover_indicators:
@@ -286,7 +365,7 @@ def perform_takeover_scan(target, custom_subdomains=None):
         "errors": []
     }
     
-    print(f"🔍 Testing {len(subdomains)} subdomains for takeover vulnerabilities...")
+    print(f"[I] Testing {len(subdomains)} subdomains for takeover vulnerabilities...")
     
     # Test subdomains concurrently
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -313,6 +392,7 @@ def perform_takeover_scan(target, custom_subdomains=None):
                     pass
                     
             except Exception as e:
+                print(f"[E] Error analyzing {subdomain}: {e}")
                 results["errors"].append({
                     "subdomain": subdomain,
                     "error": str(e)
@@ -322,23 +402,23 @@ def perform_takeover_scan(target, custom_subdomains=None):
 
 def main(target, subdomain_list=None):
     """Main execution with clean output"""
-    print(f"🔍 Subdomain Takeover Check - {target}")
+    print(f"[I] Subdomain Takeover Check - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         domain = clean_domain_input(target)
         
         if not validate_domain(domain):
-            print("❌ FAILED: Invalid domain format")
+            print("[E] FAILED: Invalid domain format")
             return {"status": "FAILED", "error": "Invalid domain format"}
         
-        print(f"🎯 Target: {domain}")
+        print(f"[I] Target: {domain}")
         
         # Load custom subdomain list if provided
         custom_subdomains = None
@@ -346,9 +426,9 @@ def main(target, subdomain_list=None):
             try:
                 with open(subdomain_list, 'r') as f:
                     custom_subdomains = [line.strip() for line in f if line.strip()]
-                print(f"📝 Loaded {len(custom_subdomains)} subdomains from file")
+                print(f"[I] Loaded {len(custom_subdomains)} subdomains from file")
             except Exception as e:
-                print(f"⚠️  Warning: Could not load subdomain list: {e}")
+                print(f"[W] Warning: Could not load subdomain list: {e}")
         
         print()
         
@@ -359,73 +439,53 @@ def main(target, subdomain_list=None):
         # Analyze results
         vulnerable_count = len(results["vulnerable_subdomains"])
         potentially_vulnerable_count = len(results["potentially_vulnerable"])
+        secure_count = len(results["secure_subdomains"])
+        error_count = len(results["errors"])
         total_issues = vulnerable_count + potentially_vulnerable_count
         
+        print(f"[I] Scan completed: {vulnerable_count} critical, {potentially_vulnerable_count} warnings, {secure_count} secure, {error_count} errors")
+        
         if vulnerable_count > 0:
-            print(f"🚨 CRITICAL: Found {vulnerable_count} vulnerable subdomains!")
-            print(f"⚠️  Additional: {potentially_vulnerable_count} potentially vulnerable")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
-            
-            # Display vulnerable subdomains
-            print("🚨 Confirmed Vulnerabilities:")
-            for vuln in results["vulnerable_subdomains"]:
-                subdomain = vuln["subdomain"]
-                assessment = vuln["vulnerability_assessment"]
-                http_info = vuln["http_info"]
-                
-                print(f"   • {subdomain}")
-                print(f"     └─ Risk: {assessment['risk_level']}")
-                print(f"     └─ Service: {http_info.get('service', 'Unknown')}")
-                print(f"     └─ Reason: {', '.join(assessment['reasons'])}")
-            print()
-            
-            # Display potentially vulnerable
-            if results["potentially_vulnerable"]:
-                print("⚠️  Requires Manual Verification:")
-                for vuln in results["potentially_vulnerable"]:
-                    subdomain = vuln["subdomain"]
-                    assessment = vuln["vulnerability_assessment"]
-                    print(f"   • {subdomain}")
-                    print(f"     └─ Reason: {', '.join(assessment['reasons'])}")
-                print()
-            
-            return {
-                "status": "VULNERABLE",
-                "data": results,
-                "count": total_issues,
-                "execution_time": execution_time,
-                "severity": "CRITICAL" if vulnerable_count > 0 else "HIGH"
-            }
+            print(f"[C] CRITICAL: Found {vulnerable_count} vulnerable subdomains!")
+            for result in results["vulnerable_subdomains"]:
+                vulnerability = result["vulnerability_assessment"]
+                print(f"  [C] {result['subdomain']} - {vulnerability['reasons'][0]}")
         
-        elif potentially_vulnerable_count > 0:
-            print(f"⚠️  POTENTIAL ISSUES: Found {potentially_vulnerable_count} subdomains requiring verification")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
-            
-            print("⚠️  Manual Verification Required:")
-            for vuln in results["potentially_vulnerable"]:
-                subdomain = vuln["subdomain"]
-                assessment = vuln["vulnerability_assessment"]
-                print(f"   • {subdomain}")
-                print(f"     └─ Reason: {', '.join(assessment['reasons'])}")
-            print()
-            
-            return {
-                "status": "POTENTIAL_ISSUES",
-                "data": results,
-                "count": potentially_vulnerable_count,
-                "execution_time": execution_time,
-                "severity": "MEDIUM"
-            }
+        if potentially_vulnerable_count > 0:
+            print(f"[W] WARNING: Found {potentially_vulnerable_count} potentially vulnerable subdomains")
+            for result in results["potentially_vulnerable"]:
+                vulnerability = result["vulnerability_assessment"]
+                print(f"  [W] {result['subdomain']} - {vulnerability['reasons'][0]}")
         
+        secure_count = len(results["secure_subdomains"])
+        if secure_count > 0:
+            print(f"[S] {secure_count} subdomains appear secure")
+        
+        if results["errors"]:
+            print(f"[E] {len(results['errors'])} errors occurred during scanning")
+        
+        # Show SSL warning count if any occurred
+        global ssl_warning_count
+        if ssl_warning_count > 0:
+            print(f"[I] {ssl_warning_count} unverified HTTPS requests made during scan")
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        if total_issues == 0:
+            return {
+                "status": "SECURE",
+                "data": results,
+                "count": 0,
+                "execution_time": execution_time
+            }
+        elif vulnerable_count > 0:
+            return {
+                "status": "CRITICAL",
+                "data": results,
+                "count": vulnerable_count,
+                "execution_time": execution_time
+            }
         else:
-            secure_count = len(results["secure_subdomains"])
-            print(f"✅ SECURE: No subdomain takeover vulnerabilities found")
-            print(f"🔒 Tested: {results['subdomains_tested']} subdomains")
-            print(f"✓ Secure: {secure_count} subdomains responding normally")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            
             return {
                 "status": "SECURE",
                 "data": results,
@@ -434,7 +494,7 @@ def main(target, subdomain_list=None):
             }
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Scan stopped by user")
+        print("[I] INTERRUPTED: Scan stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -442,16 +502,16 @@ def main(target, subdomain_list=None):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during takeover scan")
+            print("[T] TIMEOUT: Request timeout during takeover scan")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error during DNS/HTTP checks")
+            print("[E] ERROR: Connection error during DNS/HTTP checks")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -460,7 +520,7 @@ if __name__ == "__main__":
         subdomain_list = sys.argv[2] if len(sys.argv) > 2 else None
         main(target, subdomain_list)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python subdomain_takeover.py <domain> [subdomain_list.txt]")
         print("Example: python subdomain_takeover.py example.com")
         print("Example: python subdomain_takeover.py example.com subdomains.txt")

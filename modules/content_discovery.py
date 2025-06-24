@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Improved Content Discovery Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
 """
 
 import os
@@ -10,9 +11,123 @@ from datetime import datetime
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+
+try:
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+except ImportError:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
+
+def assess_content_security_risk(found_content):
+    """Assess security risk of discovered content"""
+    findings = []
+    severity = "I"
+    
+    if not found_content:
+        return findings, severity
+    
+    # Critical paths that indicate serious security issues
+    critical_paths = [
+        '/.env', '/.git', '/config', '/backup', '/backups', 
+        '/phpinfo.php', '/info.php', '/test.php', '/.DS_Store'
+    ]
+    
+    # High-risk administrative paths
+    high_risk_paths = [
+        '/admin', '/administrator', '/wp-admin', '/login', '/signin',
+        '/dashboard', '/panel', '/control', '/manage', '/setup'
+    ]
+    
+    # API and development paths
+    api_paths = ['/api', '/v1', '/v2', '/rest', '/graphql']
+    
+    # Analyze findings
+    critical_found = []
+    high_risk_found = []
+    api_found = []
+    accessible_admin = []
+    
+    for item in found_content:
+        path = item['path']
+        status = item['status']
+        
+        # Check for critical exposures
+        if any(critical_path in path for critical_path in critical_paths):
+            critical_found.append(f"{path} [{status}]")
+            
+        # Check for admin panels
+        elif any(admin_path in path for admin_path in high_risk_paths):
+            high_risk_found.append(f"{path} [{status}]")
+            if status == 200:  # Directly accessible admin panel
+                accessible_admin.append(path)
+                
+        # Check for API endpoints
+        elif any(api_path in path for api_path in api_paths):
+            api_found.append(f"{path} [{status}]")
+    
+    # Determine severity based on findings
+    if critical_found:
+        severity = "C"
+        findings.append(f"Critical files exposed: {len(critical_found)} sensitive files accessible")
+        for item in critical_found[:3]:  # Show first 3
+            findings.append(f"Critical exposure: {item}")
+            
+    if accessible_admin:
+        if severity != "C":
+            severity = "H"
+        findings.append(f"Admin panels accessible: {len(accessible_admin)} administrative interfaces")
+        
+    elif high_risk_found:
+        if severity not in ["C", "H"]:
+            severity = "H"
+        findings.append(f"Administrative paths found: {len(high_risk_found)} admin-related endpoints")
+    
+    if api_found:
+        if severity not in ["C", "H"]:
+            severity = "W"
+        findings.append(f"API endpoints discovered: {len(api_found)} API interfaces")
+    
+    # General exposure assessment
+    total_accessible = len([item for item in found_content if item['status'] == 200])
+    if total_accessible >= 10 and severity == "I":
+        severity = "W"
+        findings.append(f"High content exposure: {total_accessible} accessible paths")
+    elif total_accessible >= 5 and severity == "I":
+        findings.append(f"Moderate content exposure: {total_accessible} accessible paths")
+    
+    return findings, severity
+
+def get_path_risk_level(path, status):
+    """Determine risk level for individual paths"""
+    # Critical paths
+    critical_paths = ['/.env', '/.git', '/config', '/backup', '/backups', 
+                     '/phpinfo.php', '/info.php', '/test.php', '/.DS_Store']
+    
+    # High-risk paths
+    high_risk_paths = ['/admin', '/administrator', '/wp-admin', '/login', '/signin',
+                      '/dashboard', '/panel', '/control', '/manage', '/setup']
+    
+    # API paths
+    api_paths = ['/api', '/v1', '/v2', '/rest', '/graphql']
+    
+    if any(critical_path in path for critical_path in critical_paths):
+        return "C"
+    elif any(admin_path in path for admin_path in high_risk_paths):
+        return "H" if status == 200 else "W"
+    elif any(api_path in path for api_path in api_paths):
+        return "W"
+    elif status == 200:
+        return "I"
+    else:
+        return "I"
 
 def check_path(base_url, path, session):
     """Check if a path exists on the target"""
@@ -31,33 +146,73 @@ def check_path(base_url, path, session):
                 "url": url,
                 "status": response.status_code,
                 "size": len(response.content),
-                "type": content_type
+                "type": content_type,
+                "risk_level": get_path_risk_level(path, response.status_code)
             }
     except:
         pass
     return None
+
+def get_comprehensive_wordlist():
+    """Get comprehensive wordlist for content discovery"""
+    return [
+        # Administrative interfaces
+        '/admin', '/administrator', '/wp-admin', '/login', '/signin',
+        '/dashboard', '/panel', '/control', '/manage', '/console',
+        
+        # API endpoints
+        '/api', '/v1', '/v2', '/v3', '/rest', '/graphql', '/swagger',
+        '/api-docs', '/docs/api', '/openapi.json',
+        
+        # Backup and temporary files
+        '/backup', '/backups', '/old', '/tmp', '/temp',
+        '/archive', '/archives', '/dump', '/dumps',
+        
+        # Configuration files
+        '/config', '/settings', '/setup', '/install',
+        '/.env', '/.env.local', '/.env.production',
+        '/wp-config.php', '/config.php', '/configuration.php',
+        
+        # Version control and development
+        '/.git', '/.svn', '/.hg', '/.bzr',
+        '/.git/config', '/.git/HEAD', '/.gitignore',
+        
+        # Information disclosure
+        '/robots.txt', '/sitemap.xml', '/.well-known',
+        '/phpinfo.php', '/info.php', '/test.php',
+        '/.DS_Store', '/thumbs.db',
+        
+        # Status and monitoring
+        '/status', '/health', '/ping', '/version', '/info',
+        '/metrics', '/stats', '/monitor', '/check',
+        
+        # File uploads and media
+        '/uploads', '/files', '/images', '/assets', '/media',
+        '/documents', '/downloads', '/attachments',
+        
+        # Documentation and help
+        '/docs', '/help', '/support', '/manual',
+        '/readme', '/changelog', '/license',
+        
+        # Content management
+        '/blog', '/forum', '/shop', '/store', '/cms',
+        '/news', '/articles', '/posts',
+        
+        # Development and testing
+        '/dev', '/test', '/staging', '/qa',
+        '/debug', '/trace', '/log', '/logs',
+        
+        # Security-related
+        '/security', '/auth', '/oauth', '/sso',
+        '/cert', '/ssl', '/tls'
+    ]
 
 def discover_content(target, max_workers=10):
     """Discover hidden content and directories"""
     if not target.startswith(('http://', 'https://')):
         target = 'http://' + target
     
-    # Common paths to check
-    wordlist = [
-        '/admin', '/administrator', '/wp-admin', '/login', '/signin',
-        '/dashboard', '/panel', '/control', '/manage',
-        '/api', '/v1', '/v2', '/rest', '/graphql',
-        '/backup', '/backups', '/old', '/tmp',
-        '/config', '/settings', '/setup',
-        '/robots.txt', '/sitemap.xml', '/.well-known',
-        '/.env', '/.git', '/.svn', '/.DS_Store',
-        '/phpinfo.php', '/info.php', '/test.php',
-        '/status', '/health', '/ping', '/version',
-        '/uploads', '/files', '/images', '/assets',
-        '/docs', '/help', '/support',
-        '/blog', '/forum', '/shop', '/store'
-    ]
-    
+    wordlist = get_comprehensive_wordlist()
     found_content = []
     
     with requests.Session() as session:
@@ -72,26 +227,26 @@ def discover_content(target, max_workers=10):
                 if result:
                     found_content.append(result)
     
-    return sorted(found_content, key=lambda x: x['path'])
+    return sorted(found_content, key=lambda x: (x['risk_level'], x['path']))
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 Content Discovery - {target}")
+    print(f"[I] Content Discovery - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         # Ensure target has protocol
         if not target.startswith(('http://', 'https://')):
             target = 'http://' + target
         
-        print(f"🎯 Target: {target}")
-        print("🔍 Scanning common paths...")
+        print(f"[I] Target: {target}")
+        print("[I] Scanning common paths...")
         print()
         
         # Perform content discovery
@@ -99,48 +254,87 @@ def main(target):
         execution_time = (datetime.now() - start_time).total_seconds()
         
         if found_content:
-            print(f"✅ SUCCESS: Found {len(found_content)} accessible paths")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
+            # Assess security risk
+            security_findings, severity = assess_content_security_risk(found_content)
             
-            # Group by status code for better display
-            status_groups = {}
+            print(f"[{severity}] CONTENT DISCOVERED: Found {len(found_content)} accessible paths")
+            
+            # Display security analysis
+            if security_findings:
+                print(f"[{severity}] Security Risk Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
+            
+            # Group by risk level for better security focus
+            risk_groups = {"C": [], "H": [], "W": [], "I": []}
+            for item in found_content:
+                risk = item.get('risk_level', 'I')
+                risk_groups[risk].append(item)
+            
+            # Display by risk level (highest first)
+            for risk_level in ["C", "H", "W", "I"]:
+                if risk_groups[risk_level]:
+                    risk_names = {"C": "CRITICAL EXPOSURES", "H": "HIGH RISK PATHS", 
+                                 "W": "WARNING PATHS", "I": "INFORMATIONAL PATHS"}
+                    
+                    print(f"[{risk_level}] {risk_names[risk_level]} ({len(risk_groups[risk_level])}):")
+                    for item in risk_groups[risk_level][:10]:  # Show first 10 per category
+                        size_str = f"{item['size']} bytes" if item['size'] > 0 else "empty"
+                        status_desc = {
+                            200: "Accessible",
+                            301: "Redirect", 
+                            302: "Redirect",
+                            401: "Auth Required",
+                            403: "Forbidden"
+                        }.get(item['status'], f"Status {item['status']}")
+                        
+                        print(f"  [{risk_level}] {item['path']} [{item['status']}] - {status_desc}")
+                        print(f"    - Size: {size_str}, Type: {item['type']}")
+                        print(f"    - URL: {item['url']}")
+                    
+                    if len(risk_groups[risk_level]) > 10:
+                        print(f"  [{risk_level}] ... and {len(risk_groups[risk_level]) - 10} more")
+                    print()
+            
+            # Additional grouping by status for comprehensive view
+            status_summary = {}
             for item in found_content:
                 status = item['status']
-                if status not in status_groups:
-                    status_groups[status] = []
-                status_groups[status].append(item)
+                if status not in status_summary:
+                    status_summary[status] = 0
+                status_summary[status] += 1
             
-            # Display results grouped by status
-            for status_code in sorted(status_groups.keys()):
-                items = status_groups[status_code]
+            print("[I] STATUS CODE SUMMARY:")
+            for status_code in sorted(status_summary.keys()):
+                count = status_summary[status_code]
                 status_name = {
                     200: "Accessible",
                     301: "Redirected", 
                     302: "Redirected",
-                    401: "Requires Auth",
+                    401: "Requires Authentication",
                     403: "Forbidden"
                 }.get(status_code, f"Status {status_code}")
-                
-                print(f"📁 {status_name} ({status_code}) - {len(items)} items:")
-                for item in items:
-                    size_str = f"{item['size']} bytes" if item['size'] > 0 else "empty"
-                    print(f"   • {item['path']} ({size_str}, {item['type']})")
-                print()
+                print(f"  [I] {status_code} ({status_name}): {count} paths")
+            
+            print()
+            print(f"[I] Execution time: {execution_time:.2f}s")
             
             return {
                 "status": "SUCCESS",
                 "data": found_content,
+                "security_findings": security_findings,
+                "severity": severity,
                 "count": len(found_content),
                 "execution_time": execution_time
             }
         else:
-            print("ℹ️  NO DATA: No accessible paths found")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
+            print("[I] NO DATA: No accessible paths found")
+            print(f"[I] Execution time: {execution_time:.2f}s")
             return {"status": "NO_DATA", "execution_time": execution_time}
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Discovery stopped by user")
+        print("[I] INTERRUPTED: Discovery stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -148,16 +342,16 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during content discovery")
+            print("[T] TIMEOUT: Request timeout during content discovery")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error - target may be unreachable")
+            print("[E] ERROR: Connection error - target may be unreachable")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
+        print(f"[I] Execution time: {execution_time:.2f}s")
         return {"status": status, "error": error_msg, "execution_time": execution_time}
 
 if __name__ == "__main__":
@@ -165,7 +359,7 @@ if __name__ == "__main__":
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python content_discovery.py <url_or_domain>")
         print("Example: python content_discovery.py example.com")
         sys.exit(1)

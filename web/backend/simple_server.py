@@ -928,7 +928,9 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
         self.send_json_response(health_data)
 
     def handle_get_modules(self):
-        """Get available modules with enhanced metadata"""
+        """Get available modules with enhanced metadata - FIXED VERSION"""
+        
+        # Enhanced modules that support the new findings system (define at function level)
         enhanced_modules = [
             "dns_records.py", "open_ports.py", "whois_lookup.py",
             "content_discovery.py", "email_harvester.py", "social_media.py", 
@@ -937,29 +939,133 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
             "subdomain_takeover.py", "virustotal_scan.py"
         ]
         
-        modules_data = []
-        for i, module_script in enumerate(enhanced_modules, 1):
-            metadata = get_finding_metadata(module_script)
-            module_info = {
-                "id": i,
-                "name": metadata["title"],
-                "script": module_script,
-                "category": metadata["category"],
-                "description": metadata["description"],
-                "severity_base": metadata["severity_base"],
-                "enhanced": True,
-                "supports_clean_output": True,
-                "estimated_time": MODULE_TIMEOUTS.get(module_script, 60)
-            }
-            modules_data.append(module_info)
+        # Import the full module list from argus.py
+        try:
+            # Add the argus root to path if not already there
+            import sys
+            from pathlib import Path
+            argus_root = Path(__file__).parent.parent.parent
+            if str(argus_root) not in sys.path:
+                sys.path.insert(0, str(argus_root))
+            
+            from argus import tools
+            original_modules_available = True
+            print(f"✅ Loaded {len(tools)} modules from argus.py")
+        except ImportError as e:
+            print(f"⚠️  Could not import from argus.py: {e}")
+            original_modules_available = False
+            tools = []
         
-        self.send_json_response({
+        modules_data = []
+        
+        if original_modules_available and tools:
+            # Use the full 54-module list from argus.py
+            for tool in tools:
+                # Skip the special "Run All" and "BEAST MODE" entries
+                if not tool['script'] or tool['section'] in ['Run All Scripts', 'Special Mode']:
+                    continue
+                    
+                module_script = tool['script']
+                is_enhanced = module_script in enhanced_modules
+                
+                # Get enhanced metadata if available, otherwise use basic info
+                if is_enhanced:
+                    try:
+                        metadata = get_finding_metadata(module_script)
+                        # OVERRIDE: Force enhanced modules into the 3 main categories
+                        section_to_category = {
+                            'Network & Infrastructure': 'Network and Infrastructure',
+                            'Web Application Analysis': 'Web Application', 
+                            'Security & Threat Intelligence': 'Security & Threat Intelligence'
+                        }
+                        # Use the tool's original section, not the metadata category
+                        category = section_to_category.get(tool['section'], 'Network and Infrastructure')
+                        description = metadata["description"]
+                        severity_base = metadata["severity_base"]
+                    except:
+                        # Fallback if metadata function fails - use 3 main categories
+                        section_to_category = {
+                            'Network & Infrastructure': 'Network and Infrastructure',
+                            'Web Application Analysis': 'Web Application', 
+                            'Security & Threat Intelligence': 'Security & Threat Intelligence'
+                        }
+                        category = section_to_category.get(tool['section'], 'Network and Infrastructure')
+                        description = f"{tool['name']} - Enhanced reconnaissance module"
+                        severity_base = "medium"
+                else:
+                    # Map ALL modules to the 3 main categories only
+                    section_to_category = {
+                        'Network & Infrastructure': 'Network and Infrastructure',
+                        'Web Application Analysis': 'Web Application', 
+                        'Security & Threat Intelligence': 'Security & Threat Intelligence'
+                    }
+                    # Force everything into one of the 3 categories
+                    category = section_to_category.get(tool['section'], 'Network and Infrastructure')
+                    description = f"{tool['name']} - {tool['section']} tool"
+                    severity_base = "medium"
+                
+                module_info = {
+                    "id": int(tool['number']) if tool['number'].isdigit() else len(modules_data) + 1,
+                    "name": tool['name'],
+                    "script": module_script,
+                    "category": category,
+                    "description": description,
+                    "severity_base": severity_base,
+                    "enhanced": is_enhanced,
+                    "supports_clean_output": is_enhanced,
+                    "estimated_time": MODULE_TIMEOUTS.get(module_script, 60),
+                    "section": tool['section'],  # Keep original section info
+                    "number": tool['number']     # Keep original numbering
+                }
+                modules_data.append(module_info)
+                
+        else:
+            # Fallback to enhanced modules only if argus.py import fails
+            print("⚠️  Using fallback enhanced modules only")
+            for i, module_script in enumerate(enhanced_modules, 1):
+                try:
+                    metadata = get_finding_metadata(module_script)
+                    module_info = {
+                        "id": i,
+                        "name": metadata["title"],
+                        "script": module_script,
+                        "category": metadata["category"],
+                        "description": metadata["description"],
+                        "severity_base": metadata["severity_base"],
+                        "enhanced": True,
+                        "supports_clean_output": True,
+                        "estimated_time": MODULE_TIMEOUTS.get(module_script, 60)
+                    }
+                    modules_data.append(module_info)
+                except Exception as e:
+                    print(f"⚠️  Error loading metadata for {module_script}: {e}")
+        
+        # Sort modules by category and then by name for consistent ordering
+        modules_data.sort(key=lambda x: (x['category'], x['name']))
+        
+        # Generate summary statistics
+        total_modules = len(modules_data)
+        enhanced_count = len([m for m in modules_data if m.get('enhanced', False)])
+        categories = list(set(m['category'] for m in modules_data))
+        
+        response_data = {
             "modules": modules_data,
-            "total": len(modules_data),
-            "enhanced_count": len(modules_data),
-            "categories": list(set(m["category"] for m in modules_data))
-        })
-
+            "total": total_modules,
+            "enhanced_count": enhanced_count,
+            "legacy_count": total_modules - enhanced_count,
+            "categories": sorted(categories),
+            "status": "success",
+            "source": "argus.py" if original_modules_available else "enhanced_only",
+            "features": {
+                "enhanced_findings": enhanced_count > 0,
+                "legacy_support": total_modules > enhanced_count,
+                "full_module_set": original_modules_available
+            }
+        }
+        
+        print(f"📊 Returning {total_modules} modules ({enhanced_count} enhanced, {total_modules - enhanced_count} legacy)")
+        self.send_json_response(response_data)
+    
     def handle_create_scan(self):
         """Enhanced scan creation with clean output support"""
         try:
