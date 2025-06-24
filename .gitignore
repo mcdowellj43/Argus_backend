@@ -107,7 +107,6 @@ Thumbs.db
 
 # Local configuration files
 config.py
-config/
 settings.py
 settings/
 *.ini
