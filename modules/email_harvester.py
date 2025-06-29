@@ -2,6 +2,7 @@
 """
 Improved Email Harvester Module - Clean Output with Success/Failure Indicators
 Fixed for Windows Unicode encoding issues
+UPDATED: Integrated with centralized findings system
 """
 
 import os
@@ -26,6 +27,14 @@ except ImportError:
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     DEFAULT_TIMEOUT = 10
 
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
+
 # Try to import BeautifulSoup with fallback
 try:
     from bs4 import BeautifulSoup
@@ -46,82 +55,60 @@ def assess_email_security_risk(emails, categories):
                          'president', 'director', 'manager', 'owner']
     
     # Sensitive business patterns
-    sensitive_patterns = ['hr', 'finance', 'accounting', 'legal', 'security', 
-                         'it', 'support', 'sales', 'marketing']
+    sensitive_patterns = ['hr', 'finance', 'accounting', 'legal', 'security',
+                         'support', 'billing', 'sales']
     
-    high_risk_found = []
-    sensitive_found = []
-    personal_exposed = []
-    generic_exposed = []
+    high_risk_emails = []
+    sensitive_emails = []
     
     for email in emails:
         local_part = email.split('@')[0].lower()
         
-        # Check for high-risk administrative emails
+        # Check for high-risk patterns
         if any(pattern in local_part for pattern in high_risk_patterns):
-            high_risk_found.append(email)
-            
-        # Check for sensitive business emails
+            high_risk_emails.append(email)
+        
+        # Check for sensitive business patterns
         elif any(pattern in local_part for pattern in sensitive_patterns):
-            sensitive_found.append(email)
+            sensitive_emails.append(email)
     
-    # Analyze categories
-    personal_exposed = categories.get("personal", [])
-    generic_exposed = categories.get("generic", [])
-    
-    # Determine severity and findings
-    if high_risk_found:
-        severity = "C"
-        findings.append(f"Administrative emails exposed: {len(high_risk_found)} high-value targets")
-        for email in high_risk_found[:3]:  # Show first 3
-            findings.append(f"Critical exposure: {email}")
-    
-    if sensitive_found and severity not in ["C"]:
+    # Analyze findings based on categories and patterns
+    if high_risk_emails:
+        findings.append(f"Executive/administrative emails discovered: {len(high_risk_emails)}")
         severity = "H"
-        findings.append(f"Business-critical emails found: {len(sensitive_found)} sensitive accounts")
     
-    if personal_exposed and severity not in ["C", "H"]:
-        severity = "W"
-        findings.append(f"Personal emails exposed: {len(personal_exposed)} individual accounts")
+    if sensitive_emails:
+        findings.append(f"Business function emails found: {len(sensitive_emails)}")
+        if severity == "I":
+            severity = "W"
     
-    if len(emails) >= 10 and severity == "I":
-        severity = "W"
-        findings.append(f"High email exposure: {len(emails)} addresses discovered")
-    elif len(emails) >= 5 and severity == "I":
-        findings.append(f"Moderate email exposure: {len(emails)} addresses found")
+    if len(emails) > 10:
+        findings.append(f"Large email exposure: {len(emails)} addresses harvested")
+        if severity == "I":
+            severity = "W"
     
-    # Check for potential spear-phishing targets
-    if high_risk_found or sensitive_found:
-        findings.append("Spear-phishing risk: High-value targets identified for social engineering")
+    # Check for personal vs organizational emails
+    org_emails = len(categories.get("organizational", []))
+    personal_emails = len(categories.get("personal", []))
+    
+    if personal_emails > 0:
+        findings.append(f"Personal email addresses found: {personal_emails}")
+    
+    if org_emails > 5:
+        findings.append(f"Extensive organizational email exposure: {org_emails}")
+        if severity == "I":
+            severity = "W"
+    
+    # Generic contact emails are usually acceptable
+    generic_emails = len(categories.get("generic", []))
+    if generic_emails > 0 and len(findings) == 0:
+        findings.append(f"Generic contact emails found: {generic_emails}")
     
     return findings, severity
 
-def get_email_risk_level(email):
-    """Determine risk level for individual email addresses"""
-    local_part = email.split('@')[0].lower()
-    
-    # Critical patterns (administrative/executive)
-    critical_patterns = ['admin', 'administrator', 'root', 'ceo', 'cto', 'cfo', 
-                        'president', 'director', 'owner']
-    
-    # High-risk patterns (business functions)
-    high_patterns = ['hr', 'finance', 'accounting', 'legal', 'security', 
-                    'it', 'manager', 'supervisor']
-    
-    # Medium-risk patterns (support/sales)
-    medium_patterns = ['support', 'sales', 'marketing', 'info', 'contact']
-    
-    if any(pattern in local_part for pattern in critical_patterns):
-        return "C"
-    elif any(pattern in local_part for pattern in high_patterns):
-        return "H"
-    elif any(pattern in local_part for pattern in medium_patterns):
-        return "W"
-    else:
-        return "I"
-
 def extract_emails_from_content(content):
     """Extract email addresses from content using regex"""
+    # Improved email regex pattern
     email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     emails = set(re.findall(email_pattern, content, re.IGNORECASE))
     
@@ -235,8 +222,8 @@ def categorize_emails(emails):
     }
     
     generic_prefixes = ['info', 'contact', 'support', 'admin', 'hello', 'mail']
-    personal_domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 
-                       'icloud.com', 'aol.com', 'live.com']
+    personal_domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 
+                       'outlook.com', 'icloud.com', 'aol.com', 'live.com']
     
     for email in emails:
         local, domain = email.split('@', 1)
@@ -251,8 +238,8 @@ def categorize_emails(emails):
     return categories
 
 def main(target):
-    """Main execution with clean output"""
-    print(f"[I] Email Harvester - {target}")
+    """Main execution with enhanced findings evaluation"""
+    print(f"[I] Email Harvester Analysis - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
@@ -260,7 +247,22 @@ def main(target):
     try:
         if not target:
             print("[E] FAILED: Empty target provided")
-            return {"status": "FAILED", "error": "Empty target"}
+            
+            # Error findings for empty target
+            error_findings = {
+                "success": False,
+                "severity": "I",
+                "findings": ["Empty target provided"],
+                "has_findings": True,
+                "category": "Input Error"
+            }
+            
+            return {
+                "status": "FAILED", 
+                "error": "Empty target",
+                "findings": error_findings,
+                "execution_time": (datetime.now() - start_time).total_seconds()
+            }
         
         # Ensure target has protocol
         if not target.startswith(('http://', 'https://')):
@@ -272,102 +274,109 @@ def main(target):
         print("[I] Harvesting email addresses...")
         print()
         
-        # Perform email harvesting
+        # Perform email harvesting (your existing logic)
         harvest_result = harvest_emails(target)
         execution_time = (datetime.now() - start_time).total_seconds()
         
         emails = harvest_result["emails"]
         pages_checked = harvest_result["pages_checked"]
         
+        # Prepare scan data for findings evaluation
+        scan_data = {
+            "emails": emails,
+            "total_emails": len(emails),
+            "pages_checked": pages_checked,
+            "pages_scanned": len(pages_checked),
+            "status": "SUCCESS" if emails else "NO_DATA",
+            "target": target
+        }
+        
         if emails:
-            # Categorize emails and assess security risk
+            # Categorize emails and assess security risk (keep existing logic)
             categories = categorize_emails(emails)
             security_findings, severity = assess_email_security_risk(emails, categories)
             
             print(f"[{severity}] EMAILS DISCOVERED: Found {len(emails)} email addresses")
             print(f"[I] Pages checked: {len(pages_checked)}")
             
-            # Display security analysis
+            # Display legacy security analysis
             if security_findings:
                 print(f"[{severity}] Security Risk Analysis:")
                 for finding in security_findings:
                     print(f"  [{severity}] {finding}")
                 print()
             
-            # Display emails by risk level and category
-            risk_groups = {"C": [], "H": [], "W": [], "I": []}
-            for email in emails:
-                risk = get_email_risk_level(email)
-                risk_groups[risk].append(email)
-            
-            # Show critical and high-risk emails first
-            for risk_level in ["C", "H", "W", "I"]:
-                if risk_groups[risk_level]:
-                    risk_names = {"C": "CRITICAL TARGETS", "H": "HIGH-VALUE TARGETS", 
-                                 "W": "BUSINESS CONTACTS", "I": "GENERAL CONTACTS"}
-                    
-                    print(f"[{risk_level}] {risk_names[risk_level]} ({len(risk_groups[risk_level])}):")
-                    for email in risk_groups[risk_level]:
-                        print(f"  [{risk_level}] {email}")
+            # Display results by category (keep existing display)
+            for category, email_list in categories.items():
+                if email_list:
+                    print(f"[I] {category.title()} Emails ({len(email_list)}):")
+                    for email in email_list[:5]:  # Show first 5
+                        print(f"   - {email}")
+                    if len(email_list) > 5:
+                        print(f"   - ... and {len(email_list) - 5} more")
                     print()
-            
-            # Show categorized view
-            if categories["organizational"]:
-                print(f"[I] ORGANIZATIONAL EMAILS ({len(categories['organizational'])}):")
-                for email in categories["organizational"]:
-                    risk = get_email_risk_level(email)
-                    print(f"  [{risk}] {email}")
-                print()
-            
-            if categories["generic"]:
-                print(f"[I] GENERIC EMAILS ({len(categories['generic'])}):")
-                for email in categories["generic"]:
-                    print(f"  [I] {email}")
-                print()
-            
-            if categories["personal"]:
-                print(f"[W] PERSONAL EMAILS ({len(categories['personal'])}):")
-                for email in categories["personal"]:
-                    print(f"  [W] {email}")
-                print()
-            
-            print("[I] PAGES SCANNED:")
-            for page in pages_checked:
-                print(f"  [I] {page}")
-            
-            print()
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "SUCCESS",
-                "data": {
-                    "emails": emails,
-                    "categories": categories,
-                    "pages_checked": pages_checked
-                },
-                "security_findings": security_findings,
-                "severity": severity,
-                "count": len(emails),
-                "execution_time": execution_time
-            }
         else:
             print("[I] NO DATA: No email addresses found")
             print(f"[I] Pages checked: {len(pages_checked)}")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {
-                "status": "NO_DATA", 
-                "data": {"pages_checked": pages_checked},
-                "execution_time": execution_time
+            security_findings = []
+            severity = "I"
+            categories = {"organizational": [], "personal": [], "generic": []}
+        
+        print()
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("email_harvester.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback to basic assessment
+            findings_result = {
+                "success": len(emails) > 0,
+                "severity": severity,
+                "findings": security_findings,
+                "has_findings": len(security_findings) > 0,
+                "category": "Email Discovery"
             }
-            
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        print()
+        
+        # Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,
+            "findings": findings_result,
+            "execution_time": execution_time,
+            "target": target,
+            # Keep legacy fields for backward compatibility
+            "security_findings": security_findings,
+            "severity": findings_result["severity"],
+            "count": len(emails),
+            "categories": categories
+        }
+        
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Harvesting stopped by user")
-        return {"status": "INTERRUPTED"}
+        
+        interrupt_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": ["Email harvesting interrupted by user"],
+            "has_findings": True,
+            "category": "Execution"
+        }
+        
+        return {
+            "status": "INTERRUPTED",
+            "findings": interrupt_findings,
+            "execution_time": (datetime.now() - start_time).total_seconds()
+        }
         
     except Exception as e:
         execution_time = (datetime.now() - start_time).total_seconds()
         error_msg = str(e)
         
+        # Classify error types (keep existing logic)
         if "timeout" in error_msg.lower():
             print("[T] TIMEOUT: Request timeout during email harvesting")
             status = "TIMEOUT"
@@ -379,12 +388,31 @@ def main(target):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # Error findings
+        error_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": [f"Email harvesting failed: {error_msg}"],
+            "has_findings": True,
+            "category": "Error"
+        }
+        
+        return {
+            "status": status,
+            "error": error_msg,
+            "findings": error_findings,
+            "execution_time": execution_time
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        main(target)
+        result = main(target)
+        
+        # Exit with appropriate code
+        exit_code = 0 if result["status"] in ["SUCCESS", "INTERRUPTED"] else 1
+        sys.exit(exit_code)
     else:
         print("[E] ERROR: No target provided")
         print("Usage: python email_harvester.py <url_or_domain>")

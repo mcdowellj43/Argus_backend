@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Improved Social Media Module - Clean Output with Success/Failure Indicators
+Enhanced Social Media Module - Clean Output with Centralized Binary Findings System
 Fixed for Windows Unicode encoding issues
 """
 
@@ -19,6 +19,14 @@ if sys.platform.startswith('win'):
 
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
 try:
     from config.settings import USER_AGENT, DEFAULT_TIMEOUT
@@ -307,9 +315,18 @@ def main(target):
         print("[I] Searching for social media profiles...")
         print()
         
-        # Discover social media profiles
+        # Discover social media profiles (Keep existing logic unchanged)
         profiles = discover_social_media(target)
         execution_time = (datetime.now() - start_time).total_seconds()
+        
+        # NEW: Prepare data for findings system
+        scan_data = {
+            "target": target,
+            "profiles": profiles,
+            "total_profiles_found": len(profiles),
+            "scan_completed": True,
+            "status": "SUCCESS"
+        }
         
         if profiles:
             # Group by platform for analysis
@@ -320,8 +337,45 @@ def main(target):
                     platform_groups[platform] = []
                 platform_groups[platform].append(profile)
             
+            # NEW: Categorize platforms for findings evaluation
+            business_platforms = [p for p in platform_groups.keys() if p in ['LinkedIn', 'GitHub']]
+            personal_platforms = [p for p in platform_groups.keys() if p in ['Facebook', 'Instagram', 'TikTok', 'Snapchat']]
+            
+            scan_data.update({
+                "platforms": list(platform_groups.keys()),
+                "platform_groups": platform_groups,
+                "platform_count": len(platform_groups),
+                "business_platforms": business_platforms,
+                "personal_platforms": personal_platforms
+            })
+            
             # Assess security risk
             security_findings, severity = assess_social_media_security_risk(profiles, platform_groups)
+            scan_data.update({
+                "security_findings": security_findings,
+                "severity": severity
+            })
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("social_media.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback for legacy mode
+            has_high_exposure = len(profiles) >= 5 or any(p in ['LinkedIn', 'Facebook', 'Twitter'] for p in scan_data.get("platforms", []))
+            findings_result = {
+                "success": not has_high_exposure,
+                "severity": severity if profiles else "I",
+                "findings": [],
+                "has_findings": has_high_exposure
+            }
+        
+        # Legacy output format when findings system not available
+        if not FINDINGS_AVAILABLE and profiles:
+            # Group by platform for analysis
+            platform_groups = scan_data["platform_groups"]
+            security_findings = scan_data["security_findings"]
+            severity = scan_data["severity"]
             
             print(f"[{severity}] SOCIAL PROFILES: Found {len(profiles)} social media profiles")
             
@@ -360,26 +414,20 @@ def main(target):
                 print(f"  [W] Medium-risk platforms: {', '.join(medium_risk)}")
             if low_risk:
                 print(f"  [I] Low-risk platforms: {', '.join(low_risk)}")
-            
-            print()
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "SUCCESS",
-                "data": {
-                    "profiles": profiles,
-                    "platforms": list(platform_groups.keys()),
-                    "platform_groups": platform_groups
-                },
-                "security_findings": security_findings,
-                "severity": severity,
-                "count": len(profiles),
-                "execution_time": execution_time
-            }
-        else:
+        
+        elif not FINDINGS_AVAILABLE and not profiles:
             print("[I] NO DATA: No social media profiles found")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {"status": "NO_DATA", "execution_time": execution_time}
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # NEW: Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,                    # Your existing scan results
+            "findings": findings_result,          # New findings data
+            "execution_time": execution_time,
+            "target": target
+        }
             
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Discovery stopped by user")
@@ -400,7 +448,30 @@ def main(target):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # NEW: Enhanced error handling with findings system
+        if FINDINGS_AVAILABLE:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [f"Scan error: {error_msg}"],
+                "has_findings": True
+            }
+        else:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [],
+                "has_findings": False
+            }
+        
+        return {
+            "status": status, 
+            "error": error_msg, 
+            "execution_time": execution_time,
+            "findings": findings_result,
+            "target": target
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

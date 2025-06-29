@@ -2,6 +2,7 @@
 """
 Improved WHOIS Lookup Module - Clean Output with Success/Failure Indicators
 Fixed for Windows Unicode encoding issues
+UPDATED: Integrated with centralized findings system
 """
 
 import os
@@ -36,6 +37,14 @@ except ImportError:
         return domain
     
     DEFAULT_TIMEOUT = 30
+
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
 # Use our own working validation function
 def validate_domain(domain):
@@ -238,8 +247,8 @@ def perform_whois_lookup(domain):
         raise Exception(f"WHOIS lookup failed: {str(e)}")
 
 def main(target):
-    """Main execution with clean output"""
-    print(f"[I] WHOIS Lookup - {target}")
+    """Main execution with enhanced findings evaluation"""
+    print(f"[I] WHOIS Lookup Analysis - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
@@ -250,30 +259,58 @@ def main(target):
         
         if not validate_domain(domain):
             print("[E] FAILED: Invalid domain format")
-            return {"status": "FAILED", "error": "Invalid domain format"}
+            
+            # Error findings for invalid input
+            error_findings = {
+                "success": False,
+                "severity": "I",
+                "findings": ["Invalid domain format provided"],
+                "has_findings": True,
+                "category": "Input Error"
+            }
+            
+            return {
+                "status": "FAILED", 
+                "error": "Invalid domain format",
+                "findings": error_findings,
+                "execution_time": (datetime.now() - start_time).total_seconds()
+            }
         
         print(f"[I] Target: {domain}")
         print()
         
-        # Perform WHOIS lookup
+        # Perform WHOIS lookup (your existing logic)
         whois_data = perform_whois_lookup(domain)
         execution_time = (datetime.now() - start_time).total_seconds()
         
+        # Prepare scan data for findings evaluation
+        scan_data = {
+            "registrar": whois_data.get("registrar") if whois_data else None,
+            "organization": whois_data.get("organization") if whois_data else None,
+            "expires": whois_data.get("expires") if whois_data else None,
+            "created": whois_data.get("created") if whois_data else None,
+            "status": whois_data.get("status") if whois_data else None,
+            "nameservers": whois_data.get("nameservers", []) if whois_data else [],
+            "domain": domain,
+            "lookup_successful": whois_data is not None,
+            "raw_data": whois_data if whois_data else {}
+        }
+        
         if whois_data:
-            # Analyze security implications
+            # Legacy security assessment (keep existing logic)
             security_findings, severity = analyze_whois_security(whois_data)
             
             data_fields = len([k for k, v in whois_data.items() if v])
             print(f"[S] SUCCESS: Found {data_fields} WHOIS data fields")
             
-            # Display security findings
+            # Display legacy security findings
             if security_findings:
                 print(f"[{severity}] WHOIS Security Analysis:")
                 for finding in security_findings:
                     print(f"  [{severity}] {finding}")
                 print()
             
-            # Display results
+            # Display results (keep existing display)
             print("[I] WHOIS Information:")
             if 'status' in whois_data:
                 print(f"  [I] Status: {whois_data['status']}")
@@ -289,37 +326,89 @@ def main(target):
                 print(f"  [I] Name Servers ({len(whois_data['nameservers'])}):")
                 for ns in whois_data['nameservers']:
                     print(f"    - {ns}")
-            
-            print()
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "SUCCESS",
-                "data": whois_data,
-                "security_findings": security_findings,
-                "severity": severity,
-                "count": data_fields,
-                "execution_time": execution_time
-            }
         else:
             print("[I] NO DATA: No WHOIS information found")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {"status": "NO_DATA", "execution_time": execution_time}
-            
+            security_findings = []
+            severity = "I"
+        
+        print()
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("whois_lookup.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback to basic assessment
+            findings_result = {
+                "success": whois_data is not None,
+                "severity": severity,
+                "findings": security_findings,
+                "has_findings": len(security_findings) > 0,
+                "category": "WHOIS Analysis"
+            }
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        print()
+        
+        # Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,
+            "findings": findings_result,
+            "execution_time": execution_time,
+            "target": domain,
+            # Keep legacy fields for backward compatibility
+            "security_findings": security_findings,
+            "severity": findings_result["severity"],
+            "count": len([k for k, v in whois_data.items() if v]) if whois_data else 0
+        }
+        
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Lookup stopped by user")
-        return {"status": "INTERRUPTED"}
+        
+        interrupt_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": ["WHOIS lookup interrupted by user"],
+            "has_findings": True,
+            "category": "Execution"
+        }
+        
+        return {
+            "status": "INTERRUPTED",
+            "findings": interrupt_findings,
+            "execution_time": (datetime.now() - start_time).total_seconds()
+        }
         
     except Exception as e:
         execution_time = (datetime.now() - start_time).total_seconds()
         print(f"[E] ERROR: {str(e)}")
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": "ERROR", "error": str(e), "execution_time": execution_time}
+        
+        # Error findings
+        error_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": [f"WHOIS lookup failed: {str(e)}"],
+            "has_findings": True,
+            "category": "Error"
+        }
+        
+        return {
+            "status": "ERROR",
+            "error": str(e),
+            "findings": error_findings,
+            "execution_time": execution_time
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        main(target)
+        result = main(target)
+        
+        # Exit with appropriate code
+        exit_code = 0 if result["status"] in ["SUCCESS", "INTERRUPTED"] else 1
+        sys.exit(exit_code)
     else:
         print("[E] ERROR: No target provided")
         print("Usage: python whois_lookup.py <domain>")

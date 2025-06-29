@@ -1,0 +1,142 @@
+{
+  "version": "1.0",
+  "description": "Decian Security Platform - Findings Configuration",
+  "last_updated": "2025-01-20",
+  
+  "risk_thresholds": {
+    "critical": 80,
+    "high": 60,
+    "medium": 40,
+    "low": 20,
+    "minimal": 0
+  },
+  
+  "severity_escalation_keywords": {
+    "critical": ["password", "secret", "api_key", "token", "credential", "private_key", "malicious", "infected", "compromised"],
+    "high": ["admin", "root", "database", "config", "backup", "internal"],
+    "medium": ["user", "public", "cache", "temp", "log"],
+    "low": ["info", "test", "demo", "example"]
+  },
+  
+  "output_analysis_rules": {
+    "data_leak.py": {
+      "critical_threshold": 5,
+      "high_threshold": 2,
+      "keywords": ["@", "breach", "leaked", "exposed"]
+    },
+    "open_ports.py": {
+      "critical_threshold": 20,
+      "high_threshold": 10,
+      "keywords": ["22", "3389", "1433", "5432"]
+    },
+    "subdomain_enum.py": {
+      "critical_threshold": 50,
+      "high_threshold": 20,
+      "keywords": ["admin", "api", "dev", "staging", "test"]
+    },
+    "malware_phishing.py": {
+      "critical_threshold": 1,
+      "high_threshold": 1,
+      "keywords": ["malware", "phishing", "malicious", "infected"]
+    }
+  },
+  
+  "category_priorities": {
+    "Information Disclosure": 1,
+    "Threat Intelligence": 2,
+    "Attack Surface Expansion": 3,
+    "Security Configuration": 4,
+    "Web Application Analysis": 5,
+    "Network & Infrastructure": 6,
+    "Compliance & Privacy": 7
+  },
+  
+  "remediation_timeframes": {
+    "critical": "24-48 hours",
+    "high": "1-7 days",
+    "medium": "2-4 weeks",
+    "low": "1-3 months"
+  },
+  
+  "compliance_frameworks": {
+    "GDPR": {
+      "relevant_categories": ["Information Disclosure", "Compliance & Privacy"],
+      "critical_modules": ["data_leak.py", "privacy_gdpr.py", "exposed_env_files.py"]
+    },
+    "ISO27001": {
+      "relevant_categories": ["Security Configuration", "Information Disclosure", "Threat Intelligence"],
+      "critical_modules": ["ssl_labs_report.py", "http_security.py", "firewall_detection.py"]
+    },
+    "NIST": {
+      "relevant_categories": ["Attack Surface Expansion", "Security Configuration", "Threat Intelligence"],
+      "critical_modules": ["subdomain_enum.py", "open_ports.py", "virustotal_scan.py"]
+    }
+  },
+  
+  "business_impact_templates": {
+    "data_breach": "Potential data breach involving {data_type}, affecting {user_count} users with regulatory compliance implications",
+    "service_exposure": "Exposed {service_type} services creating {attack_vector_count} potential attack vectors",
+    "reputation_damage": "Security issues may impact organizational reputation and customer trust",
+    "compliance_violation": "Identified issues may result in regulatory compliance violations and potential fines",
+    "operational_disruption": "Security vulnerabilities could lead to service disruptions and business continuity issues"
+  },
+  
+  "recommendation_templates": {
+    "immediate": {
+      "data_exposure": "Immediately remove exposed data, rotate compromised credentials, and implement access controls",
+      "active_threats": "Isolate affected systems, investigate threat vectors, and implement containment measures",
+      "critical_vulns": "Apply security patches immediately, disable vulnerable services, and implement workarounds"
+    },
+    "short_term": {
+      "config_hardening": "Review and harden security configurations, implement security best practices",
+      "monitoring": "Implement enhanced monitoring and alerting for identified vulnerabilities",
+      "access_control": "Review and strengthen access controls and authentication mechanisms"
+    },
+    "long_term": {
+      "security_program": "Develop comprehensive security program with regular assessments and training",
+      "compliance": "Establish compliance management program and regular auditing procedures",
+      "incident_response": "Create and test incident response procedures for identified threat scenarios"
+    }
+  },
+  
+  "report_sections": {
+    "executive_summary": {
+      "enabled": true,
+      "include_risk_score": true,
+      "include_business_impact": true,
+      "max_key_findings": 5
+    },
+    "technical_findings": {
+      "enabled": true,
+      "include_module_details": true,
+      "include_output_samples": true,
+      "max_output_length": 500
+    },
+    "risk_assessment": {
+      "enabled": true,
+      "include_category_breakdown": true,
+      "include_remediation_timeline": true,
+      "include_compliance_mapping": true
+    },
+    "recommendations": {
+      "enabled": true,
+      "prioritize_by_risk": true,
+      "include_implementation_guidance": true,
+      "group_by_timeframe": true
+    }
+  },
+  
+  "customization_options": {
+    "allow_severity_override": false,
+    "allow_category_weights_adjustment": false,
+    "allow_custom_recommendations": true,
+    "allow_finding_suppression": true
+  },
+  
+  "integration_settings": {
+    "auto_generate_findings": true,
+    "store_findings_with_scan": true,
+    "enable_historical_trending": true,
+    "enable_benchmark_comparison": false
+  }
+}

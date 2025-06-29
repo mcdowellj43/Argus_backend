@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Improved Content Discovery Module - Clean Output with Success/Failure Indicators
+Enhanced Content Discovery Module - Clean Output with Centralized Binary Findings System
 Fixed for Windows Unicode encoding issues
 """
 
@@ -19,6 +19,14 @@ if sys.platform.startswith('win'):
 
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
 try:
     from config.settings import USER_AGENT, DEFAULT_TIMEOUT
@@ -249,61 +257,91 @@ def main(target):
         print("[I] Scanning common paths...")
         print()
         
-        # Perform content discovery
+        # Perform content discovery (Keep existing logic unchanged)
         found_content = discover_content(target)
         execution_time = (datetime.now() - start_time).total_seconds()
         
+        # NEW: Prepare data for findings system
+        scan_data = {
+            "target": target,
+            "found_paths": found_content,
+            "total_paths_scanned": len(get_comprehensive_wordlist()),
+            "paths_found": len(found_content),
+            "scan_completed": True,
+            "status": "SUCCESS"
+        }
+        
+        # Add categorized findings for findings system
         if found_content:
+            # Assess security risk
+            security_findings, severity = assess_content_security_risk(found_content)
+            
+            # Categorize paths for findings evaluation
+            critical_paths = [item for item in found_content if item['risk_level'] == 'C']
+            admin_interfaces = [item for item in found_content if item['risk_level'] == 'H']
+            sensitive_files = [item for item in found_content if any(keyword in item['path'] for keyword in ['.env', '.git', 'config', 'backup', 'phpinfo'])]
+            
+            scan_data.update({
+                "critical_paths": critical_paths,
+                "admin_interfaces": admin_interfaces, 
+                "sensitive_files": sensitive_files,
+                "security_findings": security_findings,
+                "severity": severity
+            })
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("content_discovery.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback for legacy mode
+            has_issues = len(found_content) > 0 and any(item['risk_level'] in ['C', 'H'] for item in found_content)
+            findings_result = {
+                "success": not has_issues,
+                "severity": severity if found_content else "I",
+                "findings": [],
+                "has_findings": has_issues
+            }
+        
+        # Legacy output format when findings system not available
+        if not FINDINGS_AVAILABLE and found_content:
             # Assess security risk
             security_findings, severity = assess_content_security_risk(found_content)
             
             print(f"[{severity}] CONTENT DISCOVERED: Found {len(found_content)} accessible paths")
             
-            # Display security analysis
+            # Show security findings
             if security_findings:
-                print(f"[{severity}] Security Risk Analysis:")
+                print(f"[{severity}] SECURITY ANALYSIS:")
                 for finding in security_findings:
                     print(f"  [{severity}] {finding}")
                 print()
             
-            # Group by risk level for better security focus
-            risk_groups = {"C": [], "H": [], "W": [], "I": []}
+            # Group by risk level
+            risk_groups = {'C': [], 'H': [], 'W': [], 'I': []}
             for item in found_content:
-                risk = item.get('risk_level', 'I')
-                risk_groups[risk].append(item)
+                risk_level = item['risk_level']
+                risk_groups[risk_level].append(item)
             
-            # Display by risk level (highest first)
-            for risk_level in ["C", "H", "W", "I"]:
+            # Display critical and high-risk items first
+            for risk_level in ['C', 'H', 'W', 'I']:
                 if risk_groups[risk_level]:
-                    risk_names = {"C": "CRITICAL EXPOSURES", "H": "HIGH RISK PATHS", 
-                                 "W": "WARNING PATHS", "I": "INFORMATIONAL PATHS"}
+                    files = risk_groups[risk_level]
+                    risk_names = {'C': 'CRITICAL', 'H': 'HIGH RISK', 'W': 'WARNING', 'I': 'INFORMATIONAL'}
                     
-                    print(f"[{risk_level}] {risk_names[risk_level]} ({len(risk_groups[risk_level])}):")
-                    for item in risk_groups[risk_level][:10]:  # Show first 10 per category
-                        size_str = f"{item['size']} bytes" if item['size'] > 0 else "empty"
-                        status_desc = {
-                            200: "Accessible",
-                            301: "Redirect", 
-                            302: "Redirect",
-                            401: "Auth Required",
-                            403: "Forbidden"
-                        }.get(item['status'], f"Status {item['status']}")
-                        
-                        print(f"  [{risk_level}] {item['path']} [{item['status']}] - {status_desc}")
-                        print(f"    - Size: {size_str}, Type: {item['type']}")
-                        print(f"    - URL: {item['url']}")
+                    print(f"[{risk_level}] {risk_names[risk_level]} PATHS ({len(files)}):")
+                    for item in files[:10]:  # Show first 10 in each category
+                        print(f"  [{risk_level}] {item['path']} [{item['status']}] ({item['type']})")
                     
-                    if len(risk_groups[risk_level]) > 10:
-                        print(f"  [{risk_level}] ... and {len(risk_groups[risk_level]) - 10} more")
+                    if len(files) > 10:
+                        print(f"  [{risk_level}] ... and {len(files) - 10} more paths")
                     print()
             
-            # Additional grouping by status for comprehensive view
+            # Status code summary
             status_summary = {}
             for item in found_content:
                 status = item['status']
-                if status not in status_summary:
-                    status_summary[status] = 0
-                status_summary[status] += 1
+                status_summary[status] = status_summary.get(status, 0) + 1
             
             print("[I] STATUS CODE SUMMARY:")
             for status_code in sorted(status_summary.keys()):
@@ -316,22 +354,20 @@ def main(target):
                     403: "Forbidden"
                 }.get(status_code, f"Status {status_code}")
                 print(f"  [I] {status_code} ({status_name}): {count} paths")
-            
-            print()
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "SUCCESS",
-                "data": found_content,
-                "security_findings": security_findings,
-                "severity": severity,
-                "count": len(found_content),
-                "execution_time": execution_time
-            }
-        else:
+        
+        elif not FINDINGS_AVAILABLE and not found_content:
             print("[I] NO DATA: No accessible paths found")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {"status": "NO_DATA", "execution_time": execution_time}
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # NEW: Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,                    # Your existing scan results
+            "findings": findings_result,          # New findings data
+            "execution_time": execution_time,
+            "target": target
+        }
             
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Discovery stopped by user")
@@ -352,7 +388,30 @@ def main(target):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # NEW: Enhanced error handling with findings system
+        if FINDINGS_AVAILABLE:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [f"Scan error: {error_msg}"],
+                "has_findings": True
+            }
+        else:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [],
+                "has_findings": False
+            }
+        
+        return {
+            "status": status, 
+            "error": error_msg, 
+            "execution_time": execution_time,
+            "findings": findings_result,
+            "target": target
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

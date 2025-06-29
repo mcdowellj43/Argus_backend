@@ -3,6 +3,7 @@
 Improved Data Leak Detection Module - Clean Output with Success/Failure Indicators
 Fixed for Windows Unicode encoding issues
 Note: This module requires API keys for full functionality
+UPDATED: Integrated with centralized findings system
 """
 
 import os
@@ -28,6 +29,14 @@ except (ImportError, AttributeError):
     DEFAULT_TIMEOUT = 30
     HIBP_API_KEY = None
 
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
+
 def assess_breach_severity(breach_data):
     """Assess the severity of breach findings"""
     domain_breaches = breach_data.get("domain_breaches", {}).get("breaches", [])
@@ -52,46 +61,46 @@ def assess_breach_severity(breach_data):
             severity_score += 3
             findings.append(f"Sensitive data exposed in {breach['name']} breach")
         
-        if pwn_count > 1000000:  # Large breach
+        # Large breach impact
+        if pwn_count > 1000000:  # 1M+ accounts
             severity_score += 2
-            findings.append(f"Large-scale breach: {breach['name']} ({pwn_count:,} accounts)")
+            findings.append(f"Large-scale breach: {pwn_count:,} accounts affected")
         
-        if not breach.get('verified', True):
-            findings.append(f"Unverified breach: {breach['name']} - verify legitimacy")
+        # Recent breaches are more concerning
+        if breach.get('breach_date', '').startswith('202'):  # 2020s
+            severity_score += 1
+            findings.append(f"Recent breach: {breach['name']} ({breach['breach_date']})")
     
     # Assess email breaches
-    critical_emails = ['admin', 'root', 'administrator', 'ceo', 'cto']
-    for email_data in email_breaches:
-        email = email_data['email']
-        prefix = email.split('@')[0].lower()
+    if email_breaches:
+        severity_score += len(email_breaches)
+        findings.append(f"Organizational emails compromised: {len(email_breaches)}")
         
-        if prefix in critical_emails:
+        # Count total breaches across all emails
+        total_email_breaches = sum(email.get('breach_count', 0) for email in email_breaches)
+        if total_email_breaches > 5:
             severity_score += 2
-            findings.append(f"Critical account compromised: {email}")
-        
-        if email_data['breach_count'] > 3:
-            severity_score += 1
-            findings.append(f"Multiple breaches for {email} ({email_data['breach_count']} total)")
+            findings.append(f"Extensive email exposure: {total_email_breaches} total breach instances")
     
     # Determine overall severity
-    if severity_score >= 5 or total_breaches >= 10:
-        severity = "C"  # Critical
-    elif severity_score >= 3 or total_breaches >= 5:
-        severity = "H"  # High
-    elif severity_score >= 1 or total_breaches >= 1:
-        severity = "W"  # Warning
+    if severity_score >= 8:
+        severity = "C"
+    elif severity_score >= 5:
+        severity = "H"
+    elif severity_score >= 2:
+        severity = "W"
     else:
-        severity = "I"  # Info
+        severity = "I"
     
     return severity, findings
 
 def check_haveibeenpwned_domain(domain):
-    """Check domain breaches using HaveIBeenPwned API"""
+    """Check HaveIBeenPwned for domain-related breaches"""
     if not HIBP_API_KEY:
         return {"error": "API key required", "breaches": []}
     
     try:
-        url = f"https://haveibeenpwned.com/api/v3/breaches"
+        url = "https://haveibeenpwned.com/api/v3/breaches"
         headers = {
             'hibp-api-key': HIBP_API_KEY,
             'User-Agent': 'Argus Security Scanner'
@@ -237,8 +246,8 @@ def perform_data_leak_check(target):
     return results
 
 def main(target):
-    """Main execution with clean output"""
-    print(f"[I] Data Leak Detection - {target}")
+    """Main execution with enhanced findings evaluation"""
+    print(f"[I] Data Leak Detection Analysis - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
@@ -246,7 +255,22 @@ def main(target):
     try:
         if not target:
             print("[E] FAILED: Empty target provided")
-            return {"status": "FAILED", "error": "Empty target"}
+            
+            # Error findings for empty target
+            error_findings = {
+                "success": False,
+                "severity": "I",
+                "findings": ["Empty target provided"],
+                "has_findings": True,
+                "category": "Input Error"
+            }
+            
+            return {
+                "status": "FAILED", 
+                "error": "Empty target",
+                "findings": error_findings,
+                "execution_time": (datetime.now() - start_time).total_seconds()
+            }
         
         domain = target.replace('http://', '').replace('https://', '').split('/')[0]
         print(f"[I] Target: {domain}")
@@ -259,28 +283,41 @@ def main(target):
         
         print()
         
-        # Perform data leak checking
+        # Perform data leak checking (your existing logic)
         results = perform_data_leak_check(target)
         execution_time = (datetime.now() - start_time).total_seconds()
         
-        # Analyze results
+        # Prepare scan data for findings evaluation
         summary = results["summary"]
+        
+        scan_data = {
+            "domain": domain,
+            "total_domain_breaches": summary["total_domain_breaches"],
+            "total_compromised_emails": summary["total_compromised_emails"],
+            "has_breaches": summary["has_breaches"],
+            "api_available": HIBP_API_KEY is not None,
+            "breach_details": results["domain_breaches"].get("breaches", []),
+            "email_details": results["email_breaches"].get("emails", []),
+            "scan_completed": True
+        }
+        
+        # Analyze results
         total_findings = summary["total_domain_breaches"] + summary["total_compromised_emails"]
         
         if summary["has_breaches"]:
-            # Assess severity of findings
+            # Assess severity of findings (keep existing logic)
             severity, security_findings = assess_breach_severity(results)
             
             print(f"[{severity}] BREACH DATA FOUND: {total_findings} potential data exposures detected")
             
-            # Display security analysis
+            # Display legacy security analysis
             if security_findings:
                 print(f"[{severity}] Security Impact Analysis:")
                 for finding in security_findings:
                     print(f"  [{severity}] {finding}")
                 print()
             
-            # Display domain breaches
+            # Display domain breaches (keep existing display)
             domain_breaches = results["domain_breaches"].get("breaches", [])
             if domain_breaches:
                 print(f"[W] Domain Breaches ({len(domain_breaches)}):")
@@ -288,70 +325,88 @@ def main(target):
                     verified_status = "[VERIFIED]" if breach['verified'] else "[UNVERIFIED]"
                     print(f"  [W] {breach['title']} ({breach['breach_date']}) {verified_status}")
                     print(f"    - Affected: {breach['pwn_count']:,} accounts")
-                    print(f"    - Data: {', '.join(breach['data_classes'][:3])}")
+                    if breach['data_classes']:
+                        print(f"    - Data: {', '.join(breach['data_classes'][:3])}")
                 if len(domain_breaches) > 5:
-                    print(f"  [I] ... and {len(domain_breaches) - 5} more breaches")
+                    print(f"  [W] ... and {len(domain_breaches) - 5} more breaches")
                 print()
             
             # Display email breaches
             email_breaches = results["email_breaches"].get("emails", [])
             if email_breaches:
-                print(f"[W] Compromised Emails ({len(email_breaches)}):")
-                for email_data in email_breaches:
-                    email_severity = "C" if email_data['email'].startswith(('admin@', 'root@')) else "W"
-                    print(f"  [{email_severity}] {email_data['email']} - {email_data['breach_count']} breaches")
-                    print(f"    - Found in: {', '.join(email_data['breaches'][:3])}")
+                print(f"[H] Email Breaches ({len(email_breaches)}):")
+                for email_breach in email_breaches:
+                    email = email_breach['email']
+                    breach_count = email_breach['breach_count']
+                    print(f"  [H] {email} - {breach_count} breaches")
+                    for breach_name in email_breach['breaches'][:3]:
+                        print(f"    - {breach_name}")
                 print()
-            
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "SUCCESS",
-                "data": results,
-                "security_findings": security_findings,
-                "severity": severity,
-                "count": total_findings,
-                "execution_time": execution_time
-            }
-        
-        elif results["domain_breaches"].get("error") or results["email_breaches"].get("error"):
-            # API errors occurred
-            error_msg = results["domain_breaches"].get("error") or results["email_breaches"].get("error")
-            if "API key" in error_msg:
-                print("[E] API ERROR: Valid API key required for breach checking")
-                print("[I] SETUP: Configure HIBP_API_KEY in config/settings.py")
-                status = "API_ERROR"
-            elif "rate limit" in error_msg.lower():
-                print("[W] RATE LIMIT: API rate limit exceeded, try again later")
-                status = "RATE_LIMITED"
-            else:
-                print(f"[E] ERROR: {error_msg}")
-                status = "ERROR"
-            
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {"status": status, "error": error_msg, "execution_time": execution_time}
-        
         else:
             print("[S] NO BREACHES: No data breaches found for target")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {
-                "status": "NO_DATA",
-                "data": results,
-                "count": 0,
-                "execution_time": execution_time
+            security_findings = []
+            severity = "I"
+        
+        print()
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("data_leak.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback to basic assessment
+            findings_result = {
+                "success": True,  # Consider scan successful even if no breaches found
+                "severity": severity,
+                "findings": security_findings if summary["has_breaches"] else ["No data breaches detected"],
+                "has_findings": summary["has_breaches"],
+                "category": "Data Breach Analysis"
             }
-            
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        print()
+        
+        # Return standardized format
+        return {
+            "status": "SUCCESS",  # Always success if scan completes
+            "data": scan_data,
+            "findings": findings_result,
+            "execution_time": execution_time,
+            "target": target,
+            # Keep legacy fields for backward compatibility
+            "count": total_findings,
+            "security_findings": security_findings if summary["has_breaches"] else [],
+            "severity": findings_result["severity"]
+        }
+        
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Check stopped by user")
-        return {"status": "INTERRUPTED"}
+        
+        interrupt_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": ["Data leak check interrupted by user"],
+            "has_findings": True,
+            "category": "Execution"
+        }
+        
+        return {
+            "status": "INTERRUPTED",
+            "findings": interrupt_findings,
+            "execution_time": (datetime.now() - start_time).total_seconds()
+        }
         
     except Exception as e:
         execution_time = (datetime.now() - start_time).total_seconds()
         error_msg = str(e)
         
+        # Classify error types (keep existing logic)
         if "timeout" in error_msg.lower():
             print("[T] TIMEOUT: Request timeout during data leak check")
             status = "TIMEOUT"
+        elif "rate limit" in error_msg.lower():
+            print("[R] RATE LIMITED: API rate limit exceeded")
+            status = "RATE_LIMITED"
         elif "connection" in error_msg.lower():
             print("[E] ERROR: Connection error during API requests")
             status = "CONNECTION_ERROR"
@@ -360,12 +415,31 @@ def main(target):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # Error findings
+        error_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": [f"Data leak check failed: {error_msg}"],
+            "has_findings": True,
+            "category": "Error"
+        }
+        
+        return {
+            "status": status,
+            "error": error_msg,
+            "findings": error_findings,
+            "execution_time": execution_time
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        main(target)
+        result = main(target)
+        
+        # Exit with appropriate code (always 0 for data leak checks since "no breaches" is success)
+        exit_code = 0 if result["status"] in ["SUCCESS", "INTERRUPTED"] else 1
+        sys.exit(exit_code)
     else:
         print("[E] ERROR: No target provided")
         print("Usage: python data_leak.py <domain>")
