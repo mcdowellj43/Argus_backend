@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Enhanced Argus Web Server - With Clean Script Integration & Report Generation
-Supports clean module outputs and frontend template integration
-"""
+
 
 import http.server
 import socketserver
@@ -21,8 +18,7 @@ import importlib.util
 # Import the findings system
 try:
     from modules.findings_generator import FindingsGenerator
-    from modules.risk_calculator import RiskCalculator
-    FINDINGS_ENABLED = True
+    INDINGS_ENABLED = True
     print("✅ Findings system loaded successfully")
 except ImportError as e:
     print(f"⚠️  Findings system not available: {e}")
@@ -508,7 +504,7 @@ def determine_risk_level(risk_score):
         return "minimal"
 
 def format_findings_for_templates(scan_results):
-    """Format findings to match frontend template expectations"""
+    """Format findings to match frontend template expectations with enhanced module metadata"""
     findings = {
         "hasFindings": False,
         "totalFindings": 0,
@@ -522,7 +518,8 @@ def format_findings_for_templates(scan_results):
             "medium": 0,
             "low": 0,
             "informational": 0
-        }
+        },
+        "modules_metadata": {}  # NEW: Add minimal module metadata
     }
     
     module_results = scan_results.get("module_results", [])
@@ -532,6 +529,23 @@ def format_findings_for_templates(scan_results):
         status = module_result.get("status", "")
         count = module_result.get("count", 0)
         severity = module_result.get("severity", "LOW")
+        
+        # NEW: Add minimal metadata for each module (regardless of success)
+        try:
+            from modules.module_mappings import MODULE_FINDINGS_MAP
+            if module_name in MODULE_FINDINGS_MAP:
+                metadata = MODULE_FINDINGS_MAP[module_name]
+                findings["modules_metadata"][module_name] = {
+                    "description": metadata["description"],
+                    "business_impact": metadata["business_impact"]
+                }
+        except ImportError:
+            # Fallback if module mappings not available
+            clean_name = module_name.replace('.py', '').replace('_', ' ').title()
+            findings["modules_metadata"][module_name] = {
+                "description": f"{clean_name} performs security analysis and assessment",
+                "business_impact": "Provides security insights and potential risk identification"
+            }
         
         if status == "SUCCESS" and count > 0:
             findings["hasFindings"] = True
@@ -797,6 +811,7 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
                     "endpoints": {
                         "health": "/api/health",
                         "modules": "/api/modules", 
+                        "modules_metadata": "/api/modules/metadata",
                         "scans": "/api/scans",
                         "scan_details": "/api/scans/{scan_id}",
                         "report_data": "/api/scans/{scan_id}/report-data",
@@ -811,7 +826,8 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
                         "Frontend template integration", 
                         "Risk scoring",
                         "Evidence formatting",
-                        "Multiple export formats"
+                        "Multiple export formats",
+                        "Module metadata API"
                     ]
                 })
             
@@ -848,6 +864,9 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
             
             elif self.path == '/api/findings/config':
                 self.handle_findings_config()
+            
+            elif self.path == '/api/modules/metadata':
+                self.handle_modules_metadata()
             
             else:
                 self.send_error(404, "Not Found")
@@ -1476,6 +1495,27 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
             print(f"❌ Error getting enhanced config: {str(e)}")
             self.send_json_response({'error': str(e)}, 500)
 
+    def handle_modules_metadata(self):
+        """Return minimal module metadata for dropdown functionality"""
+        try:
+            from modules.module_mappings import MODULE_FINDINGS_MAP
+            
+            # Transform for frontend - only description and business_impact
+            metadata_response = {}
+            for module_name, mapping in MODULE_FINDINGS_MAP.items():
+                clean_name = module_name.replace('.py', '')
+                metadata_response[clean_name] = {
+                    "description": mapping["description"],
+                    "business_impact": mapping["business_impact"]
+                }
+            
+            self.send_json_response(metadata_response)
+            
+        except ImportError:
+            self.send_json_response({"error": "Module mappings not available"}, 500)
+        except Exception as e:
+            self.send_json_response({"error": str(e)}, 500)
+
 # =============================================================================
 # MAIN SERVER STARTUP
 # =============================================================================
@@ -1497,6 +1537,7 @@ def start_server():
             print("   GET  /                          - API information")
             print("   GET  /api/health                - Health check")
             print("   GET  /api/modules               - List enhanced modules")
+            print("   GET  /api/modules/metadata      - Get module descriptions")
             print("   POST /api/scans                 - Create new scan")
             print("   GET  /api/scans                 - List all scans")
             print("   GET  /api/scans/{id}            - Get scan details")
@@ -1510,6 +1551,7 @@ def start_server():
             print("   ✅ Automated risk scoring")
             print("   ✅ Evidence formatting")
             print("   ✅ Professional PDF reports")
+            print("   ✅ Module metadata API")
             print("=" * 60)
             print("🎬 Ready for requests! Press Ctrl+C to stop")
             print()
