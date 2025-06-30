@@ -2,6 +2,7 @@
 """
 Improved Open Ports Module - Clean Output with Success/Failure Indicators
 Fixed for Windows Unicode encoding issues
+UPDATED: Integrated with centralized findings system
 """
 
 import os
@@ -25,6 +26,14 @@ try:
 except ImportError:
     DEFAULT_TIMEOUT = 10
 
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
+
 def get_port_severity(port, service):
     """Assess security risk level of open ports"""
     # Critical ports (high security risk)
@@ -36,6 +45,10 @@ def get_port_severity(port, service):
         139: "NetBIOS - Windows file sharing",
         445: "SMB - Windows file sharing vulnerability",
         1433: "MSSQL - Database access",
+        3306: "MySQL - Database access",
+        5432: "PostgreSQL - Database access",
+        27017: "MongoDB - Database access",
+        6379: "Redis - Database access",
         3389: "RDP - Remote desktop access"
     }
     
@@ -46,15 +59,21 @@ def get_port_severity(port, service):
         110: "POP3 - Email retrieval",
         143: "IMAP - Email access",
         993: "IMAPS - Secure email access",
-        995: "POP3S - Secure email retrieval"
+        995: "POP3S - Secure email retrieval",
+        5900: "VNC - Remote desktop access",
+        8080: "HTTP Alt - Alternative web server",
+        8443: "HTTPS Alt - Alternative secure web server",
+        9090: "Administrative interface",
+        9443: "Secure administrative interface",
+        10000: "Web administration interface"
     }
     
     # Warning ports (commonly targeted)
     warning_ports = {
         80: "HTTP - Web server (unencrypted)",
         443: "HTTPS - Web server (encrypted)",
-        8080: "HTTP Alt - Alternative web server",
-        8443: "HTTPS Alt - Alternative secure web server"
+        8000: "HTTP Alt - Development/test server",
+        8888: "HTTP Alt - Common development port"
     }
     
     if port in critical_ports:
@@ -122,8 +141,8 @@ def categorize_ports(open_ports):
     return categories
 
 def main(target, port_range="1-1000"):
-    """Main execution with clean output"""
-    print(f"[I] Port Scan - {target}")
+    """Main execution with enhanced findings evaluation"""
+    print(f"[I] Port Scan Analysis - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
@@ -139,14 +158,41 @@ def main(target, port_range="1-1000"):
             print()
         except socket.gaierror:
             print(f"[E] FAILED: Unable to resolve hostname '{host}'")
-            return {"status": "FAILED", "error": "Hostname resolution failed"}
+            
+            # Error findings for hostname resolution failure
+            error_findings = {
+                "success": False,
+                "severity": "I",
+                "findings": [f"Unable to resolve hostname '{host}'"],
+                "has_findings": True,
+                "category": "Network Error"
+            }
+            
+            return {
+                "status": "FAILED",
+                "error": "Hostname resolution failed",
+                "findings": error_findings,
+                "execution_time": (datetime.now() - start_time).total_seconds()
+            }
         
-        # Perform port scan
+        # Perform port scan (your existing logic)
         open_ports = scan_ports(host, port_range)
         execution_time = (datetime.now() - start_time).total_seconds()
         
+        # Prepare scan data for findings evaluation
+        port_numbers = [p["port"] for p in open_ports]
+        scan_data = {
+            "open_ports": port_numbers,
+            "total_ports": len(port_numbers),
+            "scan_completed": True,
+            "host": host,
+            "ip_address": ip_address,
+            "port_range": port_range,
+            "detailed_ports": open_ports  # Keep full port info for display
+        }
+        
         if open_ports:
-            # Categorize by security risk
+            # Categorize by security risk (keep existing logic)
             categories = categorize_ports(open_ports)
             
             total_ports = len(open_ports)
@@ -159,7 +205,7 @@ def main(target, port_range="1-1000"):
             print(f"[I] Security summary: {critical_count} critical, {high_count} high risk, {warning_count} warnings, {info_count} informational")
             print()
             
-            # Display critical ports first
+            # Display critical ports first (keep existing display)
             if categories["C"]:
                 print(f"[C] CRITICAL PORTS ({len(categories['C'])}):")
                 for port_info in categories["C"]:
@@ -186,49 +232,105 @@ def main(target, port_range="1-1000"):
                 for port_info in categories["I"]:
                     print(f"  [I] Port {port_info['port']} - {port_info['service']}")
                 print()
-            
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "SUCCESS",
-                "data": {
-                    "host": host, 
-                    "ip": ip_address, 
-                    "open_ports": open_ports,
-                    "security_summary": {
-                        "critical": critical_count,
-                        "high": high_count, 
-                        "warning": warning_count,
-                        "info": info_count
-                    }
-                },
-                "count": len(open_ports),
-                "execution_time": execution_time
-            }
         else:
             print(f"[I] NO DATA: No open ports found in range {port_range}")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {
-                "status": "NO_DATA", 
-                "data": {"host": host, "ip": ip_address, "port_range": port_range},
-                "execution_time": execution_time
-            }
+        
+        print()
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("open_ports.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback to basic assessment
+            if open_ports:
+                # Determine overall severity based on highest risk ports found
+                if len(categories.get("C", [])) > 0:
+                    severity = "C"
+                elif len(categories.get("H", [])) > 0:
+                    severity = "H"
+                elif len(categories.get("W", [])) > 0:
+                    severity = "W"
+                else:
+                    severity = "I"
+            else:
+                severity = "I"
             
+            findings_result = {
+                "success": len(open_ports) > 0,
+                "severity": severity,
+                "findings": [f"Found {len(open_ports)} open ports"],
+                "has_findings": len(open_ports) > 0,
+                "category": "Port Analysis"
+            }
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        print()
+        
+        # Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,
+            "findings": findings_result,
+            "execution_time": execution_time,
+            "target": target,
+            # Keep legacy fields for backward compatibility
+            "count": len(open_ports),
+            "security_summary": {
+                "critical": len(categories.get("C", [])) if open_ports else 0,
+                "high": len(categories.get("H", [])) if open_ports else 0,
+                "warning": len(categories.get("W", [])) if open_ports else 0,
+                "info": len(categories.get("I", [])) if open_ports else 0
+            }
+        }
+        
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Scan stopped by user")
-        return {"status": "INTERRUPTED"}
+        
+        interrupt_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": ["Port scan interrupted by user"],
+            "has_findings": True,
+            "category": "Execution"
+        }
+        
+        return {
+            "status": "INTERRUPTED",
+            "findings": interrupt_findings,
+            "execution_time": (datetime.now() - start_time).total_seconds()
+        }
         
     except Exception as e:
         execution_time = (datetime.now() - start_time).total_seconds()
         print(f"[E] ERROR: {str(e)}")
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": "ERROR", "error": str(e), "execution_time": execution_time}
+        
+        # Error findings
+        error_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": [f"Port scan failed: {str(e)}"],
+            "has_findings": True,
+            "category": "Error"
+        }
+        
+        return {
+            "status": "ERROR",
+            "error": str(e),
+            "findings": error_findings,
+            "execution_time": execution_time
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
         port_range = sys.argv[2] if len(sys.argv) > 2 else "1-1000"
-        main(target, port_range)
+        result = main(target, port_range)
+        
+        # Exit with appropriate code
+        exit_code = 0 if result["status"] in ["SUCCESS", "INTERRUPTED"] else 1
+        sys.exit(exit_code)
     else:
         print("[E] ERROR: No target provided")
         print("Usage: python open_ports.py <target> [port_range]")

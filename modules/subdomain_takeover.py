@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Improved Subdomain Takeover Module - Clean Output with Success/Failure Indicators
-Fixed for Windows Unicode encoding issues
+Enhanced Subdomain Takeover Module - Clean Output with Centralized Binary Findings System
+Fixed for Windows Unicode encoding issues and integrated with findings framework
 """
 
 import os
@@ -37,6 +37,14 @@ warnings.filterwarnings('ignore', category=requests.packages.urllib3.exceptions.
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
+
 try:
     from utils.util import clean_domain_input
     from config.settings import USER_AGENT, DEFAULT_TIMEOUT
@@ -45,20 +53,13 @@ except ImportError:
     # Fallback implementations
     def clean_domain_input(domain):
         """Clean domain input with debug output"""
-        print(f"[DEBUG] Original input: '{domain}'")
         if not domain:
-            print(f"[DEBUG] Empty domain, returning empty string")
             return ""
         domain = domain.strip().lower()
-        print(f"[DEBUG] After strip/lower: '{domain}'")
         domain = domain.replace('http://', '').replace('https://', '')
-        print(f"[DEBUG] After removing protocols: '{domain}'")
         domain = domain.replace('www.', '')
-        print(f"[DEBUG] After removing www: '{domain}'")
         if '/' in domain:
             domain = domain.split('/')[0]
-            print(f"[DEBUG] After removing path: '{domain}'")
-        print(f"[DEBUG] Final cleaned domain: '{domain}'")
         return domain
     
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -362,7 +363,9 @@ def perform_takeover_scan(target, custom_subdomains=None):
         "vulnerable_subdomains": [],
         "potentially_vulnerable": [],
         "secure_subdomains": [],
-        "errors": []
+        "errors": [],
+        "scan_completed": True,
+        "status": "SUCCESS"
     }
     
     print(f"[I] Testing {len(subdomains)} subdomains for takeover vulnerabilities...")
@@ -433,36 +436,51 @@ def main(target, subdomain_list=None):
         print()
         
         # Perform takeover scan
-        results = perform_takeover_scan(target, custom_subdomains)
+        scan_data = perform_takeover_scan(target, custom_subdomains)
         execution_time = (datetime.now() - start_time).total_seconds()
         
-        # Analyze results
-        vulnerable_count = len(results["vulnerable_subdomains"])
-        potentially_vulnerable_count = len(results["potentially_vulnerable"])
-        secure_count = len(results["secure_subdomains"])
-        error_count = len(results["errors"])
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("subdomain_takeover.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback for legacy mode
+            vulnerable_count = len(scan_data.get("vulnerable_subdomains", []))
+            findings_result = {
+                "success": vulnerable_count == 0,
+                "severity": "C" if vulnerable_count > 0 else "I",
+                "findings": [],
+                "has_findings": vulnerable_count > 0
+            }
+        
+        # Analyze results for legacy display
+        vulnerable_count = len(scan_data["vulnerable_subdomains"])
+        potentially_vulnerable_count = len(scan_data["potentially_vulnerable"])
+        secure_count = len(scan_data["secure_subdomains"])
+        error_count = len(scan_data["errors"])
         total_issues = vulnerable_count + potentially_vulnerable_count
         
-        print(f"[I] Scan completed: {vulnerable_count} critical, {potentially_vulnerable_count} warnings, {secure_count} secure, {error_count} errors")
-        
-        if vulnerable_count > 0:
-            print(f"[C] CRITICAL: Found {vulnerable_count} vulnerable subdomains!")
-            for result in results["vulnerable_subdomains"]:
-                vulnerability = result["vulnerability_assessment"]
-                print(f"  [C] {result['subdomain']} - {vulnerability['reasons'][0]}")
-        
-        if potentially_vulnerable_count > 0:
-            print(f"[W] WARNING: Found {potentially_vulnerable_count} potentially vulnerable subdomains")
-            for result in results["potentially_vulnerable"]:
-                vulnerability = result["vulnerability_assessment"]
-                print(f"  [W] {result['subdomain']} - {vulnerability['reasons'][0]}")
-        
-        secure_count = len(results["secure_subdomains"])
-        if secure_count > 0:
-            print(f"[S] {secure_count} subdomains appear secure")
-        
-        if results["errors"]:
-            print(f"[E] {len(results['errors'])} errors occurred during scanning")
+        if not FINDINGS_AVAILABLE:
+            # Legacy output format when findings system not available
+            print(f"[I] Scan completed: {vulnerable_count} critical, {potentially_vulnerable_count} warnings, {secure_count} secure, {error_count} errors")
+            
+            if vulnerable_count > 0:
+                print(f"[C] CRITICAL: Found {vulnerable_count} vulnerable subdomains!")
+                for result in scan_data["vulnerable_subdomains"]:
+                    vulnerability = result["vulnerability_assessment"]
+                    print(f"  [C] {result['subdomain']} - {vulnerability['reasons'][0]}")
+            
+            if potentially_vulnerable_count > 0:
+                print(f"[W] WARNING: Found {potentially_vulnerable_count} potentially vulnerable subdomains")
+                for result in scan_data["potentially_vulnerable"]:
+                    vulnerability = result["vulnerability_assessment"]
+                    print(f"  [W] {result['subdomain']} - {vulnerability['reasons'][0]}")
+            
+            if secure_count > 0:
+                print(f"[S] {secure_count} subdomains appear secure")
+            
+            if scan_data["errors"]:
+                print(f"[E] {len(scan_data['errors'])} errors occurred during scanning")
         
         # Show SSL warning count if any occurred
         global ssl_warning_count
@@ -471,27 +489,14 @@ def main(target, subdomain_list=None):
         
         print(f"[I] Execution time: {execution_time:.2f}s")
         
-        if total_issues == 0:
-            return {
-                "status": "SECURE",
-                "data": results,
-                "count": 0,
-                "execution_time": execution_time
-            }
-        elif vulnerable_count > 0:
-            return {
-                "status": "CRITICAL",
-                "data": results,
-                "count": vulnerable_count,
-                "execution_time": execution_time
-            }
-        else:
-            return {
-                "status": "SECURE",
-                "data": results,
-                "count": 0,
-                "execution_time": execution_time
-            }
+        # NEW: Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,                    # Your existing scan results
+            "findings": findings_result,          # New findings data
+            "execution_time": execution_time,
+            "target": target
+        }
             
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Scan stopped by user")
@@ -512,7 +517,30 @@ def main(target, subdomain_list=None):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # NEW: Enhanced error handling with findings system
+        if FINDINGS_AVAILABLE:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [f"Scan error: {error_msg}"],
+                "has_findings": True
+            }
+        else:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [],
+                "has_findings": False
+            }
+        
+        return {
+            "status": status, 
+            "error": error_msg, 
+            "execution_time": execution_time,
+            "findings": findings_result,
+            "target": target
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

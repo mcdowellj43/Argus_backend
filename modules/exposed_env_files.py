@@ -2,6 +2,7 @@
 """
 Improved Exposed Environment Files Module - Clean Output with Success/Failure Indicators
 Fixed for Windows Unicode encoding issues
+UPDATED: Integrated with centralized findings system
 """
 
 import os
@@ -26,6 +27,14 @@ try:
 except ImportError:
     USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     DEFAULT_TIMEOUT = 10
+
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
 def get_env_file_patterns():
     """Get list of environment files to check"""
@@ -82,41 +91,41 @@ def assess_file_security_risk(filename, analysis):
     ]
     
     medium_risk_files = [
-        '.env.development', '.env.staging', '.env.test', 'config.yml', 
-        'application.yml', 'database.json'
+        '.env.development', '.env.staging', 'config.yml', 'application.yml',
+        'docker-compose.yml', 'database.json'
     ]
     
-    # Base risk from filename
+    low_risk_files = [
+        '.env.example', '.env.sample', 'Dockerfile', '.dockerignore'
+    ]
+    
+    # Base risk on filename
     if filename in high_risk_files:
-        base_risk = "H"
+        base_risk = "C"
     elif filename in medium_risk_files:
+        base_risk = "H"
+    elif filename in low_risk_files:
         base_risk = "W"
     else:
-        base_risk = "I"
+        base_risk = "W"
     
-    # Elevate risk based on content analysis
-    content_risk = analysis.get('risk_level', 'LOW')
-    sensitive_count = len(analysis.get('sensitive_items', []))
+    # Adjust based on content analysis
+    if analysis:
+        risk_level = analysis.get('risk_level', 'LOW')
+        sensitive_count = len(analysis.get('sensitive_items', []))
+        
+        if risk_level == "CRITICAL" or sensitive_count > 10:
+            return "C"
+        elif risk_level == "HIGH" or sensitive_count > 5:
+            return "C" if base_risk in ["C", "H"] else "H"
+        elif risk_level == "MEDIUM" or sensitive_count > 0:
+            return "H" if base_risk == "C" else ("H" if base_risk == "H" else "W")
     
-    # Critical conditions
-    if content_risk == 'CRITICAL' or sensitive_count >= 10:
-        return "C"
-    
-    # High risk conditions
-    if content_risk == 'HIGH' or sensitive_count >= 5 or base_risk == "H":
-        return "H"
-    
-    # Warning conditions
-    if content_risk == 'MEDIUM' or sensitive_count >= 1 or base_risk == "W":
-        return "W"
-    
-    return "I"
+    return base_risk
 
 def analyze_file_content(content, filename):
     """Analyze file content for sensitive information"""
-    if not content:
-        return {"sensitive_items": [], "risk_level": "LOW"}
-    
+    # Patterns for different types of sensitive data
     sensitive_patterns = {
         'API Keys': [
             r'api[_-]?key[_-]?=[\s]*["\']?([A-Za-z0-9_-]{20,})["\']?',
@@ -130,8 +139,8 @@ def analyze_file_content(content, filename):
             r'postgres[_-]?password[_-]?=[\s]*["\']?([^"\'\s]+)["\']?'
         ],
         'AWS Credentials': [
-            r'aws[_-]?access[_-]?key[_-]?id[_-]?=[\s]*["\']?([A-Z0-9]{20})["\']?',
-            r'aws[_-]?secret[_-]?access[_-]?key[_-]?=[\s]*["\']?([A-Za-z0-9/+=]{40})["\']?'
+            r'aws[_-]?access[_-]?key[_-]?=[\s]*["\']?([A-Z0-9]{20})["\']?',
+            r'aws[_-]?secret[_-]?=[\s]*["\']?([A-Za-z0-9/+=]{40})["\']?'
         ],
         'Email Credentials': [
             r'mail[_-]?password[_-]?=[\s]*["\']?([^"\'\s]+)["\']?',
@@ -243,8 +252,8 @@ def scan_exposed_files(target, max_workers=10):
     return sorted(found_files, key=lambda x: x.get('security_risk', 'I'), reverse=True)
 
 def main(target):
-    """Main execution with clean output"""
-    print(f"[I] Exposed Environment Files Check - {target}")
+    """Main execution with enhanced findings evaluation"""
+    print(f"[I] Exposed Environment Files Analysis - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
@@ -252,7 +261,22 @@ def main(target):
     try:
         if not target:
             print("[E] FAILED: Empty target provided")
-            return {"status": "FAILED", "error": "Empty target"}
+            
+            # Error findings for empty target
+            error_findings = {
+                "success": False,
+                "severity": "I",
+                "findings": ["Empty target provided"],
+                "has_findings": True,
+                "category": "Input Error"
+            }
+            
+            return {
+                "status": "FAILED", 
+                "error": "Empty target",
+                "findings": error_findings,
+                "execution_time": (datetime.now() - start_time).total_seconds()
+            }
         
         # Ensure target has protocol
         if not target.startswith(('http://', 'https://')):
@@ -262,104 +286,146 @@ def main(target):
         print("[I] Scanning for exposed environment files...")
         print()
         
-        # Scan for exposed files
+        # Perform environment file scanning (your existing logic)
         found_files = scan_exposed_files(target)
         execution_time = (datetime.now() - start_time).total_seconds()
         
-        if found_files:
-            # Separate accessible and inaccessible files
-            accessible_files = [f for f in found_files if f.get('accessible', False)]
-            protected_files = [f for f in found_files if not f.get('accessible', False)]
+        # Separate accessible and protected files
+        accessible_files = [f for f in found_files if f.get('accessible', False)]
+        protected_files = [f for f in found_files if not f.get('accessible', True)]
+        
+        # Calculate total secrets found
+        total_secrets = sum(
+            len(f.get('analysis', {}).get('sensitive_items', []))
+            for f in accessible_files
+        )
+        
+        # Prepare scan data for findings evaluation
+        scan_data = {
+            "accessible_files": accessible_files,
+            "protected_files": protected_files,
+            "total_files_found": len(found_files),
+            "total_accessible": len(accessible_files),
+            "total_secrets": total_secrets,
+            "scan_completed": True,
+            "target": target
+        }
+        
+        if accessible_files:
+            # Group files by risk level (keep existing logic)
+            risk_groups = {"C": [], "H": [], "W": [], "I": []}
+            for file_info in accessible_files:
+                risk = file_info.get('security_risk', 'I')
+                risk_groups[risk].append(file_info)
             
-            if accessible_files:
-                # Determine overall severity
-                risk_levels = [f.get('security_risk', 'I') for f in accessible_files]
-                if 'C' in risk_levels:
-                    overall_severity = "C"
-                elif 'H' in risk_levels:
-                    overall_severity = "H"
-                elif 'W' in risk_levels:
-                    overall_severity = "W"
-                else:
-                    overall_severity = "I"
-                
-                print(f"[{overall_severity}] EXPOSED FILES: Found {len(accessible_files)} accessible environment files")
-                if protected_files:
-                    print(f"[I] Protected: {len(protected_files)} files exist but are access-denied")
-                
-                # Security analysis
-                total_secrets = sum(len(f.get('analysis', {}).get('sensitive_items', [])) for f in accessible_files)
-                if total_secrets > 0:
-                    print(f"[C] Security Impact: {total_secrets} sensitive credentials exposed")
-                print()
-                
-                # Group files by security risk
-                risk_groups = {"C": [], "H": [], "W": [], "I": []}
-                for file_info in accessible_files:
-                    risk = file_info.get('security_risk', 'I')
-                    risk_groups[risk].append(file_info)
-                
-                # Display by risk level (highest first)
-                for risk_level in ['C', 'H', 'W', 'I']:
-                    if risk_groups[risk_level]:
-                        files = risk_groups[risk_level]
-                        risk_names = {'C': 'CRITICAL', 'H': 'HIGH RISK', 'W': 'WARNING', 'I': 'INFORMATIONAL'}
-                        
-                        print(f"[{risk_level}] {risk_names[risk_level]} FILES ({len(files)}):")
-                        for file_info in files:
-                            analysis = file_info.get('analysis', {})
-                            sensitive_count = len(analysis.get('sensitive_items', []))
-                            
-                            print(f"  [{risk_level}] {file_info['filename']} ({file_info['file_size']} bytes)")
-                            print(f"    - URL: {file_info['url']}")
-                            
-                            if sensitive_count > 0:
-                                print(f"    - Secrets: {sensitive_count} sensitive items detected")
-                                
-                                # Show critical sensitive items
-                                for item in analysis.get('sensitive_items', [])[:3]:
-                                    print(f"      * {item['category']}: {item['masked_value']} (line {item['line_number']})")
-                            
-                            if sensitive_count > 3:
-                                print(f"      * ... and {sensitive_count - 3} more items")
-                        print()
-                
-                print(f"[I] Execution time: {execution_time:.2f}s")
-                
-                return {
-                    "status": "SUCCESS",
-                    "data": {
-                        "accessible_files": accessible_files,
-                        "protected_files": protected_files,
-                        "risk_summary": {level: len(files) for level, files in risk_groups.items() if files}
-                    },
-                    "severity": overall_severity,
-                    "count": len(accessible_files),
-                    "secrets_count": total_secrets,
-                    "execution_time": execution_time
-                }
+            # Determine overall severity
+            if risk_groups["C"]:
+                overall_severity = "C"
+            elif risk_groups["H"]:
+                overall_severity = "H"
+            elif risk_groups["W"]:
+                overall_severity = "W"
             else:
-                print(f"[S] PROTECTED: Found {len(protected_files)} files but they are properly protected")
-                print(f"[I] Execution time: {execution_time:.2f}s")
-                return {
-                    "status": "PROTECTED",
-                    "data": {"protected_files": protected_files},
-                    "count": len(protected_files),
-                    "execution_time": execution_time
-                }
-        else:
-            print("[S] SECURE: No exposed environment files found")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {"status": "NO_DATA", "execution_time": execution_time}
+                overall_severity = "I"
             
+            print(f"[{overall_severity}] EXPOSED FILES FOUND: {len(accessible_files)} files publicly accessible")
+            if total_secrets > 0:
+                print(f"[C] CRITICAL: {total_secrets} sensitive items discovered in exposed files")
+            print()
+            
+            # Display results by risk level (keep existing display)
+            for risk_level in ['C', 'H', 'W', 'I']:
+                if risk_groups[risk_level]:
+                    files = risk_groups[risk_level]
+                    risk_names = {'C': 'CRITICAL', 'H': 'HIGH RISK', 'W': 'WARNING', 'I': 'INFORMATIONAL'}
+                    
+                    print(f"[{risk_level}] {risk_names[risk_level]} FILES ({len(files)}):")
+                    for file_info in files:
+                        analysis = file_info.get('analysis', {})
+                        sensitive_count = len(analysis.get('sensitive_items', []))
+                        
+                        print(f"  [{risk_level}] {file_info['filename']} ({file_info['file_size']} bytes)")
+                        print(f"    - URL: {file_info['url']}")
+                        
+                        if sensitive_count > 0:
+                            print(f"    - Secrets: {sensitive_count} sensitive items detected")
+                            
+                            # Show critical sensitive items
+                            for item in analysis.get('sensitive_items', [])[:3]:
+                                print(f"      * {item['category']}: {item['masked_value']} (line {item['line_number']})")
+                        
+                        if sensitive_count > 3:
+                            print(f"      * ... and {sensitive_count - 3} more items")
+                    print()
+        else:
+            if protected_files:
+                print(f"[S] PROTECTED: Found {len(protected_files)} files but they are properly protected")
+                overall_severity = "I"
+            else:
+                print("[S] SECURE: No exposed environment files found")
+                overall_severity = "I"
+        
+        print()
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("exposed_env_files.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback to basic assessment
+            if accessible_files:
+                findings = [f"Found {len(accessible_files)} exposed environment files"]
+                if total_secrets > 0:
+                    findings.append(f"Discovered {total_secrets} sensitive items in files")
+            else:
+                findings = ["No environment files exposed"]
+            
+            findings_result = {
+                "success": True,  # Scan completed successfully
+                "severity": overall_severity,
+                "findings": findings,
+                "has_findings": len(accessible_files) > 0,
+                "category": "Environment File Analysis"
+            }
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        print()
+        
+        # Return standardized format
+        return {
+            "status": "SUCCESS",  # Always success if scan completes
+            "data": scan_data,
+            "findings": findings_result,
+            "execution_time": execution_time,
+            "target": target,
+            # Keep legacy fields for backward compatibility
+            "count": len(accessible_files),
+            "secrets_count": total_secrets,
+            "severity": findings_result["severity"]
+        }
+        
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Scan stopped by user")
-        return {"status": "INTERRUPTED"}
+        
+        interrupt_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": ["Environment file scan interrupted by user"],
+            "has_findings": True,
+            "category": "Execution"
+        }
+        
+        return {
+            "status": "INTERRUPTED",
+            "findings": interrupt_findings,
+            "execution_time": (datetime.now() - start_time).total_seconds()
+        }
         
     except Exception as e:
         execution_time = (datetime.now() - start_time).total_seconds()
         error_msg = str(e)
         
+        # Classify error types (keep existing logic)
         if "timeout" in error_msg.lower():
             print("[T] TIMEOUT: Request timeout during file scanning")
             status = "TIMEOUT"
@@ -371,12 +437,31 @@ def main(target):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # Error findings
+        error_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": [f"Environment file scan failed: {error_msg}"],
+            "has_findings": True,
+            "category": "Error"
+        }
+        
+        return {
+            "status": status,
+            "error": error_msg,
+            "findings": error_findings,
+            "execution_time": execution_time
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        main(target)
+        result = main(target)
+        
+        # Exit with appropriate code
+        exit_code = 0 if result["status"] in ["SUCCESS", "INTERRUPTED"] else 1
+        sys.exit(exit_code)
     else:
         print("[E] ERROR: No target provided")
         print("Usage: python exposed_env_files.py <url_or_domain>")

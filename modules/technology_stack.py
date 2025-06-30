@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Improved Technology Stack Module - Clean Output with Success/Failure Indicators
+Enhanced Technology Stack Module - Clean Output with Centralized Binary Findings System
 Fixed for Windows Unicode encoding issues
 """
 
@@ -19,6 +19,14 @@ if sys.platform.startswith('win'):
 
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
 try:
     from config.settings import USER_AGENT, DEFAULT_TIMEOUT
@@ -337,17 +345,72 @@ def main(target):
         print("[I] Detecting technologies...")
         print()
         
-        # Detect technology stack
+        # Detect technology stack (Keep existing logic unchanged)
         technologies = detect_technology_stack(target)
         execution_time = (datetime.now() - start_time).total_seconds()
+        
+        # NEW: Prepare data for findings system
+        scan_data = {
+            "target": target,
+            "technologies": technologies or {},
+            "scan_completed": True,
+            "status": "SUCCESS"
+        }
         
         if technologies:
             # Count total technologies found
             total_count = sum(len(techs) for techs in technologies.values())
             
             if total_count > 0:
+                # NEW: Categorize technologies for findings evaluation
+                outdated_tech = []
+                deprecated_tech = []
+                high_risk_tech = []
+                
+                for category, tech_list in technologies.items():
+                    for tech in tech_list:
+                        if tech in ['PHP', 'ASP', 'WordPress', 'Joomla', 'Magento']:
+                            high_risk_tech.append(tech)
+                        if tech in ['ASP', 'jQuery'] or 'old' in tech.lower():
+                            outdated_tech.append(tech)
+                        if tech in ['ASP']:  # Legacy technologies
+                            deprecated_tech.append(tech)
+                
+                scan_data.update({
+                    "total_technologies": total_count,
+                    "outdated_tech": outdated_tech,
+                    "deprecated_tech": deprecated_tech,
+                    "high_risk_tech": high_risk_tech,
+                    "security_headers": technologies.get('security', [])
+                })
+                
                 # Assess security risk
                 security_findings, severity = assess_technology_security_risk(technologies)
+                scan_data.update({
+                    "security_findings": security_findings,
+                    "severity": severity
+                })
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("technology_stack.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback for legacy mode
+            has_security_concerns = bool(scan_data.get("high_risk_tech")) or bool(scan_data.get("outdated_tech"))
+            findings_result = {
+                "success": not has_security_concerns,
+                "severity": severity if technologies else "I",
+                "findings": [],
+                "has_findings": has_security_concerns
+            }
+        
+        # Legacy output format when findings system not available
+        if not FINDINGS_AVAILABLE and technologies:
+            total_count = scan_data["total_technologies"]
+            if total_count > 0:
+                severity = scan_data["severity"]
+                security_findings = scan_data["security_findings"]
                 
                 print(f"[{severity}] TECHNOLOGIES DETECTED: {total_count} technologies identified")
                 
@@ -396,26 +459,25 @@ def main(target):
                 if security_features:
                     print(f"  [S] Security features: {', '.join(security_features)}")
                 print(f"  [I] Total technologies: {total_count}")
-                
-                print()
-                print(f"[I] Execution time: {execution_time:.2f}s")
-                
-                return {
-                    "status": "SUCCESS",
-                    "data": technologies,
-                    "security_findings": security_findings,
-                    "severity": severity,
-                    "count": total_count,
-                    "execution_time": execution_time
-                }
             else:
                 print("[I] NO DATA: No technologies detected")
-                print(f"[I] Execution time: {execution_time:.2f}s")
-                return {"status": "NO_DATA", "execution_time": execution_time}
-        else:
-            print("[I] NO DATA: Unable to analyze target")
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {"status": "NO_DATA", "execution_time": execution_time}
+        
+        elif not FINDINGS_AVAILABLE:
+            if not technologies:
+                print("[I] NO DATA: Unable to analyze target")
+            else:
+                print("[I] NO DATA: No technologies detected")
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # NEW: Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,                    # Your existing scan results
+            "findings": findings_result,          # New findings data
+            "execution_time": execution_time,
+            "target": target
+        }
             
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Detection stopped by user")
@@ -436,7 +498,30 @@ def main(target):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # NEW: Enhanced error handling with findings system
+        if FINDINGS_AVAILABLE:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [f"Scan error: {error_msg}"],
+                "has_findings": True
+            }
+        else:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [],
+                "has_findings": False
+            }
+        
+        return {
+            "status": status, 
+            "error": error_msg, 
+            "execution_time": execution_time,
+            "findings": findings_result,
+            "target": target
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

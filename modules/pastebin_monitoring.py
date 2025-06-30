@@ -2,16 +2,14 @@
 """
 Improved Pastebin Monitoring Module - Clean Output with Success/Failure Indicators
 Fixed for Windows Unicode encoding issues
-Note: This module uses free search methods and may require API keys for comprehensive monitoring
+UPDATED: Integrated with centralized findings system
 """
 
 import os
 import sys
 import requests
-import re
-from datetime import datetime
-from urllib.parse import quote
 import time
+from datetime import datetime
 
 # Fix encoding issues for Windows
 if sys.platform.startswith('win'):
@@ -23,22 +21,30 @@ if sys.platform.startswith('win'):
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 try:
-    from config.settings import USER_AGENT, DEFAULT_TIMEOUT, API_KEYS
-    PASTEBIN_API_KEY = API_KEYS.get("PASTEBIN_API_KEY") if hasattr(API_KEYS, 'get') else None
+    from config.settings import DEFAULT_TIMEOUT, API_KEYS
     GOOGLE_API_KEY = API_KEYS.get("GOOGLE_API_KEY") if hasattr(API_KEYS, 'get') else None
     GOOGLE_CSE_ID = API_KEYS.get("GOOGLE_CSE_ID") if hasattr(API_KEYS, 'get') else None
+    PASTEBIN_API_KEY = API_KEYS.get("PASTEBIN_API_KEY") if hasattr(API_KEYS, 'get') else None
 except (ImportError, AttributeError):
-    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     DEFAULT_TIMEOUT = 30
-    PASTEBIN_API_KEY = None
     GOOGLE_API_KEY = None
     GOOGLE_CSE_ID = None
+    PASTEBIN_API_KEY = None
+
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
 def assess_paste_security_risk(results, patterns):
-    """Assess security risk of found paste mentions"""
+    """Assess security risk level of paste findings"""
     findings = []
     severity = "I"
     
+    # Combine all results from different search methods
     google_results = results.get("google_search", {}).get("results", [])
     duckduckgo_results = results.get("duckduckgo_search", [])
     all_results = google_results + duckduckgo_results
@@ -46,9 +52,10 @@ def assess_paste_security_risk(results, patterns):
     if not all_results:
         return findings, severity
     
-    # Analyze each result for security implications
-    high_risk_keywords = ['password', 'credential', 'database', 'dump', 'backup', 'config', 'secret', 'key']
-    medium_risk_keywords = ['email', 'user', 'admin', 'login', 'token']
+    # Risk keywords for content analysis
+    high_risk_keywords = ['password', 'credential', 'secret', 'key', 'dump', 'database', 'breach']
+    medium_risk_keywords = ['config', 'backup', 'log', 'api']
+    risk_keywords = ['email', 'user', 'admin', 'login', 'token']
     
     for result in all_results:
         title = result.get('title', '').lower()
@@ -96,64 +103,26 @@ def search_google_for_pastes(domain, max_results=10):
     
     for site in paste_sites:
         try:
-            query = f'{site} "{domain}"'
+            query = f'{domain} {site}'
             url = "https://www.googleapis.com/customsearch/v1"
             params = {
                 'key': GOOGLE_API_KEY,
                 'cx': GOOGLE_CSE_ID,
                 'q': query,
-                'num': min(max_results, 10)
+                'num': min(10, max_results)
             }
             
             response = requests.get(url, params=params, timeout=DEFAULT_TIMEOUT)
+            data = response.json()
             
-            if response.status_code == 200:
-                data = response.json()
-                items = data.get('items', [])
-                
-                for item in items:
+            if 'items' in data:
+                for item in data['items']:
                     all_results.append({
                         'title': item.get('title', ''),
                         'url': item.get('link', ''),
                         'snippet': item.get('snippet', ''),
-                        'site': site.replace('site:', ''),
-                        'display_url': item.get('displayLink', '')
-                    })
-            
-            # Rate limiting
-            time.sleep(0.5)
-            
-        except Exception:
-            continue
-    
-    return {"results": all_results, "error": None}
-
-def search_duckduckgo_pastes(domain):
-    """Search DuckDuckGo for paste site results (free alternative)"""
-    paste_sites = ['pastebin.com', 'hastebin.com', 'dpaste.de', 'paste.ee']
-    found_results = []
-    
-    for site in paste_sites:
-        try:
-            # Use DuckDuckGo instant answer API (limited but free)
-            query = f'site:{site} {domain}'
-            url = f"https://api.duckduckgo.com/?q={quote(query)}&format=json&no_html=1&skip_disambig=1"
-            
-            headers = {'User-Agent': USER_AGENT}
-            response = requests.get(url, headers=headers, timeout=5)
-            
-            if response.status_code == 200:
-                data = response.json()
-                # DuckDuckGo instant answers are limited, but we can try
-                abstract = data.get('Abstract', '')
-                if abstract and domain in abstract:
-                    found_results.append({
-                        'site': site,
-                        'query': query,
-                        'snippet': abstract[:200],
-                        'source': 'DuckDuckGo',
-                        'note': 'Limited free search result',
-                        'url': f"https://{site}/search?q={domain}"
+                        'source': 'Google',
+                        'site': site.replace('site:', '')
                     })
             
             time.sleep(1)  # Rate limiting
@@ -161,6 +130,45 @@ def search_duckduckgo_pastes(domain):
         except Exception:
             continue
     
+    return {"results": all_results[:max_results], "error": None}
+
+def search_duckduckgo_pastes(domain):
+    """Search DuckDuckGo for paste mentions (fallback method)"""
+    paste_sites = ['pastebin.com', 'paste.ubuntu.com', 'hastebin.com', 'dpaste.de']
+    found_results = []
+    
+    for site in paste_sites:
+        try:
+            query = f'{domain} site:{site}'
+            url = "https://api.duckduckgo.com/"
+            params = {
+                'q': query,
+                'format': 'json',
+                'no_redirect': '1',
+                'no_html': '1',
+                'skip_disambig': '1'
+            }
+            
+            response = requests.get(url, params=params, timeout=5)
+            data = response.json()
+            
+            # DuckDuckGo instant answers are limited, but we can try
+            abstract = data.get('Abstract', '')
+            if abstract and domain in abstract:
+                found_results.append({
+                    'site': site,
+                    'query': query,
+                    'snippet': abstract[:200],
+                    'source': 'DuckDuckGo',
+                    'note': 'Limited free search result',
+                    'url': f"https://{site}/search?q={domain}"
+                })
+            
+            time.sleep(1)  # Rate limiting
+            
+        except Exception:
+            continue
+
     return found_results
 
 def check_common_paste_patterns(domain):
@@ -265,8 +273,8 @@ def perform_paste_monitoring(target):
     return results
 
 def main(target):
-    """Main execution with clean output"""
-    print(f"[I] Pastebin Monitoring - {target}")
+    """Main execution with enhanced findings evaluation"""
+    print(f"[I] Pastebin Monitoring Analysis - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
@@ -274,7 +282,22 @@ def main(target):
     try:
         if not target:
             print("[E] FAILED: Empty target provided")
-            return {"status": "FAILED", "error": "Empty target"}
+            
+            # Error findings for empty target
+            error_findings = {
+                "success": False,
+                "severity": "I",
+                "findings": ["Empty target provided"],
+                "has_findings": True,
+                "category": "Input Error"
+            }
+            
+            return {
+                "status": "FAILED", 
+                "error": "Empty target",
+                "findings": error_findings,
+                "execution_time": (datetime.now() - start_time).total_seconds()
+            }
         
         domain = target.replace('http://', '').replace('https://', '').split('/')[0]
         print(f"[I] Target: {domain}")
@@ -286,30 +309,41 @@ def main(target):
         
         print()
         
-        # Perform paste monitoring
+        # Perform paste monitoring (your existing logic)
         results = perform_paste_monitoring(target)
         execution_time = (datetime.now() - start_time).total_seconds()
         
-        # Analyze results
+        # Prepare scan data for findings evaluation
         google_results = results.get("google_search", {}).get("results", [])
         duckduckgo_results = results.get("duckduckgo_search", [])
         total_findings = len(google_results) + len(duckduckgo_results)
         patterns = results.get("patterns", {})
         
+        scan_data = {
+            "domain": domain,
+            "pastes_found": google_results + duckduckgo_results,
+            "total_pastes": total_findings,
+            "google_results": len(google_results),
+            "duckduckgo_results": len(duckduckgo_results),
+            "api_available": api_available,
+            "monitoring_patterns": patterns.get("patterns_to_monitor", []),
+            "scan_completed": True
+        }
+        
         if total_findings > 0:
-            # Assess security risk
+            # Assess security risk (keep existing logic)
             security_findings, severity = assess_paste_security_risk(results, patterns)
             
             print(f"[{severity}] PASTE MENTIONS: Found {total_findings} paste site mentions")
             
-            # Display security analysis
+            # Display legacy security analysis
             if security_findings:
                 print(f"[{severity}] Security Risk Analysis:")
                 for finding in security_findings[:5]:  # Show first 5
                     print(f"  [{severity}] {finding}")
                 print()
             
-            # Display Google results
+            # Display Google results (keep existing display)
             if google_results:
                 print(f"[W] Google Search Results ({len(google_results)}):")
                 for i, result in enumerate(google_results[:5], 1):  # Show first 5
@@ -325,86 +359,80 @@ def main(target):
             if duckduckgo_results:
                 print(f"[I] DuckDuckGo Results ({len(duckduckgo_results)}):")
                 for i, result in enumerate(duckduckgo_results, 1):
-                    print(f"  [I] {i}. {result['site']}: {result['snippet']}")
+                    print(f"  [I] {i}. {result.get('site', 'Unknown site')}")
+                    print(f"    - Query: {result.get('query', 'N/A')}")
+                    print(f"    - Note: {result.get('note', 'N/A')}")
                 print()
             
-            # Show high-priority monitoring patterns
-            leak_patterns = patterns.get("leak_indicators", [])
-            if leak_patterns:
-                print(f"[H] High-Priority Monitoring Patterns ({len(leak_patterns)}):")
-                for pattern in leak_patterns[:5]:
-                    print(f"  [H] \"{pattern}\"")
-                print()
-            
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "SUCCESS",
-                "data": results,
-                "security_findings": security_findings,
-                "severity": severity,
-                "count": total_findings,
-                "execution_time": execution_time
-            }
-        
-        elif results.get("google_search", {}).get("error") or not api_available:
-            print("[W] API LIMITATION: Limited search capabilities without API keys")
-            print("[I] SETUP: Configure Google Custom Search API for comprehensive monitoring")
-            
-            # Still show monitoring recommendations
-            patterns_list = patterns.get("patterns_to_monitor", [])
-            if patterns_list:
-                print()
-                print(f"[I] Recommended Monitoring Patterns ({len(patterns_list)}):")
-                for pattern in patterns_list[:5]:
-                    print(f"  [I] \"{pattern}\"")
-                print()
-                
-                # Show critical patterns to monitor
-                leak_patterns = patterns.get("leak_indicators", [])
-                if leak_patterns:
-                    print(f"[H] Critical Data Leak Patterns ({len(leak_patterns)}):")
-                    for pattern in leak_patterns:
-                        print(f"  [H] \"{pattern}\"")
-                    print()
-            
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            
-            return {
-                "status": "LIMITED",
-                "data": results,
-                "count": 0,
-                "execution_time": execution_time,
-                "note": "Limited functionality without API keys"
-            }
-        
+            # Display monitoring recommendations
+            print("[I] Monitoring Recommendations:")
+            print(f"  [I] Monitor {len(patterns.get('patterns_to_monitor', []))} specific patterns")
+            print(f"  [I] Set up alerts for new paste mentions")
+            print(f"  [I] Review {len(patterns.get('leak_indicators', []))} high-risk keywords")
         else:
-            print("[S] NO FINDINGS: No paste site mentions found")
+            print("[S] CLEAN: No paste site mentions found")
+            security_findings = []
+            severity = "I"
+        
+        print()
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("pastebin_monitoring.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback to basic assessment
+            if total_findings > 0:
+                findings = security_findings if security_findings else [f"Found {total_findings} paste mentions"]
+            else:
+                findings = ["No paste site mentions detected"]
             
-            # Still provide monitoring guidance
-            patterns_list = patterns.get("patterns_to_monitor", [])
-            if patterns_list:
-                print(f"[I] Monitoring Setup: {len(patterns_list)} patterns should be monitored")
-                print("[I] Consider setting up alerts for:")
-                for pattern in patterns.get("leak_indicators", [])[:3]:
-                    print(f"  [I] \"{pattern}\"")
-            
-            print(f"[I] Execution time: {execution_time:.2f}s")
-            return {
-                "status": "NO_DATA",
-                "data": results,
-                "count": 0,
-                "execution_time": execution_time
+            findings_result = {
+                "success": True,  # Scan completed successfully
+                "severity": severity,
+                "findings": findings,
+                "has_findings": total_findings > 0,
+                "category": "Paste Site Analysis"
             }
-            
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        print()
+        
+        # Return standardized format
+        return {
+            "status": "SUCCESS",  # Always success if scan completes
+            "data": scan_data,
+            "findings": findings_result,
+            "execution_time": execution_time,
+            "target": target,
+            # Keep legacy fields for backward compatibility
+            "count": total_findings,
+            "security_findings": security_findings,
+            "severity": findings_result["severity"]
+        }
+        
     except KeyboardInterrupt:
         print("[I] INTERRUPTED: Monitoring stopped by user")
-        return {"status": "INTERRUPTED"}
+        
+        interrupt_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": ["Paste monitoring interrupted by user"],
+            "has_findings": True,
+            "category": "Execution"
+        }
+        
+        return {
+            "status": "INTERRUPTED",
+            "findings": interrupt_findings,
+            "execution_time": (datetime.now() - start_time).total_seconds()
+        }
         
     except Exception as e:
         execution_time = (datetime.now() - start_time).total_seconds()
         error_msg = str(e)
         
+        # Classify error types (keep existing logic)
         if "timeout" in error_msg.lower():
             print("[T] TIMEOUT: Request timeout during paste monitoring")
             status = "TIMEOUT"
@@ -416,12 +444,31 @@ def main(target):
             status = "ERROR"
         
         print(f"[I] Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        
+        # Error findings
+        error_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": [f"Paste monitoring failed: {error_msg}"],
+            "has_findings": True,
+            "category": "Error"
+        }
+        
+        return {
+            "status": status,
+            "error": error_msg,
+            "findings": error_findings,
+            "execution_time": execution_time
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        main(target)
+        result = main(target)
+        
+        # Exit with appropriate code
+        exit_code = 0 if result["status"] in ["SUCCESS", "INTERRUPTED"] else 1
+        sys.exit(exit_code)
     else:
         print("[E] ERROR: No target provided")
         print("Usage: python pastebin_monitoring.py <domain>")

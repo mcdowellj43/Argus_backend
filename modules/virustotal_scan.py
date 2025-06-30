@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Improved VirusTotal Scan Module - Clean Output with Success/Failure Indicators
+Enhanced VirusTotal Scan Module - Clean Output with Centralized Binary Findings System
 Note: This module requires a VirusTotal API key for functionality
 """
 
@@ -14,6 +14,15 @@ from urllib.parse import urlparse
 
 # Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
+
 from utils.util import clean_domain_input
 from config.settings import DEFAULT_TIMEOUT
 
@@ -166,7 +175,7 @@ def parse_domain_data(domain_data):
 
 def wait_for_scan_completion(scan_id, max_wait_time=300):
     """Wait for URL scan to complete"""
-    print("⏳ Waiting for scan to complete...")
+    print("[I] Waiting for scan to complete...")
     
     wait_time = 0
     while wait_time < max_wait_time:
@@ -182,7 +191,7 @@ def wait_for_scan_completion(scan_id, max_wait_time=300):
         if status == "completed":
             return report
         
-        print(f"⏳ Still scanning... ({wait_time}s elapsed)")
+        print(f"[I] Still scanning... ({wait_time}s elapsed)")
     
     return {"error": "Scan timeout - analysis took too long", "data": None}
 
@@ -192,13 +201,15 @@ def perform_virustotal_scan(target):
         "target": target,
         "url_scan": {},
         "domain_analysis": {},
-        "summary": {}
+        "summary": {},
+        "scan_completed": True,
+        "status": "SUCCESS"
     }
     
     # Determine if target is URL or domain
     if target.startswith(('http://', 'https://')):
         # URL scan
-        print("🔍 Submitting URL for scanning...")
+        print("[I] Submitting URL for scanning...")
         scan_result = submit_url_scan(target)
         
         if scan_result["error"]:
@@ -219,7 +230,7 @@ def perform_virustotal_scan(target):
         domain = clean_domain_input(target)
     
     # Domain analysis
-    print(f"🌐 Analyzing domain: {domain}")
+    print(f"[I] Analyzing domain: {domain}")
     domain_result = get_domain_report(domain)
     
     if domain_result["error"]:
@@ -227,160 +238,171 @@ def perform_virustotal_scan(target):
     else:
         results["domain_analysis"] = parse_domain_data(domain_result["data"])
     
-    # Create summary
+    # Create summary for findings system
     url_malicious = results["url_scan"].get("malicious", 0)
+    url_suspicious = results["url_scan"].get("suspicious", 0)
     domain_malicious = results["domain_analysis"].get("last_analysis_stats", {}).get("malicious", 0)
     domain_suspicious = results["domain_analysis"].get("last_analysis_stats", {}).get("suspicious", 0)
     
+    # NEW: Add required fields for findings evaluation
+    results["malicious_count"] = url_malicious + domain_malicious
+    results["suspicious_count"] = url_suspicious + domain_suspicious
+    results["total_threats"] = results["malicious_count"] + results["suspicious_count"]
+    results["reputation_score"] = results["domain_analysis"].get("reputation", 0)
+    
     results["summary"] = {
-        "url_threats_detected": url_malicious,
+        "url_threats_detected": url_malicious + url_suspicious,
         "domain_threats_detected": domain_malicious + domain_suspicious,
         "overall_risk": "HIGH" if (url_malicious > 0 or domain_malicious > 0) else 
-                       "MEDIUM" if domain_suspicious > 0 else "LOW",
-        "reputation_score": results["domain_analysis"].get("reputation", 0)
+                       "MEDIUM" if (url_suspicious > 0 or domain_suspicious > 0) else "LOW",
+        "reputation_score": results["reputation_score"]
     }
     
     return results
 
 def main(target):
     """Main execution with clean output"""
-    print(f"🔍 VirusTotal Scan - {target}")
+    print(f"[I] VirusTotal Scan - {target}")
     print("=" * 50)
     
     start_time = datetime.now()
     
     try:
         if not target:
-            print("❌ FAILED: Empty target provided")
+            print("[E] FAILED: Empty target provided")
             return {"status": "FAILED", "error": "Empty target"}
         
         # Check API key availability
         if not VIRUSTOTAL_API_KEY:
-            print("🔑 ERROR: VirusTotal API key not configured")
-            print("ℹ️  SETUP: Configure VIRUSTOTAL_API_KEY in config/settings.py")
+            print("[E] ERROR: VirusTotal API key not configured")
+            print("[I] SETUP: Configure VIRUSTOTAL_API_KEY in config/settings.py")
             return {"status": "API_ERROR", "error": "API key required"}
         
-        print(f"🎯 Target: {target}")
+        print(f"[I] Target: {target}")
         print()
         
-        # Perform VirusTotal scan
-        results = perform_virustotal_scan(target)
+        # Perform VirusTotal scan (Keep existing logic unchanged)
+        scan_data = perform_virustotal_scan(target)
         execution_time = (datetime.now() - start_time).total_seconds()
         
-        # Analyze results
-        summary = results["summary"]
-        url_threats = summary["url_threats_detected"]
-        domain_threats = summary["domain_threats_detected"]
-        total_threats = url_threats + domain_threats
-        overall_risk = summary["overall_risk"]
-        
-        if total_threats > 0:
-            print(f"⚠️  THREATS DETECTED: Found {total_threats} security threats")
-            print(f"🚨 Risk Level: {overall_risk}")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
-            
-            # Display URL scan results
-            url_scan = results.get("url_scan", {})
-            if not url_scan.get("error") and url_scan.get("malicious", 0) > 0:
-                print(f"🌐 URL Scan Results:")
-                print(f"   • Detection Ratio: {url_scan.get('detection_ratio', 'N/A')}")
-                print(f"   • Malicious: {url_scan.get('malicious', 0)}")
-                print(f"   • Suspicious: {url_scan.get('suspicious', 0)}")
-                print(f"   • Total Engines: {url_scan.get('total_engines', 0)}")
-                
-                # Show detected threats
-                scan_results = url_scan.get("scan_results", {})
-                if scan_results:
-                    print(f"   • Detected Threats:")
-                    for engine, detection in list(scan_results.items())[:5]:  # Show first 5
-                        print(f"     - {engine}: {detection.get('result', 'Unknown')}")
-                print()
-            
-            # Display domain analysis results
-            domain_analysis = results.get("domain_analysis", {})
-            if not domain_analysis.get("error"):
-                stats = domain_analysis.get("last_analysis_stats", {})
-                if stats.get("malicious", 0) > 0 or stats.get("suspicious", 0) > 0:
-                    print(f"🏢 Domain Analysis:")
-                    print(f"   • Reputation Score: {domain_analysis.get('reputation', 0)}")
-                    print(f"   • Malicious: {stats.get('malicious', 0)}")
-                    print(f"   • Suspicious: {stats.get('suspicious', 0)}")
-                    print(f"   • Harmless: {stats.get('harmless', 0)}")
-                    
-                    # Show categories if available
-                    categories = domain_analysis.get("categories", {})
-                    if categories:
-                        category_list = list(categories.values())[:3]  # Show first 3
-                        print(f"   • Categories: {', '.join(category_list)}")
-                    
-                    # Show tags if available
-                    tags = domain_analysis.get("tags", [])
-                    if tags:
-                        print(f"   • Tags: {', '.join(tags[:5])}")  # Show first 5
-                print()
-            
-            return {
-                "status": "THREATS_FOUND",
-                "data": results,
-                "count": total_threats,
-                "execution_time": execution_time,
-                "severity": overall_risk
-            }
-        
-        elif results.get("url_scan", {}).get("error") and results.get("domain_analysis", {}).get("error"):
-            # Both scans failed
-            url_error = results["url_scan"].get("error", "")
-            domain_error = results["domain_analysis"].get("error", "")
-            
-            if "API key" in url_error or "API key" in domain_error:
-                print("🔑 API ERROR: Invalid VirusTotal API key")
-                status = "API_ERROR"
-                error_msg = "Invalid API key"
-            elif "rate limit" in url_error.lower() or "rate limit" in domain_error.lower():
-                print("⏰ RATE LIMIT: VirusTotal API rate limit exceeded")
-                status = "RATE_LIMITED"
-                error_msg = "Rate limit exceeded"
-            else:
-                print(f"❌ ERROR: Scan failed")
-                print(f"   URL Error: {url_error}")
-                print(f"   Domain Error: {domain_error}")
-                status = "ERROR"
-                error_msg = f"URL: {url_error}, Domain: {domain_error}"
-            
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            return {"status": status, "error": error_msg, "execution_time": execution_time}
-        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("virustotal_scan.py", scan_data)
+            display_findings_result(scan_data, findings_result)
         else:
-            print("✅ CLEAN: No security threats detected")
-            print(f"🛡️  Risk Level: {overall_risk}")
-            print(f"⏱️  Execution time: {execution_time:.2f}s")
-            print()
-            
-            # Show clean scan details
-            url_scan = results.get("url_scan", {})
-            if not url_scan.get("error"):
-                print(f"🌐 URL Scan: Clean ({url_scan.get('detection_ratio', 'N/A')})")
-            
-            domain_analysis = results.get("domain_analysis", {})
-            if not domain_analysis.get("error"):
-                reputation = domain_analysis.get("reputation", 0)
-                print(f"🏢 Domain Reputation: {reputation}")
-                
-                stats = domain_analysis.get("last_analysis_stats", {})
-                if stats:
-                    print(f"🔍 Last Analysis: {stats.get('harmless', 0)} harmless, {stats.get('undetected', 0)} undetected")
-            
-            return {
-                "status": "CLEAN",
-                "data": results,
-                "count": 0,
-                "execution_time": execution_time,
-                "reputation": domain_analysis.get("reputation", 0)
+            # Fallback for legacy mode
+            total_threats = scan_data.get("total_threats", 0)
+            findings_result = {
+                "success": total_threats == 0,
+                "severity": "C" if scan_data.get("malicious_count", 0) > 0 else "W" if scan_data.get("suspicious_count", 0) > 0 else "I",
+                "findings": [],
+                "has_findings": total_threats > 0
             }
+        
+        # Legacy output format when findings system not available
+        if not FINDINGS_AVAILABLE:
+            # Analyze results for legacy display
+            summary = scan_data["summary"]
+            url_threats = summary["url_threats_detected"]
+            domain_threats = summary["domain_threats_detected"]
+            total_threats = url_threats + domain_threats
+            overall_risk = summary["overall_risk"]
+            
+            if total_threats > 0:
+                print(f"[W] THREATS DETECTED: Found {total_threats} security threats")
+                print(f"[I] Risk Level: {overall_risk}")
+                print(f"[I] Execution time: {execution_time:.2f}s")
+                print()
+                
+                # Display URL scan results
+                url_scan = scan_data.get("url_scan", {})
+                if not url_scan.get("error") and url_scan.get("malicious", 0) > 0:
+                    print(f"[I] URL Scan Results:")
+                    print(f"   Detection Ratio: {url_scan.get('detection_ratio', 'N/A')}")
+                    print(f"   Malicious: {url_scan.get('malicious', 0)}")
+                    print(f"   Suspicious: {url_scan.get('suspicious', 0)}")
+                    print(f"   Total Engines: {url_scan.get('total_engines', 0)}")
+                    
+                    # Show detected threats
+                    scan_results = url_scan.get("scan_results", {})
+                    if scan_results:
+                        print(f"   Detected Threats:")
+                        for engine, detection in list(scan_results.items())[:5]:  # Show first 5
+                            print(f"     - {engine}: {detection.get('result', 'Unknown')}")
+                    print()
+                
+                # Display domain analysis results
+                domain_analysis = scan_data.get("domain_analysis", {})
+                if not domain_analysis.get("error"):
+                    stats = domain_analysis.get("last_analysis_stats", {})
+                    if stats.get("malicious", 0) > 0 or stats.get("suspicious", 0) > 0:
+                        print(f"[I] Domain Analysis:")
+                        print(f"   Reputation Score: {domain_analysis.get('reputation', 0)}")
+                        print(f"   Malicious: {stats.get('malicious', 0)}")
+                        print(f"   Suspicious: {stats.get('suspicious', 0)}")
+                        print(f"   Harmless: {stats.get('harmless', 0)}")
+                        
+                        # Show categories if available
+                        categories = domain_analysis.get("categories", {})
+                        if categories:
+                            category_list = list(categories.values())[:3]  # Show first 3
+                            print(f"   Categories: {', '.join(category_list)}")
+                        
+                        # Show tags if available
+                        tags = domain_analysis.get("tags", [])
+                        if tags:
+                            print(f"   Tags: {', '.join(tags[:5])}")  # Show first 5
+                    print()
+            
+            elif scan_data.get("url_scan", {}).get("error") and scan_data.get("domain_analysis", {}).get("error"):
+                # Both scans failed
+                url_error = scan_data["url_scan"].get("error", "")
+                domain_error = scan_data["domain_analysis"].get("error", "")
+                
+                if "API key" in url_error or "API key" in domain_error:
+                    print("[E] API ERROR: Invalid VirusTotal API key")
+                elif "rate limit" in url_error.lower() or "rate limit" in domain_error.lower():
+                    print("[W] RATE LIMIT: VirusTotal API rate limit exceeded")
+                else:
+                    print(f"[E] ERROR: Scan failed")
+                    print(f"   URL Error: {url_error}")
+                    print(f"   Domain Error: {domain_error}")
+                
+                print(f"[I] Execution time: {execution_time:.2f}s")
+            
+            else:
+                print("[S] CLEAN: No security threats detected")
+                print(f"[I] Risk Level: {overall_risk}")
+                print(f"[I] Execution time: {execution_time:.2f}s")
+                print()
+                
+                # Show clean scan details
+                url_scan = scan_data.get("url_scan", {})
+                if not url_scan.get("error"):
+                    print(f"[I] URL Scan: Clean ({url_scan.get('detection_ratio', 'N/A')})")
+                
+                domain_analysis = scan_data.get("domain_analysis", {})
+                if not domain_analysis.get("error"):
+                    reputation = domain_analysis.get("reputation", 0)
+                    print(f"[I] Domain Reputation: {reputation}")
+                    
+                    stats = domain_analysis.get("last_analysis_stats", {})
+                    if stats:
+                        print(f"[I] Last Analysis: {stats.get('harmless', 0)} harmless, {stats.get('undetected', 0)} undetected")
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # NEW: Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,                    # Your existing scan results
+            "findings": findings_result,          # New findings data
+            "execution_time": execution_time,
+            "target": target
+        }
             
     except KeyboardInterrupt:
-        print("⚠️  INTERRUPTED: Scan stopped by user")
+        print("[I] INTERRUPTED: Scan stopped by user")
         return {"status": "INTERRUPTED"}
         
     except Exception as e:
@@ -388,24 +410,47 @@ def main(target):
         error_msg = str(e)
         
         if "timeout" in error_msg.lower():
-            print("⏰ TIMEOUT: Request timeout during VirusTotal scan")
+            print("[T] TIMEOUT: Request timeout during VirusTotal scan")
             status = "TIMEOUT"
         elif "connection" in error_msg.lower():
-            print("🌐 ERROR: Connection error during API requests")
+            print("[E] ERROR: Connection error during API requests")
             status = "CONNECTION_ERROR"
         else:
-            print(f"❌ ERROR: {error_msg}")
+            print(f"[E] ERROR: {error_msg}")
             status = "ERROR"
         
-        print(f"⏱️  Execution time: {execution_time:.2f}s")
-        return {"status": status, "error": error_msg, "execution_time": execution_time}
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # NEW: Enhanced error handling with findings system
+        if FINDINGS_AVAILABLE:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [f"Scan error: {error_msg}"],
+                "has_findings": True
+            }
+        else:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [],
+                "has_findings": False
+            }
+        
+        return {
+            "status": status, 
+            "error": error_msg, 
+            "execution_time": execution_time,
+            "findings": findings_result,
+            "target": target
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
         main(target)
     else:
-        print("❌ ERROR: No target provided")
+        print("[E] ERROR: No target provided")
         print("Usage: python virustotal_scan.py <url_or_domain>")
         print("Example: python virustotal_scan.py https://example.com")
         print("Example: python virustotal_scan.py example.com")
