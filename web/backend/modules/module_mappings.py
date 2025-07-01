@@ -451,6 +451,175 @@ MODULE_FINDINGS_MAP = {
         'description': 'Website quality metrics including code quality, accessibility, and standards compliance have been evaluated.',
         'business_impact': 'Code quality affects security posture, accessibility compliance requirements, professional reputation',
         'recommendation': 'Implement code quality standards, ensure accessibility compliance, regularly audit website standards adherence'
+    },
+
+    # VULNERABILITY SCANNING CATEGORY (NEW)
+    # Network & Infrastructure Vulnerabilities
+    'network_vuln_scan.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'Network Vulnerability Assessment',
+        'description': 'Comprehensive network vulnerability scanning has identified critical security weaknesses in network services, including unpatched systems, weak configurations, and exploitable services.',
+        'business_impact': 'Direct network compromise risk, unauthorized access to internal systems, potential data breaches and service disruption',
+        'recommendation': 'Immediately patch identified vulnerabilities, implement network segmentation, harden service configurations, and establish regular vulnerability scanning'
+    },
+    
+    'service_banner_vulns.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'Service Version Vulnerability Analysis',
+        'description': 'Service banner analysis has identified known vulnerabilities in specific software versions running on target systems, including outdated services and exploitable configurations.',
+        'business_impact': 'Targeted exploitation of known vulnerabilities, potential system compromise, unauthorized access to services',
+        'recommendation': 'Update all identified vulnerable services to latest versions, implement version monitoring, establish patch management procedures'
+    },
+    
+    'default_credentials.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'Default Credential Exposure',
+        'description': 'Default, weak, or commonly used credentials have been identified on network services, databases, and administrative interfaces.',
+        'business_impact': 'Immediate unauthorized access risk, complete system compromise, potential data theft and service manipulation',
+        'recommendation': 'Immediately change all default credentials, implement strong password policies, enable multi-factor authentication, and conduct credential audits'
+    },
+
+    # Web Application Vulnerabilities
+    'sql_injection_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'SQL Injection Vulnerabilities Detected',
+        'description': 'SQL injection vulnerabilities have been identified in web applications, allowing potential database access, data manipulation, and system compromise.',
+        'business_impact': 'Complete database compromise, data theft, unauthorized data manipulation, potential system access',
+        'recommendation': 'Implement input validation and parameterized queries, conduct code review for SQL injection patterns, deploy WAF rules, and test all user inputs'
+    },
+    
+    'xss_vulnerability_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'Cross-Site Scripting (XSS) Vulnerabilities',
+        'description': 'Cross-Site Scripting vulnerabilities have been detected, allowing potential client-side code execution, session hijacking, and user data theft.',
+        'business_impact': 'User session compromise, data theft, malicious script execution, reputation damage',
+        'recommendation': 'Implement proper input validation and output encoding, deploy Content Security Policy (CSP), conduct security testing, and sanitize all user inputs'
+    },
+    
+    'web_app_authentication_bypass.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'Authentication Bypass Vulnerabilities',
+        'description': 'Authentication mechanisms have been found vulnerable to bypass techniques, allowing unauthorized access to protected resources and administrative functions.',
+        'business_impact': 'Unauthorized access to sensitive data and functions, complete application compromise, potential privilege escalation',
+        'recommendation': 'Implement secure authentication mechanisms, conduct penetration testing, deploy session management controls, and audit all authentication flows'
+    },
+    
+    'directory_traversal_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'Directory Traversal Vulnerabilities',
+        'description': 'Directory traversal vulnerabilities have been identified, allowing unauthorized access to sensitive system files and directory structures.',
+        'business_impact': 'Sensitive file exposure, system information disclosure, potential configuration file access, server compromise',
+        'recommendation': 'Implement proper path validation, deploy web application firewalls, conduct security testing, and restrict file system access'
+    },
+    
+    'api_security_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'API Security Vulnerabilities',
+        'description': 'API security vulnerabilities have been detected, including authentication bypass, excessive data exposure, and improper access controls.',
+        'business_impact': 'Unauthorized API access, data exposure, potential system compromise, API abuse',
+        'recommendation': 'Implement proper API authentication and authorization, deploy rate limiting, conduct API security testing, and validate all API endpoints'
+    },
+
+    # SSL/TLS & Cryptographic Vulnerabilities
+    'ssl_vulnerability_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'SSL/TLS Security Vulnerabilities',
+        'description': 'Critical SSL/TLS vulnerabilities have been identified, including weak ciphers, protocol downgrade attacks, and cryptographic weaknesses.',
+        'business_impact': 'Man-in-the-middle attacks, data interception, session hijacking, compliance violations',
+        'recommendation': 'Update SSL/TLS configuration, disable weak ciphers and protocols, implement HSTS, and conduct regular cryptographic assessments'
+    },
+    
+    'certificate_vulnerabilities.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'Certificate Security Issues',
+        'description': 'SSL certificate vulnerabilities have been detected, including weak signature algorithms, expired certificates, and trust chain issues.',
+        'business_impact': 'Certificate-based attacks, man-in-the-middle attacks, service disruption, trust issues',
+        'recommendation': 'Update certificates, implement certificate monitoring, establish certificate lifecycle management, and conduct regular certificate audits'
+    },
+
+    # Application-Specific Vulnerabilities
+    'cms_vulnerability_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'CMS Security Vulnerabilities',
+        'description': 'Content Management System vulnerabilities have been identified, including outdated core installations, vulnerable plugins, and insecure configurations.',
+        'business_impact': 'CMS compromise, website defacement, data theft, malware distribution',
+        'recommendation': 'Update CMS core and all plugins, remove unused plugins, implement security hardening, and conduct regular CMS security audits'
+    },
+    
+    'file_upload_vulnerabilities.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'File Upload Security Vulnerabilities',
+        'description': 'File upload functionality has been found vulnerable to malicious file uploads, allowing potential code execution and system compromise.',
+        'business_impact': 'Remote code execution, system compromise, malware upload, data theft',
+        'recommendation': 'Implement strict file type validation, deploy antivirus scanning, restrict upload directories, and conduct security testing'
+    },
+
+    # Infrastructure & Configuration Vulnerabilities
+    'cloud_misconfig_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'Cloud Security Misconfigurations',
+        'description': 'Cloud service misconfigurations have been identified, including exposed storage buckets, insecure containers, and improper access controls.',
+        'business_impact': 'Data exposure, unauthorized access, compliance violations, potential data breaches',
+        'recommendation': 'Review and fix cloud configurations, implement least privilege access, deploy security monitoring, and conduct cloud security audits'
+    },
+    
+    'database_exposure_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'Database Exposure Vulnerabilities',
+        'description': 'Database exposure vulnerabilities have been detected, including unauthenticated access, weak configurations, and sensitive data exposure.',
+        'business_impact': 'Complete data compromise, data theft, unauthorized access, compliance violations',
+        'recommendation': 'Secure database access, implement authentication, encrypt sensitive data, deploy database firewalls, and conduct security audits'
+    },
+    
+    'email_server_vulnerabilities.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'Email Server Security Vulnerabilities',
+        'description': 'Email server vulnerabilities have been identified, including open relay configurations, weak authentication, and exploitable mail server software.',
+        'business_impact': 'Email spoofing, spam relay, unauthorized access, reputation damage',
+        'recommendation': 'Secure email server configuration, implement authentication, deploy anti-spam measures, and conduct regular security testing'
+    },
+
+    # Advanced Vulnerability Detection
+    'deserialization_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'Unsafe Deserialization Vulnerabilities',
+        'description': 'Unsafe deserialization vulnerabilities have been detected, allowing potential remote code execution and system compromise.',
+        'business_impact': 'Remote code execution, system compromise, data manipulation, complete application takeover',
+        'recommendation': 'Implement secure deserialization practices, validate all serialized data, deploy security controls, and conduct penetration testing'
+    },
+    
+    'command_injection_scanner.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'Command Injection Vulnerabilities',
+        'description': 'Command injection vulnerabilities have been identified, allowing potential system command execution and complete server compromise.',
+        'business_impact': 'System compromise, unauthorized access, data theft, service disruption',
+        'recommendation': 'Implement input validation, use parameterized commands, deploy security controls, and conduct comprehensive security testing'
+    },
+    
+    'business_logic_vulnerabilities.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'high',
+        'title': 'Business Logic Vulnerabilities',
+        'description': 'Business logic vulnerabilities have been detected, including race conditions, workflow bypass, and access control flaws.',
+        'business_impact': 'Unauthorized access, data manipulation, financial loss, business process compromise',
+        'recommendation': 'Conduct business logic testing, implement proper access controls, deploy monitoring, and conduct security code reviews'
     }
 }
 
@@ -462,7 +631,8 @@ CATEGORY_WEIGHTS = {
     'Security Configuration': 0.8,        # High risk - security controls
     'Web Application Analysis': 0.6,      # Medium risk - application security
     'Network & Infrastructure': 0.5,      # Medium risk - infrastructure info
-    'Compliance & Privacy': 0.3           # Lower risk - compliance/quality
+    'Compliance & Privacy': 0.3,          # Lower risk - compliance/quality
+    'Vulnerability Scanning': 1.0         # Highest risk - direct vulnerabilities
 }
 
 # Severity to numeric score mapping
