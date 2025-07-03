@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-API Security Scanner Module
-Performs comprehensive API security testing including authentication bypass, 
-parameter manipulation, rate limiting bypass, and OWASP API Top 10 vulnerabilities.
-"""
+
 
 import os
 import sys

@@ -5,64 +5,18 @@ Maps each of the 54 Argus modules to their corresponding security findings
 """
 
 MODULE_FINDINGS_MAP = {
-    # Network & Infrastructure
-    'associated_hosts.py': {
-        'category': 'Network & Infrastructure',
-        'base_severity': 'medium',
-        'title': 'Related Domains and Hosts Identified',
-        'description': 'Additional domains and hosts associated with the organization have been identified, potentially sharing security vulnerabilities or misconfigurations.',
-        'business_impact': 'Extended attack surface across multiple domains, potential lateral movement opportunities, shared infrastructure risks',
-        'recommendation': 'Ensure consistent security policies across all related domains, audit security posture of all identified hosts, and implement centralized security management'
-    },
-    'dns_over_https.py': {
-        'category': 'Network & Infrastructure',
-        'base_severity': 'low',
-        'title': 'DNS over HTTPS Configuration',
-        'description': 'DNS over HTTPS (DoH) implementation and configuration has been evaluated for privacy and security enhancements.',
-        'business_impact': 'DNS privacy and security posture assessment, potential DNS monitoring and filtering bypass capabilities',
-        'recommendation': 'Consider implementing DNS over HTTPS for improved privacy, evaluate impact on network monitoring capabilities'
-    },
-    
-    # Web Application Analysis
-    'content_discovery.py': {
-        'category': 'Web Application Analysis',
-        'base_severity': 'medium',
-        'title': 'Hidden Content and Directories Found',
-        'description': 'Administrative interfaces, backup files, or sensitive directories that are not intended for public access have been discovered.',
-        'business_impact': 'Potential access to administrative functions, exposure of sensitive files, information leakage about internal structure',
-        'recommendation': 'Secure or remove unnecessary exposed content, implement proper access controls, disable directory listing, and review web server configuration'
-    },
-    
-    # Security & Threat Intelligence
+    # Information Disclosure Category (Critical Risk)
     'data_leak.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Information Disclosure',
         'base_severity': 'critical',
         'title': 'Data Breach Exposure Detected',
         'description': 'Email addresses or credentials associated with the target have been found in known data breaches, indicating potential compromise of user accounts or organizational data.',
         'business_impact': 'Direct data breach risk, potential regulatory compliance violations, credential theft enabling unauthorized access',
         'recommendation': 'Implement continuous breach monitoring, notify affected users, mandate password resets for compromised accounts, and enhance authentication security'
     },
-    'subdomain_takeover.py': {
-        'category': 'Security & Threat Intelligence',
-        'base_severity': 'critical',
-        'title': 'Subdomain Takeover Vulnerability',
-        'description': 'One or more subdomains are vulnerable to takeover attacks due to dangling DNS records pointing to unclaimed external services.',
-        'business_impact': 'Complete subdomain compromise, potential phishing attacks using legitimate domain, brand reputation damage',
-        'recommendation': 'Immediately remove dangling DNS records, claim any abandoned external services, implement DNS monitoring, and establish subdomain lifecycle management'
-    },
-    
-    # Vulnerability Scanning
-    'network_vuln_scan.py': {
-        'category': 'Vulnerability Scanning',
-        'base_severity': 'critical',
-        'title': 'Network Vulnerability Assessment',
-        'description': 'Comprehensive network vulnerability scanning has identified critical security weaknesses in network services, including unpatched systems, weak configurations, and exploitable services.',
-        'business_impact': 'Direct network compromise risk, unauthorized access to internal systems, potential data breaches and service disruption',
-        'recommendation': 'Immediately patch identified vulnerabilities, implement network segmentation, harden service configurations, and establish regular vulnerability scanning'
-    },
     
     'exposed_env_files.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Information Disclosure',
         'base_severity': 'critical',
         'title': 'Configuration Files Publicly Exposed',
         'description': 'Environment configuration files containing potentially sensitive information such as API keys, database credentials, or internal settings are publicly accessible.',
@@ -71,7 +25,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'pastebin_monitoring.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Information Disclosure',
         'base_severity': 'high',
         'title': 'Sensitive Data Found in Paste Sites',
         'description': 'Organizational data, credentials, or sensitive information has been identified on public paste sites like Pastebin, indicating potential data leakage.',
@@ -80,7 +34,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'email_harvester.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Information Disclosure',
         'base_severity': 'medium',
         'title': 'Email Addresses Publicly Discoverable',
         'description': 'Employee email addresses are easily discoverable through public sources, enabling targeted phishing attacks and social engineering campaigns.',
@@ -89,7 +43,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'archive_history.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Information Disclosure',
         'base_severity': 'medium',
         'title': 'Historical Data Exposure in Archives',
         'description': 'Sensitive information from previous versions of the website has been preserved in web archives and may still be accessible.',
@@ -97,8 +51,9 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Review archived content for sensitive information, request removal from archive services where necessary, and ensure current data governance practices'
     },
 
+    # Attack Surface Expansion Category (High Risk)
     'subdomain_enum.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Attack Surface Expansion',
         'base_severity': 'high',
         'title': 'Additional Subdomains Discovered',
         'description': 'Multiple subdomains have been identified, expanding the potential attack surface and providing additional entry points for attackers.',
@@ -106,8 +61,17 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Audit all discovered subdomains, disable unnecessary services, ensure consistent security policies across all subdomains, and implement subdomain monitoring'
     },
     
+    'subdomain_takeover.py': {
+        'category': 'Attack Surface Expansion',
+        'base_severity': 'critical',
+        'title': 'Subdomain Takeover Vulnerability',
+        'description': 'One or more subdomains are vulnerable to takeover attacks due to dangling DNS records pointing to unclaimed external services.',
+        'business_impact': 'Complete subdomain compromise, potential phishing attacks using legitimate domain, brand reputation damage',
+        'recommendation': 'Immediately remove dangling DNS records, claim any abandoned external services, implement DNS monitoring, and establish subdomain lifecycle management'
+    },
+    
     'open_ports.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Attack Surface Expansion',
         'base_severity': 'high',
         'title': 'Open Network Services Detected',
         'description': 'Multiple network services are accessible from the internet, potentially providing entry points for unauthorized access attempts.',
@@ -115,8 +79,17 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Review necessity of all open ports, close unnecessary services, implement proper firewall rules, and ensure all exposed services are properly secured'
     },
     
+    'content_discovery.py': {
+        'category': 'Attack Surface Expansion',
+        'base_severity': 'medium',
+        'title': 'Hidden Content and Directories Found',
+        'description': 'Administrative interfaces, backup files, or sensitive directories that are not intended for public access have been discovered.',
+        'business_impact': 'Potential access to administrative functions, exposure of sensitive files, information leakage about internal structure',
+        'recommendation': 'Secure or remove unnecessary exposed content, implement proper access controls, disable directory listing, and review web server configuration'
+    },
+    
     'directory_finder.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Attack Surface Expansion',
         'base_severity': 'medium',
         'title': 'Directory Structure Enumerable',
         'description': 'The website\'s directory structure can be systematically enumerated, revealing the organization and layout of web resources.',
@@ -124,8 +97,17 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Disable directory browsing, implement custom error pages, restrict access to administrative directories, and review web server security configuration'
     },
     
+    'associated_hosts.py': {
+        'category': 'Attack Surface Expansion',
+        'base_severity': 'medium',
+        'title': 'Related Domains and Hosts Identified',
+        'description': 'Additional domains and hosts associated with the organization have been identified, potentially sharing security vulnerabilities or misconfigurations.',
+        'business_impact': 'Extended attack surface across multiple domains, potential lateral movement opportunities, shared infrastructure risks',
+        'recommendation': 'Ensure consistent security policies across all related domains, audit security posture of all identified hosts, and implement centralized security management'
+    },
+    
     'port_scanner.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Attack Surface Expansion',
         'base_severity': 'high',
         'title': 'Network Port Scanning Results',
         'description': 'Comprehensive port scanning has revealed the network services landscape, identifying both expected and potentially unexpected open services.',
@@ -133,8 +115,9 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Validate necessity of all identified services, implement network segmentation, ensure proper service hardening, and establish regular port scanning audits'
     },
 
+    # Security Configuration Category (High Risk)
     'ssl_labs_report.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Security Configuration',
         'base_severity': 'high',
         'title': 'SSL/TLS Configuration Assessment',
         'description': 'SSL/TLS configuration analysis reveals potential weaknesses in cryptographic implementation, certificate management, or protocol support.',
@@ -143,7 +126,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'http_security.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Security Configuration',
         'base_severity': 'medium',
         'title': 'HTTP Security Headers Analysis',
         'description': 'Analysis of HTTP security headers reveals missing or misconfigured security controls that protect against common web attacks.',
@@ -152,7 +135,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'http_headers.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Security Configuration',
         'base_severity': 'low',
         'title': 'HTTP Response Headers Reviewed',
         'description': 'HTTP response headers have been analyzed for security-relevant information and potential information disclosure.',
@@ -161,7 +144,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'firewall_detection.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Security Configuration',
         'base_severity': 'medium',
         'title': 'Web Application Firewall Analysis',
         'description': 'Web Application Firewall (WAF) presence and configuration have been analyzed, providing insights into perimeter security controls.',
@@ -170,7 +153,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'ssl_pinning_check.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Security Configuration',
         'base_severity': 'medium',
         'title': 'SSL Certificate Pinning Assessment',
         'description': 'SSL certificate pinning implementation has been evaluated to determine protection against certificate-based attacks.',
@@ -179,7 +162,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'certificate_authority_recon.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Security Configuration',
         'base_severity': 'medium',
         'title': 'Certificate Authority Intelligence',
         'description': 'Certificate transparency logs and CA information reveal insights about certificate issuance patterns and potential unauthorized certificates.',
@@ -188,7 +171,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'dnssec_check.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Security Configuration',
         'base_severity': 'medium',
         'title': 'DNSSEC Configuration Review',
         'description': 'DNS Security Extensions (DNSSEC) implementation has been evaluated for protection against DNS manipulation attacks.',
@@ -197,7 +180,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'security_txt.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Security Configuration',
         'base_severity': 'low',
         'title': 'Security.txt Policy Review',
         'description': 'Security.txt file implementation provides insights into the organization\'s vulnerability disclosure and security contact policies.',
@@ -205,6 +188,7 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Implement or update security.txt file with current contact information, establish clear vulnerability disclosure process, and ensure security team responsiveness'
     },
 
+    # Network & Infrastructure Category (Medium Risk)
     'dns_records.py': {
         'category': 'Network & Infrastructure',
         'base_severity': 'low',
@@ -268,6 +252,15 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Review TXT records for sensitive information, ensure proper SPF/DKIM/DMARC configuration, and clean up obsolete verification tokens'
     },
     
+    'dns_over_https.py': {
+        'category': 'Network & Infrastructure',
+        'base_severity': 'low',
+        'title': 'DNS over HTTPS Configuration',
+        'description': 'DNS over HTTPS (DoH) implementation and configuration has been evaluated for privacy and security enhancements.',
+        'business_impact': 'DNS privacy and security posture assessment, potential DNS monitoring and filtering bypass capabilities',
+        'recommendation': 'Consider implementing DNS over HTTPS for improved privacy, evaluate impact on network monitoring capabilities'
+    },
+    
     'traceroute.py': {
         'category': 'Network & Infrastructure',
         'base_severity': 'low',
@@ -277,6 +270,7 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Ensure network infrastructure is properly secured, consider impact of network topology disclosure on security posture'
     },
 
+    # Web Application Analysis Category (Medium Risk)
     'technology_stack.py': {
         'category': 'Web Application Analysis',
         'base_severity': 'medium',
@@ -367,8 +361,9 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Audit all third-party integrations for security, implement vendor risk management, monitor third-party service security posture'
     },
 
+    # Threat Intelligence Category (Critical/High Risk)
     'virustotal_scan.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Threat Intelligence',
         'base_severity': 'high',
         'title': 'Malware and Threat Reputation Analysis',
         'description': 'Domain and IP reputation analysis through VirusTotal reveals potential associations with malicious activity or security threats.',
@@ -377,7 +372,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'malware_phishing.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Threat Intelligence',
         'base_severity': 'critical',
         'title': 'Malware and Phishing Threat Detection',
         'description': 'Active malware or phishing threats have been detected associated with the target domain or infrastructure.',
@@ -386,7 +381,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'domain_reputation.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Threat Intelligence',
         'base_severity': 'medium',
         'title': 'Domain Reputation Assessment',
         'description': 'Domain reputation analysis across multiple threat intelligence sources reveals the security standing and trustworthiness of the target domain.',
@@ -395,7 +390,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'censys.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Threat Intelligence',
         'base_severity': 'medium',
         'title': 'Internet-Wide Asset Discovery',
         'description': 'Comprehensive internet-wide scanning has identified additional assets, services, and potential security exposures associated with the organization.',
@@ -404,7 +399,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'shodan.py': {
-        'category': 'Security & Threat Intelligence',
+        'category': 'Threat Intelligence',
         'base_severity': 'high',
         'title': 'Internet-Connected Device Discovery',
         'description': 'Shodan search engine results reveal internet-connected devices and services associated with the organization, potentially including exposed industrial control systems, IoT devices, or misconfigured services.',
@@ -412,8 +407,9 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Immediately secure any exposed critical systems, implement network segmentation, audit all internet-connected devices, establish IoT security policies'
     },
 
+    # Compliance & Privacy Category (Medium/Low Risk)
     'privacy_gdpr.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Compliance & Privacy',
         'base_severity': 'medium',
         'title': 'Privacy and GDPR Compliance Assessment',
         'description': 'Privacy policy implementation and GDPR compliance measures have been evaluated for data protection and regulatory compliance.',
@@ -422,7 +418,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'carbon_footprint.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Compliance & Privacy',
         'base_severity': 'low',
         'title': 'Environmental Impact Assessment',
         'description': 'Website carbon footprint and environmental impact have been assessed, providing insights into sustainability and environmental responsibility.',
@@ -431,7 +427,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'global_ranking.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Compliance & Privacy',
         'base_severity': 'low',
         'title': 'Website Popularity and Ranking Analysis',
         'description': 'Global website ranking and popularity metrics provide insights into the site\'s visibility and potential attractiveness to attackers.',
@@ -440,7 +436,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'performance_monitoring.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Compliance & Privacy',
         'base_severity': 'low',
         'title': 'Website Performance Analysis',
         'description': 'Website performance metrics including load times, responsiveness, and user experience factors have been evaluated.',
@@ -449,7 +445,7 @@ MODULE_FINDINGS_MAP = {
     },
     
     'quality_metrics.py': {
-        'category': 'Network & Infrastructure',
+        'category': 'Compliance & Privacy',
         'base_severity': 'low',
         'title': 'Website Quality and Standards Assessment',
         'description': 'Website quality metrics including code quality, accessibility, and standards compliance have been evaluated.',
@@ -457,6 +453,17 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Implement code quality standards, ensure accessibility compliance, regularly audit website standards adherence'
     },
 
+    # VULNERABILITY SCANNING CATEGORY (NEW)
+    # Network & Infrastructure Vulnerabilities
+    'network_vuln_scan.py': {
+        'category': 'Vulnerability Scanning',
+        'base_severity': 'critical',
+        'title': 'Network Vulnerability Assessment',
+        'description': 'Comprehensive network vulnerability scanning has identified critical security weaknesses in network services, including unpatched systems, weak configurations, and exploitable services.',
+        'business_impact': 'Direct network compromise risk, unauthorized access to internal systems, potential data breaches and service disruption',
+        'recommendation': 'Immediately patch identified vulnerabilities, implement network segmentation, harden service configurations, and establish regular vulnerability scanning'
+    },
+    
     'service_banner_vulns.py': {
         'category': 'Vulnerability Scanning',
         'base_severity': 'high',
@@ -475,6 +482,7 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Immediately change all default credentials, implement strong password policies, enable multi-factor authentication, and conduct credential audits'
     },
 
+    # Web Application Vulnerabilities
     'sql_injection_scanner.py': {
         'category': 'Vulnerability Scanning',
         'base_severity': 'critical',
@@ -520,6 +528,7 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Implement proper API authentication and authorization, deploy rate limiting, conduct API security testing, and validate all API endpoints'
     },
 
+    # SSL/TLS & Cryptographic Vulnerabilities
     'ssl_vulnerability_scanner.py': {
         'category': 'Vulnerability Scanning',
         'base_severity': 'critical',
@@ -538,6 +547,7 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Update certificates, implement certificate monitoring, establish certificate lifecycle management, and conduct regular certificate audits'
     },
 
+    # Application-Specific Vulnerabilities
     'cms_vulnerability_scanner.py': {
         'category': 'Vulnerability Scanning',
         'base_severity': 'high',
@@ -556,6 +566,7 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Implement strict file type validation, deploy antivirus scanning, restrict upload directories, and conduct security testing'
     },
 
+    # Infrastructure & Configuration Vulnerabilities
     'cloud_misconfig_scanner.py': {
         'category': 'Vulnerability Scanning',
         'base_severity': 'high',
@@ -583,6 +594,7 @@ MODULE_FINDINGS_MAP = {
         'recommendation': 'Secure email server configuration, implement authentication, deploy anti-spam measures, and conduct regular security testing'
     },
 
+    # Advanced Vulnerability Detection
     'deserialization_scanner.py': {
         'category': 'Vulnerability Scanning',
         'base_severity': 'critical',
@@ -613,10 +625,14 @@ MODULE_FINDINGS_MAP = {
 
 # Category metadata for risk calculation
 CATEGORY_WEIGHTS = {
-    'Network & Infrastructure': 1.0,
-    'Web Application Analysis': 1.0,
-    'Security & Threat Intelligence': 1.0,
-    'Vulnerability Scanning': 1.0
+    'Information Disclosure': 1.0,        # Highest risk - direct data exposure
+    'Attack Surface Expansion': 0.9,      # Very high risk - more attack vectors
+    'Threat Intelligence': 0.9,           # Very high risk - active threats
+    'Security Configuration': 0.8,        # High risk - security controls
+    'Web Application Analysis': 0.6,      # Medium risk - application security
+    'Network & Infrastructure': 0.5,      # Medium risk - infrastructure info
+    'Compliance & Privacy': 0.3,          # Lower risk - compliance/quality
+    'Vulnerability Scanning': 1.0         # Highest risk - direct vulnerabilities
 }
 
 # Severity to numeric score mapping

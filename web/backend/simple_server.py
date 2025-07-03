@@ -65,7 +65,7 @@ def get_finding_metadata(module_name):
     metadata = {
         "dns_records.py": {
             "title": "DNS Infrastructure Analysis",
-            "category": "Information Disclosure",
+            "category": "Network & Infrastructure",
             "severity_base": "LOW",
             "description": "DNS records enumerated revealing infrastructure components",
             "business_impact": "Infrastructure reconnaissance information",
@@ -73,7 +73,7 @@ def get_finding_metadata(module_name):
         },
         "open_ports.py": {
             "title": "Open Network Services Detected", 
-            "category": "Attack Surface Expansion",
+            "category": "Network & Infrastructure",
             "severity_base": "MEDIUM",
             "description": "Network services accessible from the internet",
             "business_impact": "Increased attack vectors and potential unauthorized access",
@@ -81,7 +81,7 @@ def get_finding_metadata(module_name):
         },
         "whois_lookup.py": {
             "title": "Domain Registration Information",
-            "category": "Information Disclosure", 
+            "category": "Network & Infrastructure", 
             "severity_base": "LOW",
             "description": "Domain registration details collected from WHOIS databases",
             "business_impact": "Organizational information disclosure",
@@ -89,7 +89,7 @@ def get_finding_metadata(module_name):
         },
         "content_discovery.py": {
             "title": "Hidden Content Discovery",
-            "category": "Attack Surface Expansion",
+            "category": "Web Application Analysis",
             "severity_base": "MEDIUM", 
             "description": "Administrative interfaces or sensitive directories discovered",
             "business_impact": "Potential access to administrative functions",
@@ -97,7 +97,7 @@ def get_finding_metadata(module_name):
         },
         "email_harvester.py": {
             "title": "Email Address Exposure",
-            "category": "Information Disclosure",
+            "category": "Security & Threat Intelligence",
             "severity_base": "LOW",
             "description": "Employee email addresses discoverable through public sources",
             "business_impact": "Increased susceptibility to phishing attacks",
@@ -105,7 +105,7 @@ def get_finding_metadata(module_name):
         },
         "social_media.py": {
             "title": "Social Media Profile Discovery",
-            "category": "Information Disclosure",
+            "category": "Security & Threat Intelligence",
             "severity_base": "LOW",
             "description": "Social media profiles linked to the organization discovered",
             "business_impact": "Additional reconnaissance information for attackers",
@@ -113,7 +113,7 @@ def get_finding_metadata(module_name):
         },
         "technology_stack.py": {
             "title": "Technology Stack Fingerprinting",
-            "category": "Information Disclosure",
+            "category": "Web Application Analysis",
             "severity_base": "LOW",
             "description": "Web application technology stack identified",
             "business_impact": "Technology disclosure enabling targeted attacks",
@@ -121,7 +121,7 @@ def get_finding_metadata(module_name):
         },
         "data_leak.py": {
             "title": "Data Breach Exposure",
-            "category": "Critical Exposure",
+            "category": "Security & Threat Intelligence",
             "severity_base": "CRITICAL",
             "description": "Email addresses or credentials found in known data breaches",
             "business_impact": "Direct data breach risk and potential unauthorized access",
@@ -129,7 +129,7 @@ def get_finding_metadata(module_name):
         },
         "exposed_env_files.py": {
             "title": "Configuration File Exposure",
-            "category": "Critical Exposure", 
+            "category": "Security & Threat Intelligence", 
             "severity_base": "CRITICAL",
             "description": "Environment files containing sensitive information publicly accessible",
             "business_impact": "Direct exposure of secrets and credentials",
@@ -137,7 +137,7 @@ def get_finding_metadata(module_name):
         },
         "pastebin_monitoring.py": {
             "title": "Paste Site Monitoring",
-            "category": "Data Leakage",
+            "category": "Security & Threat Intelligence",
             "severity_base": "HIGH",
             "description": "Organizational data identified on public paste sites",
             "business_impact": "Sensitive information publicly available",
@@ -145,7 +145,7 @@ def get_finding_metadata(module_name):
         },
         "shodan.py": {
             "title": "Internet Device Reconnaissance", 
-            "category": "Attack Surface Expansion",
+            "category": "Network & Infrastructure",
             "severity_base": "HIGH",
             "description": "Internet-connected devices and services discovered",
             "business_impact": "Discovery of exposed services and potential vulnerabilities",
@@ -153,7 +153,7 @@ def get_finding_metadata(module_name):
         },
         "subdomain_enum.py": {
             "title": "Subdomain Discovery",
-            "category": "Attack Surface Expansion",
+            "category": "Security & Threat Intelligence",
             "severity_base": "HIGH", 
             "description": "Additional subdomains identified expanding attack surface",
             "business_impact": "Increased attack surface and potential forgotten services",
@@ -161,7 +161,7 @@ def get_finding_metadata(module_name):
         },
         "subdomain_takeover.py": {
             "title": "Subdomain Takeover Vulnerability",
-            "category": "Critical Vulnerability",
+            "category": "Vulnerability Scanning",
             "severity_base": "CRITICAL",
             "description": "Subdomains vulnerable to takeover attacks detected",
             "business_impact": "Complete subdomain compromise potential",
@@ -169,7 +169,7 @@ def get_finding_metadata(module_name):
         },
         "virustotal_scan.py": {
             "title": "Malware and Reputation Scan",
-            "category": "Threat Intelligence",
+            "category": "Security & Threat Intelligence",
             "severity_base": "HIGH",
             "description": "Domain or URL reputation analysis completed",
             "business_impact": "Reputation-based risks and potential malware association", 
@@ -179,7 +179,7 @@ def get_finding_metadata(module_name):
     
     return metadata.get(module_name, {
         "title": module_name.replace('.py', '').replace('_', ' ').title(),
-        "category": "General Security",
+        "category": "Security & Threat Intelligence",
         "severity_base": "LOW",
         "description": "Security assessment completed",
         "business_impact": "Information gathered for security analysis",
@@ -991,35 +991,18 @@ class ArgusHTTPHandler(http.server.SimpleHTTPRequestHandler):
                 if is_enhanced:
                     try:
                         metadata = get_finding_metadata(module_script)
-                        # OVERRIDE: Force enhanced modules into the 3 main categories
-                        section_to_category = {
-                            'Network & Infrastructure': 'Network and Infrastructure',
-                            'Web Application Analysis': 'Web Application', 
-                            'Security & Threat Intelligence': 'Security & Threat Intelligence'
-                        }
-                        # Use the tool's original section, not the metadata category
-                        category = section_to_category.get(tool['section'], 'Network and Infrastructure')
+                        # Use the real category from metadata
+                        category = metadata.get("category", tool.get('section', 'Other'))
                         description = metadata["description"]
                         severity_base = metadata["severity_base"]
                     except:
-                        # Fallback if metadata function fails - use 3 main categories
-                        section_to_category = {
-                            'Network & Infrastructure': 'Network and Infrastructure',
-                            'Web Application Analysis': 'Web Application', 
-                            'Security & Threat Intelligence': 'Security & Threat Intelligence'
-                        }
-                        category = section_to_category.get(tool['section'], 'Network and Infrastructure')
+                        # Fallback if metadata function fails - use tool section
+                        category = tool.get('section', 'Other')
                         description = f"{tool['name']} - Enhanced reconnaissance module"
                         severity_base = "medium"
                 else:
-                    # Map ALL modules to the 3 main categories only
-                    section_to_category = {
-                        'Network & Infrastructure': 'Network and Infrastructure',
-                        'Web Application Analysis': 'Web Application', 
-                        'Security & Threat Intelligence': 'Security & Threat Intelligence'
-                    }
-                    # Force everything into one of the 3 categories
-                    category = section_to_category.get(tool['section'], 'Network and Infrastructure')
+                    # Use the tool's section as the category
+                    category = tool.get('section', 'Other')
                     description = f"{tool['name']} - {tool['section']} tool"
                     severity_base = "medium"
                 
