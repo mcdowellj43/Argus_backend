@@ -1,0 +1,6 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - testphp.vulnweb.com
+==================================================
+[E] FAILED: Invalid domain format
+
+

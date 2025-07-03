@@ -1,0 +1,9 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - testphp.vulnweb.com
+==================================================
+[I] Target: testphp.vulnweb.com
+
+[I] Testing 18 subdomains for takeover vulnerabilities...
+[I] Execution time: 0.34s
+
+

@@ -70,29 +70,50 @@ tools = [
     {'number': '35', 'name': 'Technology Stack Detection', 'script': 'technology_stack.py', 'section': 'Web Application Analysis'},
     {'number': '36', 'name': 'Third-Party Integrations', 'script': 'third_party_integrations.py', 'section': 'Web Application Analysis'},
 
-    # Security & Threat Intelligence (37-54)
-    {'number': '37', 'name': 'Censys Reconnaissance', 'script': 'censys.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '38', 'name': 'Certificate Authority Recon', 'script': 'certificate_authority_recon.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '39', 'name': 'Data Leak Detection', 'script': 'data_leak.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '40', 'name': 'Exposed Environment Files Checker', 'script': 'exposed_env_files.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '41', 'name': 'Firewall Detection', 'script': 'firewall_detection.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '42', 'name': 'Global Ranking', 'script': 'global_ranking.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '43', 'name': 'HTTP Headers', 'script': 'http_headers.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '44', 'name': 'HTTP Security Features', 'script': 'http_security.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '45', 'name': 'Malware & Phishing Check', 'script': 'malware_phishing.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '46', 'name': 'Pastebin Monitoring', 'script': 'pastebin_monitoring.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '47', 'name': 'Privacy & GDPR Compliance', 'script': 'privacy_gdpr.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '48', 'name': 'Security.txt Check', 'script': 'security_txt.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '49', 'name': 'Shodan Reconnaissance', 'script': 'shodan.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '50', 'name': 'SSL Labs Report', 'script': 'ssl_labs_report.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '51', 'name': 'SSL Pinning Check', 'script': 'ssl_pinning_check.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '52', 'name': 'Subdomain Enumeration', 'script': 'subdomain_enum.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '53', 'name': 'Subdomain Takeover', 'script': 'subdomain_takeover.py', 'section': 'Security & Threat Intelligence'},
-    {'number': '54', 'name': 'VirusTotal Scan', 'script': 'virustotal_scan.py', 'section': 'Security & Threat Intelligence'},
+    # Vulnerability Scanning (37-60)
+    {'number': '37', 'name': 'Network Vulnerability Assessment', 'script': 'network_vuln_scan.py', 'section': 'Vulnerability Scanning'},
+    {'number': '38', 'name': 'Service Version Vulnerability Analysis', 'script': 'service_banner_vulns.py', 'section': 'Vulnerability Scanning'},
+    {'number': '39', 'name': 'Default Credential Exposure', 'script': 'default_credentials.py', 'section': 'Vulnerability Scanning'},
+    {'number': '40', 'name': 'SQL Injection Vulnerabilities Detected', 'script': 'sql_injection_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '41', 'name': 'Cross-Site Scripting (XSS) Vulnerabilities', 'script': 'xss_vulnerability_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '42', 'name': 'Authentication Bypass Vulnerabilities', 'script': 'web_app_authentication_bypass.py', 'section': 'Vulnerability Scanning'},
+    {'number': '43', 'name': 'Directory Traversal Vulnerabilities', 'script': 'directory_traversal_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '44', 'name': 'API Security Vulnerabilities', 'script': 'api_security_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '45', 'name': 'SSL/TLS Security Vulnerabilities', 'script': 'ssl_vulnerability_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '46', 'name': 'Certificate Security Issues', 'script': 'certificate_vulnerabilities.py', 'section': 'Vulnerability Scanning'},
+    {'number': '47', 'name': 'CMS Security Vulnerabilities', 'script': 'cms_vulnerability_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '48', 'name': 'File Upload Security Vulnerabilities', 'script': 'file_upload_vulnerabilities.py', 'section': 'Vulnerability Scanning'},
+    {'number': '49', 'name': 'Cloud Security Misconfigurations', 'script': 'cloud_misconfig_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '50', 'name': 'Database Exposure Vulnerabilities', 'script': 'database_exposure_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '51', 'name': 'Email Server Security Vulnerabilities', 'script': 'email_server_vulnerabilities.py', 'section': 'Vulnerability Scanning'},
+    {'number': '52', 'name': 'Unsafe Deserialization Vulnerabilities', 'script': 'deserialization_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '53', 'name': 'Command Injection Vulnerabilities', 'script': 'command_injection_scanner.py', 'section': 'Vulnerability Scanning'},
+    {'number': '54', 'name': 'Business Logic Vulnerabilities', 'script': 'business_logic_vulnerabilities.py', 'section': 'Vulnerability Scanning'},
+
+    # Security & Threat Intelligence (55-72)
+    {'number': '55', 'name': 'Censys Reconnaissance', 'script': 'censys.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '56', 'name': 'Certificate Authority Recon', 'script': 'certificate_authority_recon.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '57', 'name': 'Data Leak Detection', 'script': 'data_leak.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '58', 'name': 'Exposed Environment Files Checker', 'script': 'exposed_env_files.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '59', 'name': 'Firewall Detection', 'script': 'firewall_detection.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '60', 'name': 'Global Ranking', 'script': 'global_ranking.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '61', 'name': 'HTTP Headers', 'script': 'http_headers.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '62', 'name': 'HTTP Security Features', 'script': 'http_security.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '63', 'name': 'Malware & Phishing Check', 'script': 'malware_phishing.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '64', 'name': 'Pastebin Monitoring', 'script': 'pastebin_monitoring.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '65', 'name': 'Privacy & GDPR Compliance', 'script': 'privacy_gdpr.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '66', 'name': 'Security.txt Check', 'script': 'security_txt.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '67', 'name': 'Shodan Reconnaissance', 'script': 'shodan.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '68', 'name': 'SSL Labs Report', 'script': 'ssl_labs_report.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '69', 'name': 'SSL Pinning Check', 'script': 'ssl_pinning_check.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '70', 'name': 'Subdomain Enumeration', 'script': 'subdomain_enum.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '71', 'name': 'Subdomain Takeover', 'script': 'subdomain_takeover.py', 'section': 'Security & Threat Intelligence'},
+    {'number': '72', 'name': 'VirusTotal Scan', 'script': 'virustotal_scan.py', 'section': 'Security & Threat Intelligence'},
 
     {'number': '100', 'name': 'Run All Infrastructure Tools', 'script': '', 'section': 'Run All Scripts'},
     {'number': '200', 'name': 'Run All Web Intelligence Tools', 'script': '', 'section': 'Run All Scripts'},
     {'number': '300', 'name': 'Run All Security Tools', 'script': '', 'section': 'Run All Scripts'},
+    {'number': '400', 'name': 'Run All Vulnerability Scanning Tools', 'script': '', 'section': 'Run All Scripts'},
 
     # Special Mode
     {'number': '00', 'name': 'BEAST MODE', 'script': '', 'section': 'Special Mode'},
@@ -135,9 +156,10 @@ Version: [bold green]{VERSION}[/bold green]    Modules: [bold yellow]{number_of_
 
 def display_table():
     table = Table(box=SIMPLE_HEAVY)
-    sections = ['Network & Infrastructure', 'Web Application Analysis', 'Security & Threat Intelligence']
+    sections = ['Network & Infrastructure', 'Web Application Analysis', 'Vulnerability Scanning', 'Security & Threat Intelligence']
     table.add_column("Network & Infrastructure", justify="left", style="cyan", no_wrap=True)
     table.add_column("Web Application Analysis", justify="left", style="green", no_wrap=True)
+    table.add_column("Vulnerability Scanning", justify="left", style="yellow", no_wrap=True)
     table.add_column("Security & Threat Intelligence", justify="left", style="magenta", no_wrap=True)
     tools_by_section = defaultdict(list)
     for tool in tools:
@@ -152,11 +174,11 @@ def display_table():
             else:
                 row.append("")
         table.add_row(*row)
-    table.add_row("", "", "")
-    table.add_row("", "", "")
-    table.add_row("[bold]100[/bold]. Run All Infrastructure Tools", "[bold]200[/bold]. Run All Web Intelligence Tools", "[bold]300[/bold]. Run All Security Tools")
-    table.add_row("", "", "")
-    table.add_row("", "[bold red]" + "-" * 15 + " 00. BEAST MODE " + "-" * 15 + "[/bold red]", "")
+    table.add_row("", "", "", "")
+    table.add_row("", "", "", "")
+    table.add_row("[bold]100[/bold]. Run All Infrastructure Tools", "[bold]200[/bold]. Run All Web Intelligence Tools", "[bold]400[/bold]. Run All Vulnerability Scanning Tools", "[bold]300[/bold]. Run All Security Tools")
+    table.add_row("", "", "", "")
+    table.add_row("", "[bold red]" + "-" * 15 + " 00. BEAST MODE " + "-" * 15 + "[/bold red]", "", "")
     console.print(table)
 
 def check_api_modules():
@@ -256,6 +278,9 @@ def main():
             elif choice == '300':  # Run all security tools
                 selected_modules = [tool['number'] for tool in tools if tool['section'] == 'Security & Threat Intelligence']
                 run_modules(selected_modules, check_api_modules(), mode_name='All_Security_Tools')
+            elif choice == '400':  # Run all vulnerability scanning tools
+                selected_modules = [tool['number'] for tool in tools if tool['section'] == 'Vulnerability Scanning']
+                run_modules(selected_modules, check_api_modules(), mode_name='All_Vulnerability_Scanning_Tools')
             elif choice.lower() in ['exit', 'quit']:
                 console.print("[bold green]Exiting Argus. Goodbye![/bold green]")
                 sys.exit(0)

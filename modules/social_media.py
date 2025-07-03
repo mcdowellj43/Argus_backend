@@ -1,194 +1,484 @@
+#!/usr/bin/env python3
+"""
+Enhanced Social Media Module - Clean Output with Centralized Binary Findings System
+Fixed for Windows Unicode encoding issues
+"""
+
+import os
 import sys
 import requests
-from bs4 import BeautifulSoup
-from rich.console import Console
-from rich.table import Table
-from colorama import Fore, init
+import re
+from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
-init(autoreset=True)
-console = Console()
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
 
-DEFAULT_TIMEOUT = 10
+# Add parent directory for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-SOCIAL_MEDIA_DOMAINS = {
-    'facebook.com': 'Facebook',
-    'twitter.com': 'Twitter',
-    'instagram.com': 'Instagram',
-    'linkedin.com': 'LinkedIn',
-    'youtube.com': 'YouTube',
-    'pinterest.com': 'Pinterest',
-    'tiktok.com': 'TikTok',
-    'snapchat.com': 'Snapchat',
-    'github.com': 'GitHub'
-}
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
-def banner():
-    console.print(Fore.GREEN + """
-=============================================
-     Argus - Social Media Presence Check
-=============================================
-""")
+try:
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+except ImportError:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
 
-def convert_to_url(target):
-    parsed = urlparse(target)
-    if not parsed.scheme:
-        return f"http://{target}"
-    return target
+# Try to import BeautifulSoup with fallback
+try:
+    from bs4 import BeautifulSoup
+    BEAUTIFULSOUP_AVAILABLE = True
+except ImportError:
+    BEAUTIFULSOUP_AVAILABLE = False
 
-def detect_social_media_from_page(domain):
-    social_media_profiles = []
-    try:
-        response = requests.get(domain, timeout=DEFAULT_TIMEOUT)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        links = soup.find_all('a', href=True)
-        for link in links:
-            href = link['href']
-            for sm_domain, platform in SOCIAL_MEDIA_DOMAINS.items():
-                if sm_domain in href:
-                    profile_url = href
-                    if not urlparse(href).netloc:
-                        profile_url = urljoin(domain, href)
-                    social_media_profiles.append({'platform': platform, 'url': profile_url})
-                    console.print(f"[+] Found {platform} profile: {profile_url}")
-        social_media_profiles = [dict(t) for t in {tuple(d.items()) for d in social_media_profiles}]
-        return social_media_profiles
-    except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error detecting social media profiles from page source: {e}")
-        return []
+def assess_social_media_security_risk(profiles, platform_groups):
+    """Assess security risk of discovered social media profiles"""
+    findings = []
+    severity = "I"
+    
+    if not profiles:
+        return findings, severity
+    
+    # High-risk platforms (often targeted for social engineering)
+    high_risk_platforms = ['LinkedIn', 'Twitter', 'X (Twitter)', 'Facebook']
+    
+    # Professional/business platforms
+    business_platforms = ['LinkedIn', 'GitHub']
+    
+    # Social platforms (personal information exposure)
+    social_platforms = ['Facebook', 'Instagram', 'TikTok', 'Snapchat']
+    
+    high_risk_found = []
+    business_found = []
+    social_found = []
+    
+    for platform in platform_groups.keys():
+        if platform in high_risk_platforms:
+            high_risk_found.append(platform)
+        if platform in business_platforms:
+            business_found.append(platform)
+        if platform in social_platforms:
+            social_found.append(platform)
+    
+    # Determine severity and findings
+    if len(profiles) >= 8:
+        severity = "H"
+        findings.append(f"High social media exposure: {len(profiles)} profiles across {len(platform_groups)} platforms")
+    elif len(profiles) >= 5:
+        severity = "W"
+        findings.append(f"Moderate social media presence: {len(profiles)} profiles discovered")
+    
+    if high_risk_found:
+        if severity not in ["H"]:
+            severity = "W"
+        findings.append(f"High-risk platforms identified: {', '.join(high_risk_found)} (social engineering targets)")
+    
+    if business_found:
+        findings.append(f"Professional platforms found: {', '.join(business_found)} (business intelligence risk)")
+    
+    if social_found:
+        findings.append(f"Personal platforms discovered: {', '.join(social_found)} (privacy exposure risk)")
+    
+    # OSINT and social engineering risks
+    if len(platform_groups) >= 4:
+        findings.append("OSINT risk: Multiple platforms enable comprehensive profile building")
+    
+    if 'LinkedIn' in platform_groups and ('Facebook' in platform_groups or 'Instagram' in platform_groups):
+        findings.append("Cross-platform correlation risk: Professional and personal profiles linked")
+    
+    return findings, severity
 
-def search_social_media_using_duckduckgo(domain):
-    social_media_profiles = []
-    search_url = f"https://duckduckgo.com/html/?q=site:{domain}+social+media"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    try:
-        response = requests.get(search_url, headers=headers, timeout=DEFAULT_TIMEOUT)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        links = soup.find_all('a', href=True)
-        for link in links:
-            href = link['href']
-            for sm_domain, platform in SOCIAL_MEDIA_DOMAINS.items():
-                if sm_domain in href:
-                    social_media_profiles.append({'platform': platform, 'url': href})
-                    console.print(f"[+] Found {platform} profile using DuckDuckGo: {href}")
-        social_media_profiles = [dict(t) for t in {tuple(d.items()) for d in social_media_profiles}]
-        return social_media_profiles
-    except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error detecting social media profiles using DuckDuckGo: {e}")
-        return []
-
-def detect_social_media_from_internal_links(domain):
-    social_media_profiles = []
-    try:
-        response = requests.get(domain, timeout=DEFAULT_TIMEOUT)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        links = soup.find_all('a', href=True)
-        for link in links:
-            href = link['href']
-            for sm_domain, platform in SOCIAL_MEDIA_DOMAINS.items():
-                if sm_domain in href:
-                    profile_url = href
-                    if not urlparse(href).netloc:
-                        profile_url = urljoin(domain, href)
-                    social_media_profiles.append({'platform': platform, 'url': profile_url})
-                    console.print(f"[+] Found {platform} profile from internal links: {profile_url}")
-        social_media_profiles = [dict(t) for t in {tuple(d.items()) for d in social_media_profiles}]
-        return social_media_profiles
-    except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error detecting social media profiles from internal links: {e}")
-        return []
-
-def detect_social_media_from_metadata(domain):
-    social_media_profiles = []
-    try:
-        response = requests.get(domain, timeout=DEFAULT_TIMEOUT)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        meta_tags = soup.find_all('meta', property=True, content=True)
-        for tag in meta_tags:
-            content = tag['content']
-            for sm_domain, platform in SOCIAL_MEDIA_DOMAINS.items():
-                if sm_domain in content:
-                    social_media_profiles.append({'platform': platform, 'url': content})
-                    console.print(f"[+] Found {platform} profile from metadata: {content}")
-        social_media_profiles = [dict(t) for t in {tuple(d.items()) for d in social_media_profiles}]
-        return social_media_profiles
-    except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error detecting social media profiles from metadata: {e}")
-        return []
-
-def search_social_media_using_google(domain):
-    social_media_profiles = []
-    search_url = f"https://www.google.com/search?q=site:{domain}+social+media"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    try:
-        response = requests.get(search_url, headers=headers, timeout=DEFAULT_TIMEOUT)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.content, 'html.parser')
-        links = soup.find_all('a', href=True)
-        for link in links:
-            href = link['href']
-            for sm_domain, platform in SOCIAL_MEDIA_DOMAINS.items():
-                if sm_domain in href:
-                    social_media_profiles.append({'platform': platform, 'url': href})
-                    console.print(f"[+] Found {platform} profile using Google search: {href}")
-        social_media_profiles = [dict(t) for t in {tuple(d.items()) for d in social_media_profiles}]
-        return social_media_profiles
-    except requests.RequestException as e:
-        console.print(Fore.RED + f"[!] Error detecting social media profiles using Google search: {e}")
-        return []
-
-def display_social_media_profiles(profiles):
-    table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("Platform", style="cyan", justify="left")
-    table.add_column("Profile URL", style="green", justify="left", overflow="fold")
-    if profiles:
-        for profile in profiles:
-            table.add_row(profile.get("platform"), profile.get("url"))
+def get_platform_risk_level(platform):
+    """Determine risk level for individual platforms"""
+    high_risk_platforms = ['LinkedIn', 'Twitter', 'X (Twitter)', 'Facebook']
+    medium_risk_platforms = ['Instagram', 'GitHub', 'YouTube']
+    
+    if platform in high_risk_platforms:
+        return "H"
+    elif platform in medium_risk_platforms:
+        return "W"
     else:
-        table.add_row("No Data", "No social media profiles found")
-    console.print(table)
+        return "I"
+
+def get_social_platforms():
+    """Define social media platforms to search for"""
+    return {
+        'facebook.com': 'Facebook',
+        'twitter.com': 'Twitter',
+        'x.com': 'X (Twitter)',
+        'linkedin.com': 'LinkedIn',
+        'instagram.com': 'Instagram',
+        'youtube.com': 'YouTube',
+        'github.com': 'GitHub',
+        'pinterest.com': 'Pinterest',
+        'tiktok.com': 'TikTok',
+        'snapchat.com': 'Snapchat',
+        'reddit.com': 'Reddit',
+        'discord.com': 'Discord',
+        'telegram.org': 'Telegram',
+        'whatsapp.com': 'WhatsApp'
+    }
+
+def extract_social_links_regex(content, base_url):
+    """Extract social media links using regex (fallback when BeautifulSoup unavailable)"""
+    social_platforms = get_social_platforms()
+    found_profiles = []
+    
+    try:
+        # Simple regex to find links
+        link_pattern = r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>([^<]*)</a>'
+        matches = re.findall(link_pattern, content, re.IGNORECASE)
+        
+        for href, link_text in matches:
+            # Convert relative URLs to absolute
+            if href.startswith('/'):
+                href = urljoin(base_url, href)
+            
+            # Check if link contains social media domain
+            for domain, platform in social_platforms.items():
+                if domain in href.lower():
+                    found_profiles.append({
+                        "platform": platform,
+                        "url": href,
+                        "link_text": link_text[:100],
+                        "source": "link"
+                    })
+    except Exception:
+        pass
+    
+    return found_profiles
+
+def extract_social_links(content, base_url):
+    """Extract social media links from HTML content"""
+    if not BEAUTIFULSOUP_AVAILABLE:
+        return extract_social_links_regex(content, base_url)
+    
+    social_platforms = get_social_platforms()
+    found_profiles = []
+    
+    try:
+        soup = BeautifulSoup(content, 'html.parser')
+        
+        # Check all links on the page
+        for link in soup.find_all('a', href=True):
+            href = link['href']
+            link_text = link.get_text(strip=True)
+            
+            # Convert relative URLs to absolute
+            if href.startswith('/'):
+                href = urljoin(base_url, href)
+            
+            # Check if link contains social media domain
+            for domain, platform in social_platforms.items():
+                if domain in href.lower():
+                    found_profiles.append({
+                        "platform": platform,
+                        "url": href,
+                        "link_text": link_text[:100],  # Truncate long text
+                        "source": "link"
+                    })
+        
+        # Check meta tags for social media properties
+        for meta in soup.find_all('meta'):
+            content_attr = meta.get('content', '')
+            property_attr = meta.get('property', '')
+            name_attr = meta.get('name', '')
+            
+            # Check various meta tag attributes
+            for attr_value in [content_attr, property_attr, name_attr]:
+                for domain, platform in social_platforms.items():
+                    if domain in attr_value.lower():
+                        found_profiles.append({
+                            "platform": platform,
+                            "url": content_attr if content_attr else attr_value,
+                            "link_text": "Meta tag",
+                            "source": "meta"
+                        })
+        
+        # Check for social media usernames in content
+        social_patterns = {
+            'Twitter/X': r'@([A-Za-z0-9_]{1,15})',
+            'Instagram': r'instagram\.com/([A-Za-z0-9_.]{1,30})',
+            'GitHub': r'github\.com/([A-Za-z0-9_-]{1,39})'
+        }
+        
+        for platform, pattern in social_patterns.items():
+            matches = re.findall(pattern, content, re.IGNORECASE)
+            for match in matches:
+                if platform == 'Twitter/X':
+                    url = f"https://twitter.com/{match}"
+                elif platform == 'Instagram':
+                    url = f"https://instagram.com/{match}"
+                elif platform == 'GitHub':
+                    url = f"https://github.com/{match}"
+                
+                found_profiles.append({
+                    "platform": platform,
+                    "url": url,
+                    "link_text": f"@{match}",
+                    "source": "pattern"
+                })
+    
+    except Exception:
+        pass
+    
+    return found_profiles
+
+def remove_duplicates(profiles):
+    """Remove duplicate social media profiles"""
+    seen_urls = set()
+    unique_profiles = []
+    
+    for profile in profiles:
+        url_clean = profile['url'].lower().rstrip('/')
+        if url_clean not in seen_urls:
+            seen_urls.add(url_clean)
+            unique_profiles.append(profile)
+    
+    return unique_profiles
+
+def validate_social_profiles(profiles):
+    """Basic validation of social media profiles"""
+    validated_profiles = []
+    
+    for profile in profiles:
+        url = profile['url']
+        
+        # Skip obviously invalid URLs
+        if not url or len(url) < 10:
+            continue
+        
+        # Skip URLs that are clearly not social media profiles
+        if any(skip in url.lower() for skip in [
+            '.png', '.jpg', '.gif', '.css', '.js', 'mailto:',
+            'tel:', 'javascript:', '#'
+        ]):
+            continue
+        
+        validated_profiles.append(profile)
+    
+    return validated_profiles
+
+def discover_social_media(target):
+    """Discover social media profiles for target"""
+    if not target.startswith(('http://', 'https://')):
+        target = 'http://' + target
+    
+    all_profiles = []
+    
+    try:
+        headers = {'User-Agent': USER_AGENT}
+        response = requests.get(target, headers=headers, timeout=DEFAULT_TIMEOUT)
+        
+        if response.status_code == 200:
+            profiles = extract_social_links(response.text, target)
+            all_profiles.extend(profiles)
+    
+    except Exception:
+        pass
+    
+    # Remove duplicates and validate
+    unique_profiles = remove_duplicates(all_profiles)
+    validated_profiles = validate_social_profiles(unique_profiles)
+    
+    return validated_profiles
 
 def main(target):
-    banner()
-    console.print(Fore.WHITE + "[*] Please wait, this may take some time...")
-    url = convert_to_url(target)
-    console.print(Fore.WHITE + f"[*] Detecting social media presence for: {url}")
-    domain = urlparse(url).netloc
-
-    social_media_profiles = []
-
-    social_media_profiles += detect_social_media_from_page(url)
-    if not social_media_profiles:
-        console.print(Fore.YELLOW + "[!] No social media profiles found in the HTML page source. Trying DuckDuckGo search...")
-        social_media_profiles += search_social_media_using_duckduckgo(domain)
-
-    if not social_media_profiles:
-        console.print(Fore.YELLOW + "[!] No social media profiles found using DuckDuckGo. Trying internal page links...")
-        social_media_profiles += detect_social_media_from_internal_links(url)
-
-    if not social_media_profiles:
-        console.print(Fore.YELLOW + "[!] No social media profiles found in internal links. Trying metadata...")
-        social_media_profiles += detect_social_media_from_metadata(url)
-
-    if not social_media_profiles:
-        console.print(Fore.YELLOW + "[!] No social media profiles found in metadata. Trying Google search...")
-        social_media_profiles += search_social_media_using_google(domain)
-
-    display_social_media_profiles(social_media_profiles)
-    console.print(Fore.WHITE + "[*] Social media presence check completed.")
+    """Main execution with clean output"""
+    print(f"[I] Social Media Discovery - {target}")
+    print("=" * 50)
+    
+    start_time = datetime.now()
+    
+    try:
+        if not target:
+            print("[E] FAILED: Empty target provided")
+            return {"status": "FAILED", "error": "Empty target"}
+        
+        # Ensure target has protocol
+        if not target.startswith(('http://', 'https://')):
+            target = 'http://' + target
+        
+        print(f"[I] Target: {target}")
+        if not BEAUTIFULSOUP_AVAILABLE:
+            print("[W] BeautifulSoup not available - using basic parsing")
+        print("[I] Searching for social media profiles...")
+        print()
+        
+        # Discover social media profiles (Keep existing logic unchanged)
+        profiles = discover_social_media(target)
+        execution_time = (datetime.now() - start_time).total_seconds()
+        
+        # NEW: Prepare data for findings system
+        scan_data = {
+            "target": target,
+            "profiles": profiles,
+            "total_profiles_found": len(profiles),
+            "scan_completed": True,
+            "status": "SUCCESS"
+        }
+        
+        if profiles:
+            # Group by platform for analysis
+            platform_groups = {}
+            for profile in profiles:
+                platform = profile['platform']
+                if platform not in platform_groups:
+                    platform_groups[platform] = []
+                platform_groups[platform].append(profile)
+            
+            # NEW: Categorize platforms for findings evaluation
+            business_platforms = [p for p in platform_groups.keys() if p in ['LinkedIn', 'GitHub']]
+            personal_platforms = [p for p in platform_groups.keys() if p in ['Facebook', 'Instagram', 'TikTok', 'Snapchat']]
+            
+            scan_data.update({
+                "platforms": list(platform_groups.keys()),
+                "platform_groups": platform_groups,
+                "platform_count": len(platform_groups),
+                "business_platforms": business_platforms,
+                "personal_platforms": personal_platforms
+            })
+            
+            # Assess security risk
+            security_findings, severity = assess_social_media_security_risk(profiles, platform_groups)
+            scan_data.update({
+                "security_findings": security_findings,
+                "severity": severity
+            })
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("social_media.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback for legacy mode
+            has_high_exposure = len(profiles) >= 5 or any(p in ['LinkedIn', 'Facebook', 'Twitter'] for p in scan_data.get("platforms", []))
+            findings_result = {
+                "success": not has_high_exposure,
+                "severity": severity if profiles else "I",
+                "findings": [],
+                "has_findings": has_high_exposure
+            }
+        
+        # Legacy output format when findings system not available
+        if not FINDINGS_AVAILABLE and profiles:
+            # Group by platform for analysis
+            platform_groups = scan_data["platform_groups"]
+            security_findings = scan_data["security_findings"]
+            severity = scan_data["severity"]
+            
+            print(f"[{severity}] SOCIAL PROFILES: Found {len(profiles)} social media profiles")
+            
+            # Display security analysis
+            if security_findings:
+                print(f"[{severity}] Security Risk Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
+            
+            # Display results grouped by platform with risk assessment
+            for platform in sorted(platform_groups.keys()):
+                platform_profiles = platform_groups[platform]
+                platform_risk = get_platform_risk_level(platform)
+                
+                print(f"[{platform_risk}] {platform.upper()} ({len(platform_profiles)}):")
+                for profile in platform_profiles:
+                    source_names = {"link": "Direct Link", "meta": "Meta Tag", "pattern": "Pattern Match"}
+                    source_name = source_names.get(profile['source'], "Unknown")
+                    
+                    print(f"  [{platform_risk}] {profile['url']}")
+                    print(f"    - Source: {source_name}")
+                    if profile['link_text'] and profile['link_text'] != "Meta tag":
+                        print(f"    - Context: {profile['link_text']}")
+                print()
+            
+            # Platform summary
+            print("[I] PLATFORM SUMMARY:")
+            high_risk = [p for p in platform_groups.keys() if get_platform_risk_level(p) == "H"]
+            medium_risk = [p for p in platform_groups.keys() if get_platform_risk_level(p) == "W"]
+            low_risk = [p for p in platform_groups.keys() if get_platform_risk_level(p) == "I"]
+            
+            if high_risk:
+                print(f"  [H] High-risk platforms: {', '.join(high_risk)}")
+            if medium_risk:
+                print(f"  [W] Medium-risk platforms: {', '.join(medium_risk)}")
+            if low_risk:
+                print(f"  [I] Low-risk platforms: {', '.join(low_risk)}")
+        
+        elif not FINDINGS_AVAILABLE and not profiles:
+            print("[I] NO DATA: No social media profiles found")
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # NEW: Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,                    # Your existing scan results
+            "findings": findings_result,          # New findings data
+            "execution_time": execution_time,
+            "target": target
+        }
+            
+    except KeyboardInterrupt:
+        print("[I] INTERRUPTED: Discovery stopped by user")
+        return {"status": "INTERRUPTED"}
+        
+    except Exception as e:
+        execution_time = (datetime.now() - start_time).total_seconds()
+        error_msg = str(e)
+        
+        if "timeout" in error_msg.lower():
+            print("[T] TIMEOUT: Request timeout during social media discovery")
+            status = "TIMEOUT"
+        elif "connection" in error_msg.lower():
+            print("[E] ERROR: Connection error - target may be unreachable")
+            status = "CONNECTION_ERROR"
+        else:
+            print(f"[E] ERROR: {error_msg}")
+            status = "ERROR"
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # NEW: Enhanced error handling with findings system
+        if FINDINGS_AVAILABLE:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [f"Scan error: {error_msg}"],
+                "has_findings": True
+            }
+        else:
+            findings_result = {
+                "success": False,
+                "severity": "E",
+                "findings": [],
+                "has_findings": False
+            }
+        
+        return {
+            "status": status, 
+            "error": error_msg, 
+            "execution_time": execution_time,
+            "findings": findings_result,
+            "target": target
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        try:
-            main(target)
-        except KeyboardInterrupt:
-            console.print(Fore.RED + "\n[!] Process interrupted by user.")
-            sys.exit(1)
+        main(target)
     else:
-        console.print(Fore.RED + "[!] No target provided. Please pass a domain or URL.")
+        print("[E] ERROR: No target provided")
+        print("Usage: python social_media.py <url_or_domain>")
+        print("Example: python social_media.py example.com")
         sys.exit(1)

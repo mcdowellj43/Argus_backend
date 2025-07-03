@@ -1,0 +1,11 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - malcams.com
+==================================================
+[I] Target: malcams.com
+
+[I] Testing 18 subdomains for takeover vulnerabilities...
+[S] 18 subdomains appear secure
+[I] 1 unverified HTTPS requests made during scan
+[I] Execution time: 1.29s
+
+

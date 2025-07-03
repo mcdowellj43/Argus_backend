@@ -1,132 +1,420 @@
-import sys
+#!/usr/bin/env python3
+"""
+Improved Email Harvester Module - Clean Output with Success/Failure Indicators
+Fixed for Windows Unicode encoding issues
+UPDATED: Integrated with centralized findings system
+"""
+
 import os
-import threading
+import sys
 import requests
-from bs4 import BeautifulSoup
 import re
+from datetime import datetime
 from urllib.parse import urljoin, urlparse
-from collections import deque
-from rich.console import Console
-from rich.table import Table
 
+# Fix encoding issues for Windows
+if sys.platform.startswith('win'):
+    import codecs
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+
+# Add parent directory for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config.settings import HEADERS, DEFAULT_TIMEOUT
 
-console = Console()
+try:
+    from config.settings import USER_AGENT, DEFAULT_TIMEOUT
+except ImportError:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    DEFAULT_TIMEOUT = 10
 
-def banner():
-    console.print("""
-[green]
-=============================================
-       Argus - Email Harvesting Module
-=============================================
-[/green]
-""")
+# NEW: Import findings system
+try:
+    from config.findings_rules import evaluate_findings, display_findings_result
+    FINDINGS_AVAILABLE = True
+except ImportError:
+    print("[W] Findings system not available - running in legacy mode")
+    FINDINGS_AVAILABLE = False
 
-class EmailHarvester:
-    def __init__(self, base_url):
-        self.base_url = base_url
-        self.visited_urls = set()
-        self.emails_found = set()
-        self.urls_queue = deque()
-        self.headers = HEADERS
-        self.max_pages = 100
-        self.lock = threading.Lock()
-        self.num_threads = 10
-        self.page_count = 0
+# Try to import BeautifulSoup with fallback
+try:
+    from bs4 import BeautifulSoup
+    BEAUTIFULSOUP_AVAILABLE = True
+except ImportError:
+    BEAUTIFULSOUP_AVAILABLE = False
 
-    def crawl(self):
-        self.urls_queue.append(self.base_url)
-        threads = []
-        for _ in range(self.num_threads):
-            t = threading.Thread(target=self.worker)
-            t.daemon = True
-            t.start()
-            threads.append(t)
-        for t in threads:
-            t.join()
+def assess_email_security_risk(emails, categories):
+    """Assess security risk of harvested emails"""
+    findings = []
+    severity = "I"
+    
+    if not emails:
+        return findings, severity
+    
+    # High-risk email patterns (admin, executive accounts)
+    high_risk_patterns = ['admin', 'administrator', 'root', 'ceo', 'cto', 'cfo', 
+                         'president', 'director', 'manager', 'owner']
+    
+    # Sensitive business patterns
+    sensitive_patterns = ['hr', 'finance', 'accounting', 'legal', 'security',
+                         'support', 'billing', 'sales']
+    
+    high_risk_emails = []
+    sensitive_emails = []
+    
+    for email in emails:
+        local_part = email.split('@')[0].lower()
+        
+        # Check for high-risk patterns
+        if any(pattern in local_part for pattern in high_risk_patterns):
+            high_risk_emails.append(email)
+        
+        # Check for sensitive business patterns
+        elif any(pattern in local_part for pattern in sensitive_patterns):
+            sensitive_emails.append(email)
+    
+    # Analyze findings based on categories and patterns
+    if high_risk_emails:
+        findings.append(f"Executive/administrative emails discovered: {len(high_risk_emails)}")
+        severity = "H"
+    
+    if sensitive_emails:
+        findings.append(f"Business function emails found: {len(sensitive_emails)}")
+        if severity == "I":
+            severity = "W"
+    
+    if len(emails) > 10:
+        findings.append(f"Large email exposure: {len(emails)} addresses harvested")
+        if severity == "I":
+            severity = "W"
+    
+    # Check for personal vs organizational emails
+    org_emails = len(categories.get("organizational", []))
+    personal_emails = len(categories.get("personal", []))
+    
+    if personal_emails > 0:
+        findings.append(f"Personal email addresses found: {personal_emails}")
+    
+    if org_emails > 5:
+        findings.append(f"Extensive organizational email exposure: {org_emails}")
+        if severity == "I":
+            severity = "W"
+    
+    # Generic contact emails are usually acceptable
+    generic_emails = len(categories.get("generic", []))
+    if generic_emails > 0 and len(findings) == 0:
+        findings.append(f"Generic contact emails found: {generic_emails}")
+    
+    return findings, severity
 
-    def worker(self):
-        while True:
-            with self.lock:
-                if not self.urls_queue or self.page_count >= self.max_pages:
-                    break
-                url = self.urls_queue.popleft()
-                if url in self.visited_urls:
-                    continue
-                self.visited_urls.add(url)
-                self.page_count += 1
-            try:
-                response = requests.get(url, headers=self.headers, timeout=DEFAULT_TIMEOUT)
-                if response.status_code == 200:
-                    self.extract_emails(response.text)
-                    self.extract_links(response.text, url)
-                    console.print(f"[cyan][*] Crawled: {url}[/cyan]")
-                else:
-                    console.print(f"[yellow][!] Skipped {url} (Status code: {response.status_code})[/yellow]")
-            except requests.exceptions.RequestException as e:
-                console.print(f"[red][!] Error crawling {url}: {e}[/red]")
+def extract_emails_from_content(content):
+    """Extract email addresses from content using regex"""
+    # Improved email regex pattern
+    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    emails = set(re.findall(email_pattern, content, re.IGNORECASE))
+    
+    # Filter out common false positives
+    filtered_emails = set()
+    for email in emails:
+        email = email.lower()
+        # Skip obvious false positives
+        if not any(skip in email for skip in [
+            'example.com', 'test.com', 'placeholder', 'dummy',
+            'noreply@', 'no-reply@', '.png', '.jpg', '.gif', '.svg'
+        ]):
+            filtered_emails.add(email)
+    
+    return filtered_emails
 
-    def extract_emails(self, html_content):
-        emails = set(re.findall(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', html_content))
-        new_emails = emails - self.emails_found
-        if new_emails:
-            with self.lock:
-                self.emails_found.update(new_emails)
-            for email in new_emails:
-                console.print(f"[green][+] Found email: {email}[/green]")
-            console.print(f"[magenta]Total emails found so far: {len(self.emails_found)}[/magenta]")
+def get_page_content(url, session, timeout=10):
+    """Get content from a single page"""
+    try:
+        headers = {'User-Agent': USER_AGENT}
+        response = session.get(url, headers=headers, timeout=timeout)
+        if response.status_code == 200:
+            return response.text
+    except:
+        pass
+    return None
 
-    def extract_links(self, html_content, current_url):
-        soup = BeautifulSoup(html_content, 'html.parser')
-        new_urls = set()
-        for link_tag in soup.find_all('a', href=True):
-            href = link_tag['href']
-            full_url = urljoin(current_url, href)
-            if self.is_valid_url(full_url):
-                if full_url not in self.visited_urls:
-                    new_urls.add(full_url)
-        with self.lock:
-            self.urls_queue.extend(new_urls - self.visited_urls)
+def find_contact_pages_regex(base_url, content):
+    """Find contact pages using regex (fallback when BeautifulSoup unavailable)"""
+    contact_urls = []
+    
+    try:
+        # Simple regex to find contact-related links
+        link_pattern = r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>([^<]*)</a>'
+        matches = re.findall(link_pattern, content, re.IGNORECASE)
+        
+        contact_keywords = ['contact', 'about', 'team', 'staff']
+        
+        for href, link_text in matches:
+            if any(keyword in href.lower() or keyword in link_text.lower() 
+                   for keyword in contact_keywords):
+                full_url = urljoin(base_url, href)
+                if urlparse(full_url).netloc == urlparse(base_url).netloc:
+                    contact_urls.append(full_url)
+                    
+    except Exception:
+        pass
+    
+    return contact_urls[:3]
 
-    def is_valid_url(self, url):
-        parsed_base = urlparse(self.base_url)
-        parsed_url = urlparse(url)
-        return parsed_url.scheme in ('http', 'https') and parsed_url.netloc == parsed_base.netloc
+def find_contact_pages(base_url, content):
+    """Find potential contact pages from main page"""
+    if not BEAUTIFULSOUP_AVAILABLE:
+        return find_contact_pages_regex(base_url, content)
+    
+    contact_urls = []
+    
+    try:
+        soup = BeautifulSoup(content, 'html.parser')
+        contact_keywords = ['contact', 'about', 'team', 'staff']
+        
+        for link in soup.find_all('a', href=True):
+            href = link['href'].lower()
+            link_text = link.get_text(strip=True).lower()
+            
+            if any(keyword in href or keyword in link_text for keyword in contact_keywords):
+                full_url = urljoin(base_url, link['href'])
+                if urlparse(full_url).netloc == urlparse(base_url).netloc:
+                    contact_urls.append(full_url)
+    except:
+        pass
+    
+    return contact_urls[:3]  # Limit to 3 contact pages
 
-    def display_results(self):
-        if self.emails_found:
-            table = Table(show_header=True, header_style="bold white")
-            table.add_column("Email Addresses Found", style="white", justify="left")
-            for email in sorted(self.emails_found):
-                table.add_row(email)
-            console.print(table)
-            console.print(f"\n[cyan][*] Email harvesting completed. Total emails found: {len(self.emails_found)}[/cyan]")
-        else:
-            console.print("[yellow][!] No email addresses found.[/yellow]")
-
-def main(target):
-    banner()
+def harvest_emails(target):
+    """Harvest email addresses from target website"""
     if not target.startswith(('http://', 'https://')):
         target = 'http://' + target
+    
+    all_emails = set()
+    pages_checked = []
+    
+    with requests.Session() as session:
+        # Get main page content
+        main_content = get_page_content(target, session)
+        if main_content:
+            pages_checked.append(target)
+            emails = extract_emails_from_content(main_content)
+            all_emails.update(emails)
+            
+            # Check contact pages
+            contact_pages = find_contact_pages(target, main_content)
+            for contact_url in contact_pages:
+                contact_content = get_page_content(contact_url, session)
+                if contact_content:
+                    pages_checked.append(contact_url)
+                    contact_emails = extract_emails_from_content(contact_content)
+                    all_emails.update(contact_emails)
+    
+    return {
+        "emails": sorted(list(all_emails)),
+        "pages_checked": pages_checked
+    }
 
-    harvester = EmailHarvester(target)
-    console.print(f"[cyan][*] Starting email harvesting on {target}...[/cyan]")
-    harvester.crawl()
-    harvester.display_results()
+def categorize_emails(emails):
+    """Categorize emails by domain type and risk level"""
+    categories = {
+        "organizational": [],
+        "personal": [],
+        "generic": []
+    }
+    
+    generic_prefixes = ['info', 'contact', 'support', 'admin', 'hello', 'mail']
+    personal_domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 
+                       'outlook.com', 'icloud.com', 'aol.com', 'live.com']
+    
+    for email in emails:
+        local, domain = email.split('@', 1)
+        
+        if any(prefix in local.lower() for prefix in generic_prefixes):
+            categories["generic"].append(email)
+        elif domain.lower() in personal_domains:
+            categories["personal"].append(email)
+        else:
+            categories["organizational"].append(email)
+    
+    return categories
+
+def main(target):
+    """Main execution with enhanced findings evaluation"""
+    print(f"[I] Email Harvester Analysis - {target}")
+    print("=" * 50)
+    
+    start_time = datetime.now()
+    
+    try:
+        if not target:
+            print("[E] FAILED: Empty target provided")
+            
+            # Error findings for empty target
+            error_findings = {
+                "success": False,
+                "severity": "I",
+                "findings": ["Empty target provided"],
+                "has_findings": True,
+                "category": "Input Error"
+            }
+            
+            return {
+                "status": "FAILED", 
+                "error": "Empty target",
+                "findings": error_findings,
+                "execution_time": (datetime.now() - start_time).total_seconds()
+            }
+        
+        # Ensure target has protocol
+        if not target.startswith(('http://', 'https://')):
+            target = 'http://' + target
+        
+        print(f"[I] Target: {target}")
+        if not BEAUTIFULSOUP_AVAILABLE:
+            print("[W] BeautifulSoup not available - using basic parsing")
+        print("[I] Harvesting email addresses...")
+        print()
+        
+        # Perform email harvesting (your existing logic)
+        harvest_result = harvest_emails(target)
+        execution_time = (datetime.now() - start_time).total_seconds()
+        
+        emails = harvest_result["emails"]
+        pages_checked = harvest_result["pages_checked"]
+        
+        # Prepare scan data for findings evaluation
+        scan_data = {
+            "emails": emails,
+            "total_emails": len(emails),
+            "pages_checked": pages_checked,
+            "pages_scanned": len(pages_checked),
+            "status": "SUCCESS" if emails else "NO_DATA",
+            "target": target
+        }
+        
+        if emails:
+            # Categorize emails and assess security risk (keep existing logic)
+            categories = categorize_emails(emails)
+            security_findings, severity = assess_email_security_risk(emails, categories)
+            
+            print(f"[{severity}] EMAILS DISCOVERED: Found {len(emails)} email addresses")
+            print(f"[I] Pages checked: {len(pages_checked)}")
+            
+            # Display legacy security analysis
+            if security_findings:
+                print(f"[{severity}] Security Risk Analysis:")
+                for finding in security_findings:
+                    print(f"  [{severity}] {finding}")
+                print()
+            
+            # Display results by category (keep existing display)
+            for category, email_list in categories.items():
+                if email_list:
+                    print(f"[I] {category.title()} Emails ({len(email_list)}):")
+                    for email in email_list[:5]:  # Show first 5
+                        print(f"   - {email}")
+                    if len(email_list) > 5:
+                        print(f"   - ... and {len(email_list) - 5} more")
+                    print()
+        else:
+            print("[I] NO DATA: No email addresses found")
+            print(f"[I] Pages checked: {len(pages_checked)}")
+            security_findings = []
+            severity = "I"
+            categories = {"organizational": [], "personal": [], "generic": []}
+        
+        print()
+        
+        # NEW: Enhanced findings evaluation
+        if FINDINGS_AVAILABLE:
+            findings_result = evaluate_findings("email_harvester.py", scan_data)
+            display_findings_result(scan_data, findings_result)
+        else:
+            # Fallback to basic assessment
+            findings_result = {
+                "success": len(emails) > 0,
+                "severity": severity,
+                "findings": security_findings,
+                "has_findings": len(security_findings) > 0,
+                "category": "Email Discovery"
+            }
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        print()
+        
+        # Return standardized format
+        return {
+            "status": "SUCCESS" if findings_result["success"] else "FAILED",
+            "data": scan_data,
+            "findings": findings_result,
+            "execution_time": execution_time,
+            "target": target,
+            # Keep legacy fields for backward compatibility
+            "security_findings": security_findings,
+            "severity": findings_result["severity"],
+            "count": len(emails),
+            "categories": categories
+        }
+        
+    except KeyboardInterrupt:
+        print("[I] INTERRUPTED: Harvesting stopped by user")
+        
+        interrupt_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": ["Email harvesting interrupted by user"],
+            "has_findings": True,
+            "category": "Execution"
+        }
+        
+        return {
+            "status": "INTERRUPTED",
+            "findings": interrupt_findings,
+            "execution_time": (datetime.now() - start_time).total_seconds()
+        }
+        
+    except Exception as e:
+        execution_time = (datetime.now() - start_time).total_seconds()
+        error_msg = str(e)
+        
+        # Classify error types (keep existing logic)
+        if "timeout" in error_msg.lower():
+            print("[T] TIMEOUT: Request timeout during email harvesting")
+            status = "TIMEOUT"
+        elif "connection" in error_msg.lower():
+            print("[E] ERROR: Connection error - target may be unreachable")
+            status = "CONNECTION_ERROR"
+        else:
+            print(f"[E] ERROR: {error_msg}")
+            status = "ERROR"
+        
+        print(f"[I] Execution time: {execution_time:.2f}s")
+        
+        # Error findings
+        error_findings = {
+            "success": False,
+            "severity": "I",
+            "findings": [f"Email harvesting failed: {error_msg}"],
+            "has_findings": True,
+            "category": "Error"
+        }
+        
+        return {
+            "status": status,
+            "error": error_msg,
+            "findings": error_findings,
+            "execution_time": execution_time
+        }
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         target = sys.argv[1]
-        try:
-            main(target)
-            sys.exit(0)
-        except KeyboardInterrupt:
-            console.print("\n[red][!] Script interrupted by user.[/red]")
-            sys.exit(0)
-        except Exception as e:
-            console.print(f"[red][!] An unexpected error occurred: {e}[/red]")
-            sys.exit(1)
+        result = main(target)
+        
+        # Exit with appropriate code
+        exit_code = 0 if result["status"] in ["SUCCESS", "INTERRUPTED"] else 1
+        sys.exit(exit_code)
     else:
-        console.print("[red][!] No target provided. Please pass a domain or URL.[/red]")
+        print("[E] ERROR: No target provided")
+        print("Usage: python email_harvester.py <url_or_domain>")
+        print("Example: python email_harvester.py example.com")
         sys.exit(1)

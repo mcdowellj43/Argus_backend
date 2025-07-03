@@ -1,0 +1,13 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - testphp.vulnweb.com
+==================================================
+[DEBUG] Original target: 'testphp.vulnweb.com'
+[DEBUG] Cleaned domain: 'testphp.vulnweb.com'
+[DEBUG] Domain length: 19
+[DEBUG] Validation result: True
+[I] Target: testphp.vulnweb.com
+
+[I] Testing 18 subdomains for takeover vulnerabilities...
+[I] Execution time: 0.55s
+
+

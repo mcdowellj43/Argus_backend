@@ -1,0 +1,46 @@
+=== Subdomain Takeover ===
+[I] Subdomain Takeover Check - testphp.vulnweb.com
+==================================================
+[I] Target: testphp.vulnweb.com
+
+[I] Testing 18 subdomains for takeover vulnerabilities...
+[DEBUG] Subdomains to test: ['www.testphp.vulnweb.com', 'api.testphp.vulnweb.com', 'app.testphp.vulnweb.com', 'blog.testphp.vulnweb.com', 'dev.testphp.vulnweb.com']...
+[DEBUG] Completed 1/18: www.testphp.vulnweb.com
+[DEBUG] www.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 2/18: app.testphp.vulnweb.com
+[DEBUG] app.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 3/18: dashboard.testphp.vulnweb.com
+[DEBUG] dashboard.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 4/18: api.testphp.vulnweb.com
+[DEBUG] api.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 5/18: test.testphp.vulnweb.com
+[DEBUG] test.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 6/18: admin.testphp.vulnweb.com
+[DEBUG] admin.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 7/18: staging.testphp.vulnweb.com
+[DEBUG] staging.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 8/18: dev.testphp.vulnweb.com
+[DEBUG] dev.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 9/18: blog.testphp.vulnweb.com
+[DEBUG] blog.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 10/18: portal.testphp.vulnweb.com
+[DEBUG] portal.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 11/18: help.testphp.vulnweb.com
+[DEBUG] help.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 12/18: support.testphp.vulnweb.com
+[DEBUG] support.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 13/18: cdn.testphp.vulnweb.com
+[DEBUG] cdn.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 14/18: wiki.testphp.vulnweb.com
+[DEBUG] wiki.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 15/18: docs.testphp.vulnweb.com
+[DEBUG] docs.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 16/18: static.testphp.vulnweb.com
+[DEBUG] static.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 17/18: assets.testphp.vulnweb.com
+[DEBUG] assets.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[DEBUG] Completed 18/18: files.testphp.vulnweb.com
+[DEBUG] files.testphp.vulnweb.com - Risk: LOW, Vulnerable: False
+[I] Execution time: 0.32s
+
+

@@ -1,0 +1,2234 @@
+=== Associated Hosts ===
+
+=============================================
+Argus - Associated Hosts Detection
+=============================================
+
+[*] Detecting associated hosts for: malcams.com
+[!] No results from Shodan, falling back to HackerTarget...
+
+[*] Associated Hosts:
+============================================================
+herspiegel.com
+iicmail.identco.com
+mayfieldmastering.com
+nicherms.com
+bayset.com.au
+mail.rkkattorneys.com
+rtroofingspecialist.com
+shiptrackapp.com
+t-3.com
+wp.wpenginepowered.com
+cbia.com
+wp.wpenginepowered.com
+enerfab.com
+charlottedentistry.com
+poynetherlands.com
+wilcoworld.net
+hdisp.org
+shalomorlando.org
+ccanj.academy
+clinicmarketing.academy
+accobra.ae
+apo.ac
+activedgeproductions.ae
+aankoopfacturen.accountant
+contracten.accountant
+contracts.accountant
+www.appresh.ae
+facturen.accountant
+ebbsfleet.academy
+nlg.academy
+inkoopfacturen.accountant
+invoices.accountant
+plugin.accountant
+eliteenglish.academy
+automait.accountants
+www.cww.accountants
+eagle1.accountants
+www.eagle1.accountants
+highperformance.accountants
+www.highperformance.accountants
+pardoe.academy
+inspire.accountants
+performancemarketing.academy
+afalc.ae
+www.afalc.ae
+fbs.us
+rendy.academy
+roberts.academy
+avispl.ae
+postmaster.avispl.ae
+sante.academy
+healthit.academy
+www.ayauniverse.ae
+homeschoolscience.academy
+ccaemirates.ae
+www.ccaemirates.ae
+www.amdata.academy
+cctvdubai.ae
+balloonflight.ae
+www.cellsave.ae
+roq.ad
+www.roq.ad
+alexandra.ae
+www.alexandra.ae
+awakened-impact.academy
+aquinashigh-org.northstar.ac
+christmas2023.northstar.ac
+cslions-org.northstar.ac
+newschoolva-org.northstar.ac
+pcschools-org.northstar.ac
+sachristian-org.northstar.ac
+shorelinechristian-org.northstar.ac
+chrismeaden.ae
+beehive.ae
+jolietcatholic.academy
+www.jolietcatholic.academy
+citycricketacademyemirates.ae
+blackopsagency.academy
+www.teamup.academy
+www.teroxx.academy
+kenzie.academy
+bestpractice.ae
+climatefutureweek.ae
+biggroup.ae
+www.biggroup.ae
+bikini.ae
+www.bikini.ae
+topo.academy
+topprospects.academy
+coachme.ae
+alnoorpod.ae
+www.alnoorpod.ae
+whs.academy
+windmilldigital.academy
+3rdeye.ae
+solutions.3rdeye.ae
+www.fastdigital.ae
+fireflyagency.ae
+www.fireflyagency.ae
+absea.ae
+duracomposites.ae
+helicopterflight.ae
+kotobuki-clinic.ae
+callcentersolution.ae
+herenow.ae
+flyby.ae
+lagunaproperties.ae
+hiresanta.ae
+leosdevelopments.ae
+houstonrentacar.ae
+eightysixmedia.ae
+hydrafacial.ae
+elitetravel.ae
+livingpoint.ae
+mnm.ae
+emergedigital.ae
+ido.ae
+www.ido.ae
+emirateslegal.ae
+www.imgtickets.ae
+blogs.imh.ae
+giftmarami.ae
+glide.ae
+madari.ae
+mala.ae
+napkin.ae
+istikana.ae
+itsupportdubai.ae
+massive.ae
+www.iwashexpress.ae
+nebconsultants.ae
+grandstreamdubai.ae
+juniorjumpers.ae
+mehdu.ae
+minipc.ae
+miraclegarden.ae
+mirplastic.ae
+primax.ae
+newforma.ae
+prospace.ae
+psychiatryandtherapy.ae
+ppc.pushgroup.ae
+redconsulting.ae
+www.optimasystems.ae
+rgginvestments.ae
+www.rgginvestments.ae
+rggroup.ae
+rhinotek.ae
+riger.ae
+www.riviera.ae
+kaia.aero
+thinkme.ae
+thinkproductive.ae
+parkregiskriskin.ae
+nata.aero
+nextgenaviator.aero
+nextgenerationaviation.aero
+nextgenerationaviator.aero
+nextgenerationaviators.aero
+torrot.ae
+paxex.aero
+prcusers.aero
+xlcr.ae
+rlaviation.aero
+yachtcharterdubai.ae
+platinumfreight.ae
+stannah.ae
+uaeappdevelopers.ae
+sdf.ae
+polyanalytik.ae
+tempest.aero
+www.tempest.aero
+powers.ae
+servy.ae
+witten.aero
+aeropraktsw.aero
+aerostar.aero
+supercellar.ae
+aerotropolisbusinessconcepts.aero
+zenon.aero
+amentum.aero
+www.amentum.aero
+apw.aero
+avsi.aero
+savi.avsi.aero
+waic.avsi.aero
+www.avsi.aero
+blackhawk.aero
+block.aero
+vds.ae
+www.vende.ae
+giftstore.cdbaviation.aero
+www.nomadtours.africa
+videoconferencing.ae
+lancasterfarming.ag
+lowefarms.ag
+ofa-group.africa
+tdaawl.ae
+direct2.aero
+dms.aero
+www.dms.aero
+thelo.africa
+open-finance.africa
+meras.ag
+eclipse.aero
+moonshotfarms.ag
+newfrontier.ag
+oxyleaf.ag
+www.oxyleaf.ag
+fpg-amentum.aero
+www.fpg-amentum.aero
+fxsolutions.aero
+www.fxsolutions.aero
+thebagbroker.ae
+www.thebagbroker.ae
+pih.ag
+thebrandcoach.ae
+www.thecarlab.ae
+gmx.aero
+www.gmx.aero
+verified.africa
+advancedhawaii.agency
+rogo.ag
+voicearchive.africa
+aestheticedge.agency
+schibli.ag
+www.schibli.ag
+aiden.agency
+academy.africa
+rhizaholdings.africa
+airportone.agency
+climate.agency
+coldcreek.agency
+www.allpoints.agency
+alwaysonline.agency
+formedible.agency
+forthewin.agency
+fresh.agency
+csp.agency
+mutatio.agency
+mx2.agency
+garner.agency
+roichase.agency
+automait.agency
+www.automotiveseo.agency
+rra.agency
+level.agency
+www.affiliate.level.agency
+www.awesem.agency
+decode.agency
+ghost.agency
+www.ghost.agency
+giddyup.agency
+www.giddyup.agency
+sagittarius.agency
+www.sagittarius.agency
+newmedia.agency
+destinationtravel.agency
+limitlessmedia.agency
+bashfoo.agency
+batesmeron.agency
+lmh.agency
+datacentral.ag
+searchauto.agency
+seaside.agency
+second2none.agency
+lombardo.agency
+grit.agency
+growmemphis.agency
+bemeaningful.agency
+seobyvijayvasu.agency
+5horizons.agency
+lunar.agency
+www.lunar.agency
+www.serenitysolutions.agency
+macgyver.agency
+guap.agency
+beyond13.agency
+bez.agency
+octopus.agency
+biondo.agency
+dlm.agency
+mainst.agency
+futureprop.ag
+odnd.agency
+mandala.agency
+manifest.agency
+www.silver.agency
+simantel.agency
+ai-tools.hahn.agency
+simplyworks.agency
+hallam.agency
+siro.agency
+sivstravel.agency
+towerandbridge.agency
+skidmorestudio.agency
+skipperandskipper.agency
+ometrics.agency
+lambacraft-old.hatched.agency
+somersetrugby.hatched.agency
+ssip.hatched.agency
+bluegrid.agency
+oneims.agency
+hearts.agency
+learn.hearts.agency
+bobbyreed.agency
+trinityinsurance.agency
+www.trinityinsurance.agency
+trivisiontravel.agency
+truevisiondigitalpartners.agency
+optimalperformance.agency
+eardrum.agency
+tw.agency
+twd.agency
+www.twd.agency
+www.editions.agency
+www.ultimedia.agency
+brandom.agency
+hsmc.agency
+unify.agency
+test.unify.agency
+humanpowered.agency
+elevateroi.agency
+eligma.agency
+upandup.agency
+specialproduction.agency
+emery.agency
+pcg.agency
+adaca.ai
+www.adaca.ai
+www.spokaneseo.agency
+pedro.agency
+www.pedro.agency
+entre-les-lignes.agency
+www.entre-les-lignes.agency
+addovation.ai
+www.addovation.ai
+burrow.agency
+www.burrow.agency
+phrasing.agency
+mintent.agency
+carterwilliams.agency
+carterwilliamsinsurance.agency
+plumm.agency
+pocketdigital.agency
+podiatrymarketing.agency
+eztravels.agency
+inovadigital.agency
+fastnet.agency
+supremestaffing.agency
+waltoninsurance.agency
+agencyportal.ai
+agentacademy.ai
+prelude.agency
+chisel.agency
+fearey.agency
+www.feelcreated.agency
+primeconcepts.agency
+wearemagneto.agency
+agentvoice.ai
+moove.agency
+www.moove.agency
+fifotravel.agency
+agilycom.ai
+filter.agency
+tands.agency
+www.tands.agency
+motherbear.agency
+tangible.agency
+www.taproot.agency
+agorai.ai
+webdesignutrecht.agency
+fivepoint.agency
+ai-fit.ai
+flo.agency
+aiandrobots.ai
+followthelead.agency
+askboss.ai
+the-unit.agency
+quattro.agency
+thebettertogether.agency
+thebranded.agency
+brandpop.raindrop.agency
+cpanel.raindrop.agency
+cpcalendars.raindrop.agency
+cpcontacts.raindrop.agency
+mail.raindrop.agency
+webdisk.raindrop.agency
+webmail.raindrop.agency
+wiki.raindrop.agency
+cpanel.wiki.raindrop.agency
+cpcalendars.wiki.raindrop.agency
+cpcontacts.wiki.raindrop.agency
+mail.wiki.raindrop.agency
+webdisk.wiki.raindrop.agency
+webmail.wiki.raindrop.agency
+www.wiki.raindrop.agency
+theessential.agency
+raymondgeorge.agency
+whitelabelseo.agency
+aileagueforgood.ai
+aimagazine.ai
+astracreative.ai
+brainsy.ai
+aimhi.ai
+brainyyack.ai
+themotion.agency
+aimworld.ai
+www.aimworld.ai
+ainbc.ai
+www.atca.ai
+refreshworks.agency
+webmail.refreshworks.agency
+www.refreshworks.agency
+knowledge.kensa.agency
+brandwell.ai
+thesoulpreneur.agency
+brewcademy.ai
+aiprofitpulse.ai
+thewurst.agency
+airgain.ai
+brunozamborlin.ai
+bryj.ai
+rocktheboat.agency
+aivin.ai
+buildfuture.ai
+buildconnections.ai
+topcreators.agency
+authormarketingmagic.ai
+auti.ai
+www.auti.ai
+businessblog.ai
+colleendeborah.ai
+autohost.ai
+blog.autohost.ai
+web-test.autohost.ai
+alexanderlabs.ai
+byld.ai
+bynaus.ai
+bzgroup.ai
+zade.agency
+www.zade.agency
+autoscheduler.ai
+www.compareabill.ai
+alloy.ai
+blog.alloy.ai
+www.alloy.ai
+calibrai.ai
+callingcard.ai
+averta.ai
+concealsherpa.ai
+avkalan.ai
+alpas.ai
+www.confida.ai
+alphazetta.ai
+1159.ai
+candyboxmarketing.ai
+consilience.ai
+esg.ai
+canvs.ai
+151interactive.ai
+www.destock.ai
+contesimal.ai
+www.contesimal.ai
+devready.ai
+carealign.ai
+azurelocal.ai
+convergence.ai
+www.convergence.ai
+2xsolutions.ai
+3hrs.ai
+convertweb.ai
+everydaygpt.ai
+cartonomics.ai
+diggrowth.ai
+cooki.ai
+balearia.ai
+www.balearia.ai
+andesite.ai
+4uroofing.ai
+andreawade.ai
+5flow.ai
+www.5flow.ai
+digitalchemistry.ai
+621.ai
+www.621.ai
+www.baron.ai
+7t.ai
+www.7t.ai
+experdent.ai
+bawse.ai
+cortexengine.ai
+bayforest.ai
+8lee.ai
+www.8lee.ai
+a3d3.ai
+directlink.ai
+www.directlink.ai
+dis.ai
+belay.ai
+============================================================
+[*] Associated hosts detection completed.
+
+
+=== DNS Over HTTPS ===
+[32m
+=============================================
+Argus - DNS Over HTTPS (DoH) Check
+=============================================
+
+[37m[*] Checking DNS over HTTPS support for: malcams.com
++------------+
+| DoH Status |
+|------------|
+| Supported  |
++------------+
+[36m[*] DNS Over HTTPS check completed.
+
+
+=== DNS Records ===
+
+=============================================
+Argus - DNS Records Check
+=============================================
+
+[37m[*] Fetching DNS records for: malcams.com
+[37m[!] No AAAA records found for malcams.com.
+[37m[!] No CNAME records found for malcams.com.
++-----------------------------------------------------------------------------+
+| Record Type | Record Value                                                  |
+|-------------+---------------------------------------------------------------|
+| A           | 141.193.213.11                                                |
+|             | 141.193.213.10                                                |
+| MX          | 10 malcams.com.1.0001.arsmtp.com.                             |
+|             | 20 malcams.com.2.0001.arsmtp.com.                             |
+| NS          | ns90.worldnic.com.                                            |
+|             | ns89.worldnic.com.                                            |
+| TXT         | "v=spf1 ip4:70.91.143.163 ip4:50.232.154.50                   |
+|             | ip4:50.232.171.80/29 include:spf.protection.outlook.com -all" |
+|             | "dodq8qplu6p1gplts1d5fkir57"                                  |
+|             | "MS=ms96946898"                                               |
+|             | "pvopvsnp9dnuj8o6k3h7ei283o"                                  |
+| SOA         | NS89.WORLDNIC.com. namehost.WORLDNIC.com. 125050121 10800     |
+|             | 3600 604800 3600                                              |
++-----------------------------------------------------------------------------+
+[37m[*] DNS records retrieval completed.
+
+
+=== DNSSEC Check ===
+[32m
+=============================================
+Argus - DNSSEC Check
+=============================================
+
+[37m[*] Checking DNSSEC for: malcams.com
+[33m[!] No DNSSEC records found.
+[31m[!] No DNSSEC records found.
+[37m[*] DNSSEC check completed.
+
+
+=== Domain Info ===
+[32m
+=============================================
+Argus - Domain Information
+=============================================
+
+[37m[*] Fetching domain information for: malcams.com
++-----------------------------------------------------------------------------+
+| Field       | Details                                                       |
+|-------------+---------------------------------------------------------------|
+| domain      | malcams.com                                                   |
+| create_date | 2023-08-27T13:51:05.466837                                    |
+| update_date | 2023-08-27T13:51:05.466839                                    |
+| country     | US                                                            |
+| isDead      | False                                                         |
+| A           | ['204.152.118.132']                                           |
+| NS          | ['ns90.worldnic.com', 'ns89.worldnic.com']                    |
+| CNAME       | None                                                          |
+| MX          | [{'exchange': 'malcams.com.mg.canit.ca', 'priority': 20},     |
+|             | {'exchange': 'malcams.com.mh.canit.ca', 'priority': 30},      |
+|             | {'exchange': 'malcams.com.mi.canit.ca', 'priority': 40},      |
+|             | {'exchange': 'malcams.com.mf.canit.ca', 'priority': 10}]      |
+| TXT         | ['v=spf1 ip4:70.91.143.163 ip4:50.232.154.50                  |
+|             | ip4:50.232.171.80/29 -all']                                   |
++-----------------------------------------------------------------------------+
+[37m[*] Domain information retrieval completed.
+
+
+=== Domain Reputation Check ===
+[32m
+=============================================
+Argus - Advanced Domain Reputation Check
+=============================================
+
+[37m[*] Checking reputation for domain: malcams.com
+[31m[!] Error retrieving domain reputation for malcams.com: 401 Client Error:
+Unauthorized for url: https://www.virustotal.com/api/v3/domains/malcams.com
+[31m[!] No reputation data available for malcams.com.
+[36m[*] Domain Reputation Check completed.
+
+
+=== HTTP/2 and HTTP/3 Support Checker ===
+
+
+=================================================
+Argus - HTTP/2 and HTTP/3 Support Checker
+=================================================
+
+
+[*] Checking for HTTP/2 support on https://malcams.com...
+[-] HTTP/2 is not supported.
+[*] Checking for HTTP/3 support on https://malcams.com...
+[+] HTTP/3 is supported.
+
+
+=== IP Info ===
+
+[32m=============================================
+Argus - IP Information
+=============================================[0m
+
+[37m[*] Fetching IP info for: malcams.com[0m
++----------------------------------------------------------------------+
+| Key             | Value                                              |
+|-----------------+----------------------------------------------------|
+| status          | success                                            |
+| country         | United States                                      |
+| countryCode     | US                                                 |
+| region          | TX                                                 |
+| regionName      | Texas                                              |
+| city            | Austin                                             |
+| zip             | 78701                                              |
+| lat             | 30.2681                                            |
+| lon             | -97.7462                                           |
+| timezone        | America/Chicago                                    |
+| isp             | Cloudflare London, LLC                             |
+| org             | WPEngine, Inc.                                     |
+| as              | AS209242 Cloudflare London, LLC                    |
+| query           | 141.193.213.10                                     |
+| map_link        | https://www.google.com/maps?q=30.2681,-97.7462     |
++----------------------------------------------------------------------+
+
+[33m[+] View location on map: https://www.google.com/maps?q=30.2681,-97.7462[0m
+[36m[*] IP info retrieval completed.[0m
+
+
+=== Open Ports Scan ===
+[32m
+=============================================
+Argus - Open Ports Scanning
+=============================================
+
+[37m[*] Scanning open ports for: malcams.com
++------------+
+| Open Ports |
+|------------|
+| 80         |
+| 443        |
++------------+
+[37m[*] Open ports scanning completed.
+
+
+=== Server Info ===
+[32m
+=============================================
+Argus - Server Information
+=============================================
+
+[33m[!] 'malcams.com' is not a valid IP address, attempting to resolve to an
+IP...
+[37m[+] Resolved domain 'malcams.com' to IP: 141.193.213.10
+[37m[*] Fetching server information for: 141.193.213.10
++-----------------------------------------------+
+| Field       | Details                         |
+|-------------+---------------------------------|
+| status      | success                         |
+| country     | United States                   |
+| countryCode | US                              |
+| region      | TX                              |
+| regionName  | Texas                           |
+| city        | Austin                          |
+| zip         | 78701                           |
+| lat         | 30.2681                         |
+| lon         | -97.7462                        |
+| timezone    | America/Chicago                 |
+| isp         | Cloudflare London, LLC          |
+| org         | WPEngine, Inc.                  |
+| as          | AS209242 Cloudflare London, LLC |
+| query       | 141.193.213.10                  |
++-----------------------------------------------+
+[37m[*] Server information retrieval completed.
+
+
+=== Server Location ===
+[32m
+=============================================
+Argus - Server Location Detection
+=============================================
+
+[31m[!] Invalid IP address. Please check the input and try again.
+
+
+=== SSL Chain Analysis ===
+[32m
+=============================================
+Argus - SSL Chain Check
+=============================================
+
+[37m[*] Fetching SSL chain for: malcams.com
+C:\Decian\vscode\Argus_frontend\modules\ssl_chain.py:49: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+days_left = (analysis["Valid Until"] - datetime.utcnow()).days if analysis["Valid Until"] != "N/A" else "N/A"
++------------------------------------------------------------------+
+| Certificate Chain                                                |
+|------------------------------------------------------------------|
+| -----BEGIN CERTIFICATE-----                                      |
+| MIIDgDCCAwegAwIBAgISBogasIiHJ+vsK8RtwgFLWWCvMAoGCCqGSM49BAMDMDIx |
+| CzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQDEwJF |
+| NjAeFw0yNTA1MTUwNDEyMzJaFw0yNTA4MTMwNDEyMzFaMBYxFDASBgNVBAMTC21h |
+| bGNhbXMuY29tMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEgQnVdxTaE0vLylin |
+| sl+NaDDBtR/BSHAgYTrmdfJemX27GWFdMA4SP4c+iDZ1Md32BGG5wiZzIMvhCXE6 |
+| VBYhsKOCAhcwggITMA4GA1UdDwEB/wQEAwIHgDAdBgNVHSUEFjAUBggrBgEFBQcD |
+| AQYIKwYBBQUHAwIwDAYDVR0TAQH/BAIwADAdBgNVHQ4EFgQUrCMZJTZuAuiIA1SY |
+| 144DM/A+LewwHwYDVR0jBBgwFoAUkydGmAOpUWiOmNbEQkjbI79YlNIwMgYIKwYB |
+| BQUHAQEEJjAkMCIGCCsGAQUFBzAChhZodHRwOi8vZTYuaS5sZW5jci5vcmcvMBYG |
+| A1UdEQQPMA2CC21hbGNhbXMuY29tMBMGA1UdIAQMMAowCAYGZ4EMAQIBMC0GA1Ud |
+| HwQmMCQwIqAgoB6GHGh0dHA6Ly9lNi5jLmxlbmNyLm9yZy80OC5jcmwwggECBgor |
+| BgEEAdZ5AgQCBIHzBIHwAO4AdQAN4fIwK9MNwUBiEgnqVS78R3R8sdfpMO8OQh60 |
+| fk6qNAAAAZbSWmoOAAAEAwBGMEQCIBrMcZaPqdJ7CBEbpT4LnYkVchmk4FSNiHa7 |
+| L146dGkRAiBr60wfms5fUlB28jnp1YZWE7q5spyrhdFI41wZ0nmmUgB1AMz7D2qF |
+| cQll/pWbU87psnwi6YVcDZeNtql+VMD+TA2wAAABltJacmUAAAQDAEYwRAIgF8k/ |
+| ULGrSJ7ME9HnOb95khUIb+zhpqI1WG+1GGgYdBMCIFaJG7GswFCGc4iDTX2z+nCU |
+| SqgBR2SFUSUfNhouW5yEMAoGCCqGSM49BAMDA2cAMGQCMGkPbZST9B7CErbG1ghI |
+| LUD4fZSi2qM2W9mCFPI9Z+sD/p8VCdbwf1duhHMg/RUK4gIwbd8XMwh9KWyDKSjo |
+| qpEpzV2qvBNRuZU/tiBoZY2llII7USKYC0AH/4vfD9ZH2a4x                 |
+| -----END CERTIFICATE-----                                        |
+|                                                                  |
++------------------------------------------------------------------+
+SSL Certificate Analysis
++-----------------------------------------------------------------------------+
+| Attribute              | Details                                            |
+|------------------------+----------------------------------------------------|
+| Subject                | ((('commonName', 'malcams.com'),),)                |
+| Issuer                 | ((('countryName', 'US'),), (('organizationName',   |
+|                        | "Let's Encrypt"),), (('commonName', 'E6'),))       |
+| Valid From             | 2025-05-15 04:12:32                                |
+| Valid Until            | 2025-08-13 04:12:31                                |
+| Serial Number          | 06881AB0888727EBEC2BC46DC2014B5960AF               |
+| Version                | 3                                                  |
+| Signature Algorithm    | N/A                                                |
+| Validity Period (Days) | 89                                                 |
+| Days Until Expiry      | 57                                                 |
++-----------------------------------------------------------------------------+
+[36m[*] SSL chain retrieval completed.
+
+
+=== SSL Expiry Alert ===
+[32m
+=============================================
+Argus - Advanced SSL Expiry Check
+=============================================
+
+C:\Decian\vscode\Argus_frontend\modules\ssl_expiry.py:49: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+days_left = (expiry_date - datetime.utcnow()).days
++------------------------------------------+
+| SSL Expiry Details | Value               |
+|--------------------+---------------------|
+| Domain             | malcams.com         |
+| Expiry Date        | 2025-08-13 04:12:31 |
+| Days Left          | 57                  |
++------------------------------------------+
++-----------------------------------------------------------------------------+
+| Attribute              | Details                                            |
+|------------------------+----------------------------------------------------|
+| Subject                | commonName=malcams.com                             |
+| Issuer                 | countryName=US, organizationName=Let's Encrypt,    |
+|                        | commonName=E6                                      |
+| Valid From             | May 15 04:12:32 2025 GMT                           |
+| Valid Until            | Aug 13 04:12:31 2025 GMT                           |
+| Validity Period (Days) | 89                                                 |
+| Days Until Expiry      | 57                                                 |
+| Serial Number          | 06881AB0888727EBEC2BC46DC2014B5960AF               |
+| Version                | 3                                                  |
+| Signature Algorithm    | N/A                                                |
++-----------------------------------------------------------------------------+
+SSL Expiry Statistics
++-----------------------------------+
+| Metric                    | Value |
+|---------------------------+-------|
+| Total Domains Checked     | 1     |
+| Successfully Scanned      | 1     |
+| Failed to Scan            | 0     |
+| Expired Certificates      | 0     |
+| Expiring Within 30 Days   | 0     |
+| Healthy Certificates      | 1     |
+| Average Days Until Expiry | 57.00 |
++-----------------------------------+
+[36m[*] SSL expiry check completed.
+
+
+=== TLS Cipher Suites ===
+[32m
+=============================================
+Argus - Advanced TLS Cipher Analysis
+=============================================
+
+[37m[*] Fetching TLS cipher suites for: malcams.com
+Supported Cipher Suites for malcams.com
++---------------------------------------------------+
+| Cipher Suite                   | Protocol Version |
+|--------------------------------+------------------|
+| AES128-SHA256                  | TLSv1.2          |
+| ECDHE-ECDSA-AES128-SHA         | TLSv1.2          |
+| AES256-SHA256                  | TLSv1.2          |
+| ECDHE-RSA-AES256-GCM-SHA384    | TLSv1.2          |
+| ECDHE-ECDSA-AES256-SHA384      | TLSv1.2          |
+| ECDHE-ECDSA-CHACHA20-POLY1305  | TLSv1.2          |
+| ECDHE-ECDSA-AES128-GCM-SHA256  | TLSv1.2          |
+| ECDHE-ECDSA-AES128-SHA256      | TLSv1.2          |
+| ECDHE-ECDSA-AES256-SHA         | TLSv1.2          |
+| ECDHE-RSA-AES256-SHA384        | TLSv1.2          |
+| AES256-GCM-SHA384              | TLSv1.2          |
+| SRP-RSA-AES-128-CBC-SHA        | TLSv1.3          |
+| ECDHE-ECDSA-AES256-GCM-SHA384  | TLSv1.2          |
+| AES128-GCM-SHA256              | TLSv1.2          |
+| AECDH-AES256-SHA               | TLSv1.3          |
+| AES128-SHA                     | TLSv1.2          |
+| AES128-SHA256                  | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA256     | TLSv1.3          |
+| AES256-SHA                     | TLSv1.2          |
+| ECDHE-RSA-AES128-SHA           | TLSv1.2          |
+| ECDHE-RSA-CHACHA20-POLY1305    | TLSv1.2          |
+| ECDHE-RSA-AES128-GCM-SHA256    | TLSv1.2          |
+| ECDHE-RSA-AES128-SHA256        | TLSv1.2          |
+| AES256-SHA256                  | TLSv1.3          |
+| DHE-DSS-AES128-GCM-SHA256      | TLSv1.3          |
+| ECDHE-ARIA128-GCM-SHA256       | TLSv1.3          |
+| ECDHE-RSA-AES256-SHA           | TLSv1.2          |
+| AES128-CCM8                    | TLSv1.3          |
+| DHE-RSA-AES128-SHA256          | TLSv1.3          |
+| PSK-CHACHA20-POLY1305          | TLSv1.3          |
+| DHE-DSS-ARIA256-GCM-SHA384     | TLSv1.3          |
+| DHE-PSK-AES256-CCM             | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA384    | TLSv1.3          |
+| ECDHE-ECDSA-AES128-SHA         | TLSv1.3          |
+| DHE-RSA-AES128-SHA             | TLSv1.3          |
+| RSA-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA256-SHA384   | TLSv1.3          |
+| DHE-DSS-AES256-GCM-SHA384      | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA        | TLSv1.3          |
+| ADH-CAMELLIA128-SHA            | TLSv1.3          |
+| CAMELLIA128-SHA256             | TLSv1.3          |
+| ECDHE-ECDSA-AES256-CCM8        | TLSv1.3          |
+| SRP-AES-128-CBC-SHA            | TLSv1.3          |
+| DHE-RSA-AES256-SHA256          | TLSv1.3          |
+| ECDHE-PSK-CHACHA20-POLY1305    | TLSv1.3          |
+| DHE-PSK-CHACHA20-POLY1305      | TLSv1.3          |
+| DHE-RSA-AES128-CCM             | TLSv1.3          |
+| DHE-RSA-AES128-GCM-SHA256      | TLSv1.3          |
+| AES256-CCM                     | TLSv1.3          |
+| DHE-PSK-AES256-GCM-SHA384      | TLSv1.3          |
+| ECDHE-RSA-AES256-GCM-SHA384    | TLSv1.3          |
+| ECDHE-ARIA256-GCM-SHA384       | TLSv1.3          |
+| PSK-AES256-CCM8                | TLSv1.3          |
+| RSA-PSK-AES128-GCM-SHA256      | TLSv1.3          |
+| DHE-DSS-AES128-SHA             | TLSv1.3          |
+| PSK-AES256-CBC-SHA384          | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA        | TLSv1.3          |
+| ADH-AES256-GCM-SHA384          | TLSv1.3          |
+| ECDHE-ECDSA-AES128-GCM-SHA256  | TLSv1.3          |
+| DHE-RSA-CHACHA20-POLY1305      | TLSv1.3          |
+| RSA-PSK-CHACHA20-POLY1305      | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| ECDHE-ECDSA-AES128-CCM         | TLSv1.3          |
+| DHE-PSK-ARIA128-GCM-SHA256     | TLSv1.3          |
+| SRP-DSS-AES-128-CBC-SHA        | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA256     | TLSv1.3          |
+| ECDHE-ECDSA-CHACHA20-POLY1305  | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| PSK-AES256-GCM-SHA384          | TLSv1.3          |
+| ECDHE-ECDSA-AES128-SHA256      | TLSv1.3          |
+| ECDHE-ECDSA-AES256-SHA384      | TLSv1.3          |
+| ADH-AES256-SHA256              | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA256     | TLSv1.3          |
+| RSA-PSK-ARIA128-GCM-SHA256     | TLSv1.3          |
+| DHE-PSK-AES128-CCM             | TLSv1.3          |
+| PSK-ARIA128-GCM-SHA256         | TLSv1.3          |
+| SRP-DSS-AES-256-CBC-SHA        | TLSv1.3          |
+| ARIA128-GCM-SHA256             | TLSv1.3          |
+| DHE-PSK-AES128-GCM-SHA256      | TLSv1.3          |
+| ECDHE-RSA-AES256-SHA384        | TLSv1.3          |
+| DHE-DSS-AES256-SHA             | TLSv1.3          |
+| DHE-PSK-AES128-CCM8            | TLSv1.3          |
+| AES128-CCM                     | TLSv1.3          |
+| PSK-AES128-CBC-SHA             | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA256     | TLSv1.3          |
+| DHE-PSK-AES256-CCM8            | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA256-SHA384   | TLSv1.3          |
+| ECDHE-ECDSA-AES256-SHA         | TLSv1.3          |
+| AES256-CCM8                    | TLSv1.3          |
+| ECDHE-ECDSA-ARIA256-GCM-SHA384 | TLSv1.3          |
+| AES256-GCM-SHA384              | TLSv1.3          |
+| RSA-PSK-ARIA256-GCM-SHA384     | TLSv1.3          |
+| PSK-AES128-CCM                 | TLSv1.3          |
+| DHE-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| DHE-RSA-ARIA256-GCM-SHA384     | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA256    | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA128-SHA256 | TLSv1.3          |
+| DHE-RSA-AES256-CCM8            | TLSv1.3          |
+| CAMELLIA256-SHA                | TLSv1.3          |
+| DHE-RSA-AES256-SHA             | TLSv1.3          |
+| DHE-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| ADH-CAMELLIA256-SHA256         | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA        | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| CAMELLIA128-SHA                | TLSv1.3          |
+| DHE-RSA-ARIA128-GCM-SHA256     | TLSv1.3          |
+| PSK-AES256-CBC-SHA             | TLSv1.3          |
+| PSK-AES128-CBC-SHA256          | TLSv1.3          |
+| ECDHE-ECDSA-ARIA128-GCM-SHA256 | TLSv1.3          |
+| ADH-CAMELLIA256-SHA            | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA        | TLSv1.3          |
+| SRP-AES-256-CBC-SHA            | TLSv1.3          |
+| RSA-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| DHE-RSA-AES256-GCM-SHA384      | TLSv1.3          |
+| DHE-RSA-AES128-CCM8            | TLSv1.3          |
+| AECDH-AES128-SHA               | TLSv1.3          |
+| DHE-DSS-ARIA128-GCM-SHA256     | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| CAMELLIA256-SHA256             | TLSv1.3          |
+| DHE-PSK-ARIA256-GCM-SHA384     | TLSv1.3          |
+| AES128-GCM-SHA256              | TLSv1.3          |
+| SRP-RSA-AES-256-CBC-SHA        | TLSv1.3          |
+| ADH-AES128-SHA256              | TLSv1.3          |
+| RSA-PSK-AES256-GCM-SHA384      | TLSv1.3          |
+| ECDHE-ECDSA-AES256-GCM-SHA384  | TLSv1.3          |
+| ARIA256-GCM-SHA384             | TLSv1.3          |
+| ECDHE-ECDSA-AES256-CCM         | TLSv1.3          |
+| AES128-SHA                     | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| ADH-AES128-SHA                 | TLSv1.3          |
+| PSK-ARIA256-GCM-SHA384         | TLSv1.3          |
+| ECDHE-RSA-AES128-SHA           | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA256-SHA384 | TLSv1.3          |
+| ECDHE-RSA-AES128-GCM-SHA256    | TLSv1.3          |
+| ADH-AES128-GCM-SHA256          | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA128-SHA256   | TLSv1.3          |
+| ADH-AES256-SHA                 | TLSv1.3          |
+| DHE-RSA-AES256-CCM             | TLSv1.3          |
+| ECDHE-ECDSA-AES128-CCM8        | TLSv1.3          |
+| PSK-AES256-CCM                 | TLSv1.3          |
+| ADH-CAMELLIA128-SHA256         | TLSv1.3          |
+| AES256-SHA                     | TLSv1.3          |
+| PSK-AES128-CCM8                | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA       | TLSv1.3          |
+| ECDHE-RSA-CHACHA20-POLY1305    | TLSv1.3          |
+| ECDHE-RSA-AES256-SHA           | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA       | TLSv1.3          |
+| ECDHE-RSA-AES128-SHA256        | TLSv1.3          |
+| PSK-CAMELLIA128-SHA256         | TLSv1.3          |
+| PSK-CAMELLIA256-SHA384         | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA128-SHA256   | TLSv1.3          |
+| PSK-AES128-GCM-SHA256          | TLSv1.3          |
+| AES128-SHA256                  | TLSv1.3          |
+| DHE-DSS-AES256-SHA256          | TLSv1.3          |
+| SRP-RSA-AES-128-CBC-SHA        | TLSv1.3          |
+| DHE-DSS-AES128-SHA256          | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA256     | TLSv1.3          |
+| RSA-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| AECDH-AES256-SHA               | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA384    | TLSv1.3          |
+| DHE-PSK-CHACHA20-POLY1305      | TLSv1.3          |
+| DHE-DSS-AES128-GCM-SHA256      | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA256-SHA384   | TLSv1.3          |
+| ECDHE-ARIA128-GCM-SHA256       | TLSv1.3          |
+| CAMELLIA128-SHA256             | TLSv1.3          |
+| PSK-CHACHA20-POLY1305          | TLSv1.3          |
+| DHE-RSA-AES128-SHA256          | TLSv1.3          |
+| AES256-SHA256                  | TLSv1.3          |
+| ECDHE-RSA-AES256-GCM-SHA384    | TLSv1.3          |
+| DHE-RSA-AES128-GCM-SHA256      | TLSv1.3          |
+| DHE-RSA-AES128-CCM             | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA        | TLSv1.3          |
+| ECDHE-ECDSA-AES128-SHA         | TLSv1.3          |
+| SRP-AES-128-CBC-SHA            | TLSv1.3          |
+| DHE-DSS-ARIA256-GCM-SHA384     | TLSv1.3          |
+| DHE-RSA-AES128-SHA             | TLSv1.3          |
+| ECDHE-ECDSA-AES256-CCM8        | TLSv1.3          |
+| DHE-DSS-AES256-GCM-SHA384      | TLSv1.3          |
+| DHE-PSK-AES256-GCM-SHA384      | TLSv1.3          |
+| AES128-CCM8                    | TLSv1.3          |
+| DHE-RSA-AES256-SHA256          | TLSv1.3          |
+| ECDHE-ARIA256-GCM-SHA384       | TLSv1.3          |
+| AES256-CCM                     | TLSv1.3          |
+| RSA-PSK-AES128-GCM-SHA256      | TLSv1.3          |
+| ADH-CAMELLIA128-SHA            | TLSv1.3          |
+| DHE-DSS-AES128-SHA             | TLSv1.3          |
+| ECDHE-PSK-CHACHA20-POLY1305    | TLSv1.3          |
+| PSK-AES256-CCM8                | TLSv1.3          |
+| DHE-PSK-AES256-CCM             | TLSv1.3          |
+| PSK-AES256-CBC-SHA384          | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| ADH-AES256-GCM-SHA384          | TLSv1.3          |
+| RSA-PSK-ARIA128-GCM-SHA256     | TLSv1.3          |
+| ADH-AES256-SHA256              | TLSv1.3          |
+| ECDHE-ECDSA-CHACHA20-POLY1305  | TLSv1.3          |
+| DHE-PSK-ARIA128-GCM-SHA256     | TLSv1.3          |
+| ECDHE-ECDSA-AES128-CCM         | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA        | TLSv1.3          |
+| SRP-DSS-AES-128-CBC-SHA        | TLSv1.3          |
+| ECDHE-ECDSA-AES128-GCM-SHA256  | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| DHE-RSA-CHACHA20-POLY1305      | TLSv1.3          |
+| ECDHE-ECDSA-AES128-SHA256      | TLSv1.3          |
+| PSK-AES256-GCM-SHA384          | TLSv1.3          |
+| RSA-PSK-CHACHA20-POLY1305      | TLSv1.3          |
+| DHE-PSK-AES128-CCM             | TLSv1.3          |
+| ECDHE-ECDSA-AES256-SHA384      | TLSv1.3          |
+| PSK-ARIA128-GCM-SHA256         | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA256     | TLSv1.3          |
+| DHE-PSK-AES128-GCM-SHA256      | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA256     | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA256-SHA384   | TLSv1.3          |
+| DHE-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| ARIA128-GCM-SHA256             | TLSv1.3          |
+| ECDHE-RSA-AES256-SHA384        | TLSv1.3          |
+| DHE-PSK-AES128-CCM8            | TLSv1.3          |
+| AES256-CCM8                    | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| ECDHE-ECDSA-AES256-SHA         | TLSv1.3          |
+| SRP-DSS-AES-256-CBC-SHA        | TLSv1.3          |
+| AES128-CCM                     | TLSv1.3          |
+| DHE-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA256     | TLSv1.3          |
+| ECDHE-ECDSA-ARIA256-GCM-SHA384 | TLSv1.3          |
+| DHE-PSK-AES256-CCM8            | TLSv1.3          |
+| DHE-RSA-ARIA256-GCM-SHA384     | TLSv1.3          |
+| AES256-GCM-SHA384              | TLSv1.3          |
+| DHE-RSA-AES256-CCM8            | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| DHE-RSA-AES256-SHA             | TLSv1.3          |
+| PSK-AES128-CCM                 | TLSv1.3          |
+| PSK-AES128-CBC-SHA             | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA128-SHA256 | TLSv1.3          |
+| CAMELLIA256-SHA                | TLSv1.3          |
+| DHE-DSS-AES256-SHA             | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA256    | TLSv1.3          |
+| RSA-PSK-ARIA256-GCM-SHA384     | TLSv1.3          |
+| CAMELLIA128-SHA                | TLSv1.3          |
+| PSK-AES256-CBC-SHA             | TLSv1.3          |
+| DHE-RSA-ARIA128-GCM-SHA256     | TLSv1.3          |
+| ADH-CAMELLIA256-SHA256         | TLSv1.3          |
+| PSK-AES128-CBC-SHA256          | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA        | TLSv1.3          |
+| ADH-CAMELLIA256-SHA            | TLSv1.3          |
+| DHE-RSA-AES256-GCM-SHA384      | TLSv1.3          |
+| RSA-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| ECDHE-ECDSA-ARIA128-GCM-SHA256 | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA        | TLSv1.3          |
+| DHE-RSA-AES128-CCM8            | TLSv1.3          |
+| CAMELLIA256-SHA256             | TLSv1.3          |
+| ADH-AES128-SHA256              | TLSv1.3          |
+| SRP-AES-256-CBC-SHA            | TLSv1.3          |
+| AES128-GCM-SHA256              | TLSv1.3          |
+| RSA-PSK-AES256-GCM-SHA384      | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| SRP-RSA-AES-256-CBC-SHA        | TLSv1.3          |
+| ECDHE-ECDSA-AES256-GCM-SHA384  | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| DHE-DSS-ARIA128-GCM-SHA256     | TLSv1.3          |
+| AECDH-AES128-SHA               | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| AES128-SHA                     | TLSv1.3          |
+| DHE-PSK-ARIA256-GCM-SHA384     | TLSv1.3          |
+| ECDHE-RSA-AES128-SHA           | TLSv1.3          |
+| ADH-AES128-GCM-SHA256          | TLSv1.3          |
+| ARIA256-GCM-SHA384             | TLSv1.3          |
+| PSK-ARIA256-GCM-SHA384         | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA128-SHA256   | TLSv1.3          |
+| ADH-AES128-SHA                 | TLSv1.3          |
+| PSK-CAMELLIA256-SHA384         | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| PSK-AES256-CCM                 | TLSv1.3          |
+| ADH-AES256-SHA                 | TLSv1.3          |
+| PSK-CAMELLIA128-SHA256         | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA       | TLSv1.3          |
+| AES256-SHA                     | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA       | TLSv1.3          |
+| DHE-RSA-AES256-CCM             | TLSv1.3          |
+| DHE-DSS-AES128-SHA256          | TLSv1.3          |
+| ADH-CAMELLIA128-SHA256         | TLSv1.3          |
+| DHE-DSS-AES256-SHA256          | TLSv1.3          |
+| ECDHE-ECDSA-AES256-CCM         | TLSv1.3          |
+| PSK-AES128-GCM-SHA256          | TLSv1.3          |
+| ECDHE-RSA-CHACHA20-POLY1305    | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA128-SHA256   | TLSv1.3          |
+| ECDHE-RSA-AES256-SHA           | TLSv1.3          |
+| PSK-AES128-CCM8                | TLSv1.3          |
+| ECDHE-RSA-AES128-SHA256        | TLSv1.3          |
+| ECDHE-ECDSA-AES128-CCM8        | TLSv1.3          |
+| ECDHE-RSA-AES128-GCM-SHA256    | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA256-SHA384 | TLSv1.3          |
++---------------------------------------------------+
+[33m[*] Weak or insecure cipher suites detected:
+Weak Cipher Suites
++---------------------------------------------------+
+| Cipher Suite                   | Protocol Version |
+|--------------------------------+------------------|
+| SRP-RSA-AES-128-CBC-SHA        | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA256     | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA384    | TLSv1.3          |
+| RSA-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA256-SHA384   | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA        | TLSv1.3          |
+| ADH-CAMELLIA128-SHA            | TLSv1.3          |
+| CAMELLIA128-SHA256             | TLSv1.3          |
+| SRP-AES-128-CBC-SHA            | TLSv1.3          |
+| PSK-AES256-CBC-SHA384          | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA        | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| SRP-DSS-AES-128-CBC-SHA        | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA256     | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA256     | TLSv1.3          |
+| SRP-DSS-AES-256-CBC-SHA        | TLSv1.3          |
+| PSK-AES128-CBC-SHA             | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA256     | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA256-SHA384   | TLSv1.3          |
+| DHE-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA256    | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA128-SHA256 | TLSv1.3          |
+| CAMELLIA256-SHA                | TLSv1.3          |
+| DHE-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| ADH-CAMELLIA256-SHA256         | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA        | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| CAMELLIA128-SHA                | TLSv1.3          |
+| PSK-AES256-CBC-SHA             | TLSv1.3          |
+| PSK-AES128-CBC-SHA256          | TLSv1.3          |
+| ADH-CAMELLIA256-SHA            | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA        | TLSv1.3          |
+| SRP-AES-256-CBC-SHA            | TLSv1.3          |
+| RSA-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| CAMELLIA256-SHA256             | TLSv1.3          |
+| SRP-RSA-AES-256-CBC-SHA        | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA256-SHA384 | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA128-SHA256   | TLSv1.3          |
+| ADH-CAMELLIA128-SHA256         | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA       | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA       | TLSv1.3          |
+| PSK-CAMELLIA128-SHA256         | TLSv1.3          |
+| PSK-CAMELLIA256-SHA384         | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA128-SHA256   | TLSv1.3          |
+| SRP-RSA-AES-128-CBC-SHA        | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA256     | TLSv1.3          |
+| RSA-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA384    | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA256-SHA384   | TLSv1.3          |
+| CAMELLIA128-SHA256             | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA        | TLSv1.3          |
+| SRP-AES-128-CBC-SHA            | TLSv1.3          |
+| ADH-CAMELLIA128-SHA            | TLSv1.3          |
+| PSK-AES256-CBC-SHA384          | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| DHE-RSA-CAMELLIA128-SHA        | TLSv1.3          |
+| SRP-DSS-AES-128-CBC-SHA        | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA256     | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA256     | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA256-SHA384   | TLSv1.3          |
+| DHE-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA         | TLSv1.3          |
+| SRP-DSS-AES-256-CBC-SHA        | TLSv1.3          |
+| DHE-PSK-CAMELLIA128-SHA256     | TLSv1.3          |
+| DHE-RSA-CAMELLIA256-SHA256     | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| PSK-AES128-CBC-SHA             | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA128-SHA256 | TLSv1.3          |
+| CAMELLIA256-SHA                | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA256    | TLSv1.3          |
+| CAMELLIA128-SHA                | TLSv1.3          |
+| PSK-AES256-CBC-SHA             | TLSv1.3          |
+| ADH-CAMELLIA256-SHA256         | TLSv1.3          |
+| PSK-AES128-CBC-SHA256          | TLSv1.3          |
+| DHE-DSS-CAMELLIA256-SHA        | TLSv1.3          |
+| ADH-CAMELLIA256-SHA            | TLSv1.3          |
+| RSA-PSK-CAMELLIA256-SHA384     | TLSv1.3          |
+| DHE-DSS-CAMELLIA128-SHA        | TLSv1.3          |
+| CAMELLIA256-SHA256             | TLSv1.3          |
+| SRP-AES-256-CBC-SHA            | TLSv1.3          |
+| DHE-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| SRP-RSA-AES-256-CBC-SHA        | TLSv1.3          |
+| RSA-PSK-AES256-CBC-SHA384      | TLSv1.3          |
+| RSA-PSK-AES128-CBC-SHA256      | TLSv1.3          |
+| ECDHE-RSA-CAMELLIA128-SHA256   | TLSv1.3          |
+| PSK-CAMELLIA256-SHA384         | TLSv1.3          |
+| DHE-PSK-AES256-CBC-SHA         | TLSv1.3          |
+| PSK-CAMELLIA128-SHA256         | TLSv1.3          |
+| ECDHE-PSK-AES128-CBC-SHA       | TLSv1.3          |
+| ECDHE-PSK-AES256-CBC-SHA       | TLSv1.3          |
+| ADH-CAMELLIA128-SHA256         | TLSv1.3          |
+| ECDHE-PSK-CAMELLIA128-SHA256   | TLSv1.3          |
+| ECDHE-ECDSA-CAMELLIA256-SHA384 | TLSv1.3          |
++---------------------------------------------------+
+[36m[*] TLS cipher suites analysis completed.
+
+
+=== TLS Handshake Simulation ===
+[32m
+=============================================
+Argus - Advanced TLS Handshake Simulation
+=============================================
+
+TLS Handshake Details for malcams.com (Resolved IP) - TLSv1_2
++------------------------------------------------------------+
+| Protocol Version:          | TLSv1.2                       |
+| Cipher Suite:              | ECDHE-ECDSA-AES128-GCM-SHA256 |
+| Cipher Protocol:           | TLSv1.2                       |
+| Cipher Bits:               | 128                           |
+| Certificate Subject:       | {}                            |
+| Certificate Issuer:        | {}                            |
+| Valid From:                |                               |
+| Valid To:                  |                               |
+| Serial Number:             |                               |
+| Subject Alternative Names: |                               |
++------------------------------------------------------------+
+TLS Handshake Details for malcams.com (Resolved IP) -
+TLSv1_3
++-----------------------------------------------------+
+| Protocol Version:          | TLSv1.3                |
+| Cipher Suite:              | TLS_AES_256_GCM_SHA384 |
+| Cipher Protocol:           | TLSv1.3                |
+| Cipher Bits:               | 256                    |
+| Certificate Subject:       | {}                     |
+| Certificate Issuer:        | {}                     |
+| Valid From:                |                        |
+| Valid To:                  |                        |
+| Serial Number:             |                        |
+| Subject Alternative Names: |                        |
++-----------------------------------------------------+
+[36m[*] TLS handshake simulation completed.
+
+
+=== Traceroute ===
+
+
+=============================================
+Argus - Email Harvesting Module
+=============================================
+
+
+[*] Starting email harvesting on http://malcams.com...
+[!] Error crawling malcams.com: Invalid URL 'malcams.com': No scheme supplied.
+Perhaps you meant https://malcams.com?
+[!] No email addresses found.
+
+
+=== TXT Records ===
+
+[32m=============================================
+Argus - TXT Record Retrieval Module
+=============================================[0m
+
+[36m[*] Retrieving TXT records for domain: malcams.com[0m
++-----------------------------------------------------------------------------+
+| TXT Record                                                                  |
+|-----------------------------------------------------------------------------|
+| MS=ms96946898                                                               |
+| pvopvsnp9dnuj8o6k3h7ei283o                                                  |
+| v=spf1 ip4:70.91.143.163 ip4:50.232.154.50 ip4:50.232.171.80/29             |
+| include:spf.protection.outlook.com -all                                     |
+| dodq8qplu6p1gplts1d5fkir57                                                  |
++-----------------------------------------------------------------------------+
+
+[36m[*] TXT record retrieval completed for malcams.com.[0m
+
+
+=== WHOIS Lookup ===
+
+[32m=============================================
+Argus - WHOIS Lookup Module
+=============================================[0m
+
+[36m[*] Performing WHOIS lookup for domain: malcams.com[0m
+[31m[!] 'whois' command not found. Please ensure it is installed on your
+system.[0m
+[33m[!] No WHOIS information found.[0m
+
+
+=== Zone Transfer ===
+
+
+=============================================
+Argus - DNS Zone Transfer Module
+=============================================
+
+
+[*] Querying name servers for domain: malcams.com
+[*] Attempting zone transfer with ns90.worldnic.com....
+[!] An error occurred during zone transfer with ns90.worldnic.com.:
+[*] Attempting zone transfer with ns89.worldnic.com....
+[!] An error occurred during zone transfer with ns89.worldnic.com.:
+[!] No zone transfer records found for malcams.com.
+
+
+=== Archive History ===
+
+[32m=============================================
+Argus - Archive History Lookup
+=============================================[0m
+
+[36m[*] Retrieving archive history for domain: malcams.com[0m
++-----------------------------------------------------------------------+
+| Archived URL                                                          |
+|-----------------------------------------------------------------------|
+| https://web.archive.org/web/19961221002805/http://www.malcams.com:80/ |
+| https://web.archive.org/web/19980613200723/http://www.malcams.com:80/ |
+| https://web.archive.org/web/19981111184919/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20000411110754/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20001215214000/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20010202063700/http://malcams.com:80/     |
+| https://web.archive.org/web/20010331123314/http://malcams.com:80/     |
+| https://web.archive.org/web/20030326144811/http://malcams.com:80/     |
+| https://web.archive.org/web/20040420000328/http://malcams.com:80/     |
+| https://web.archive.org/web/20050818041049/http://malcams.com:80/     |
+| https://web.archive.org/web/20051017080448/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20060424074102/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20061205015736/http://malcams.com:80/     |
+| https://web.archive.org/web/20070110232136/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20070929125102/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20080119034404/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20080224115051/http://www.malcams.com:80/ |
+| https://web.archive.org/web/20080509184704/http://www.malcams.com/    |
+| https://web.archive.org/web/20080820105044/http://www.malcams.com/    |
+| https://web.archive.org/web/20091202000729/http://www.malcams.com:80/ |
++-----------------------------------------------------------------------+
+
+[36m[*] Archive history retrieval completed for malcams.com.[0m
+
+
+=== Broken Links Detection ===
+
+=============================================
+Argus - Broken Links Detection
+=============================================
+
+[*] Checking links on: http://malcams.com
+
+[+] No broken links found for http://malcams.com.
+
+
+=== Carbon Footprint ===
+
+==============================================
+Argus - Website Carbon Footprint Calculator
+==============================================
+
+[*] Analyzing website: http://malcams.com
+
+Results for http://malcams.com:
+
+Is the website hosted on green hosting? Yes
+Website is cleaner than 68.00% of websites tested.
+
++----------------------------------------------------------------+
+| Metric                                          | Value        |
+|-------------------------------------------------+--------------|
+| Carbon emitted per page view (grid energy)      | 0.3405 grams |
+| Carbon emitted per page view (renewable energy) | 0.2952 grams |
+| Energy consumed per page view                   | 0.000770 kWh |
++----------------------------------------------------------------+
+
+
+=== CMS Detection ===
+[37m
+=============================================
+Argus - CMS Enumeration Module
+=============================================
+
+[37m[*] Enumerating CMS for: malcams.com
+Error making request to http://malcams.com: 403 Client Error: Forbidden for url: http://www.malcams.com/
+Traceback (most recent call last):
+File "C:\Decian\vscode\Argus_frontend\modules\cms_detection.py", line 205, in <module>
+main(target_url)
+~~~~^^^^^^^^^^^^
+File "C:\Decian\vscode\Argus_frontend\modules\cms_detection.py", line 194, in main
+cms_name = enumerate_cms(target)
+File "C:\Decian\vscode\Argus_frontend\modules\cms_detection.py", line 161, in enumerate_cms
+console.print(Fore.RED + f"[!] Error: Received status code {response.status_code}")
+^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'status_code'
+
+
+=== Cookies Analyzer ===
+[32m
+=============================================
+Argus - Advanced Cookie Analyzer
+=============================================
+
+[37m[*] Fetching cookies for: http://malcams.com
+Cookies for http://malcams.com
++-----------------------------------------------------------------------------+
+| Name    | Value        | Domain       | Path | Secure | HttpOnly | SameSite |
+|---------+--------------+--------------+------+--------+----------+----------|
+| __cf_bm | SIehnxKzfgv… | .malcams.com | /    | No     | Yes      | None     |
++-----------------------------------------------------------------------------+
+[33m[!] Security Issues Detected:
+[33m    - Cookie '__cf_bm' is missing the SameSite attribute.
+[37m[*] Cookie analysis completed for http://malcams.com.
+
+
+
+=== Content Discovery ===
+[32m
+=============================================
+Argus - Content Discovery
+=============================================
+
+[32m
+=============================================
+Argus - Content Discovery
+=============================================
+
+[37m[*] Starting content discovery for http://malcams.com
+[31m[!] Failed to access http://malcams.com, status code 403
+
+
+=== Crawler ===
+
+==============================================
+Argus - Advanced Web Crawler
+==============================================
+
+[+] Found: http://malcams.com (Status: 200) (Content-Type: text/html;
+charset=UTF-8)
+[+] Found: http://malcams.com/request-quote (Status: 200) (Content-Type:
+text/html; charset=UTF-8)
+[+] Found:
+http://malcams.com/wp-content/uploads/2024-2027-Certification_rotated.pdf
+(Status: 200) (Content-Type: application/pdf)
+[+] Found: http://malcams.com/services/multi-axis-turning (Status: 200)
+(Content-Type: text/html; charset=UTF-8)
+[+] Found: http://malcams.com/services/cnc-high-speed-vertical-milling (Status:
+200) (Content-Type: text/html; charset=UTF-8)
+[+] Found: http://malcams.com/services/cnc-turning (Status: 200) (Content-Type:
+text/html; charset=UTF-8)
+[+] Found: http://malcams.com/services/wire-edm (Status: 200) (Content-Type:
+text/html; charset=UTF-8)
+[+] Found: http://malcams.com/services/gearing (Status: 200) (Content-Type:
+text/html; charset=UTF-8)
+[+] Found: http://malcams.com/markets (Status: 200) (Content-Type: text/html;
+charset=UTF-8)
+[+] Found:
+http://malcams.com/case-studies/high-speed-milling-of-aluminum-control-housing-
+for-the-aerospace-industry (Status: 404) (Content-Type: text/html;
+charset=UTF-8)
+[+] Found:
+http://malcams.com/case-studies/cnc-turning-milling-grinding-index-cam-automate
+d-assembly-machine (Status: 200) (Content-Type: text/html; charset=UTF-8)
+[+] Found:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-of-aluminum-heli
+copter-component-for-the-aerospace-industry (Status: 404) (Content-Type:
+text/html; charset=UTF-8)
+[+] Found:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-wire-edm-of-alum
+inum-centrifugal-pump-impeller-for-a-fuel-pump-application (Status: 404)
+(Content-Type: text/html; charset=UTF-8)
+[+] Found: http://malcams.com/about-us (Status: 200) (Content-Type: text/html;
+charset=UTF-8)
+[+] Found: http://malcams.com/careers (Status: 200) (Content-Type: text/html;
+charset=UTF-8)
+[+] Found: http://malcams.com/wp-content/uploads/TOS.pdf (Status: 200)
+(Content-Type: application/pdf)
+[+] Found:
+http://malcams.com/case-studies/high-speed-cnc-milling-aluminum-electronics-hou
+sing-aerospace (Status: 200) (Content-Type: text/html; charset=UTF-8)
+[+] Found:
+http://malcams.com/wp-content/uploads/Mallory-Industries-Inc.-10024244-V4.mp4
+(Status: 200) (Content-Type: video/mp4)
+
+[+] Report saved to results\malcams.com_web_crawler.txt
+
+
+=== Robots.txt Analyzer ===
+
+=============================================
+Argus - Crawl Rules Check
+=============================================
+
+[37m[*] Fetching robots.txt from: http://malcams.com
+[31m[!] No robots.txt file found.
+[37m[*] Crawl rules analysis completed.
+
+
+=== Directory Finder ===
+
+=============================================
+Argus - Directory Finder
+=============================================
+
+[*] Target base URL set to: http://malcams.com
+[*] Loading paths from wordlists\directory_wordlists.txt...
+[!] Wordlist file not found: wordlists\directory_wordlists.txt
+
+
+=== Email Harvesting ===
+
+
+=============================================
+Argus - Email Harvesting Module
+=============================================
+
+
+[*] Starting email harvesting on http://malcams.com...
+[+] Found email: nejaz@malcams.com
+Total emails found so far: 1
+[*] Crawled: http://malcams.com
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-of-aluminum-heli
+copter-component-for-the-aerospace-industry/
+[*] Crawled: http://malcams.com/services/cnc-turning/
+[*] Crawled:
+http://malcams.com/wp-content/uploads/2024-2027-Certification_rotated.pdf
+[*] Crawled: http://malcams.com/services/cnc-high-speed-vertical-milling/
+[*] Crawled: http://malcams.com/services/wire-edm/
+[*] Crawled: http://malcams.com/wp-content/uploads/TOS.pdf
+[*] Crawled: http://malcams.com/careers/
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-wire-edm-of-alum
+inum-centrifugal-pump-impeller-for-a-fuel-pump-application/
+[*] Crawled: http://malcams.com/services/gearing/
+[*] Crawled: http://malcams.com/markets/#military
+[*] Crawled: http://malcams.com#menu
+[*] Crawled: http://malcams.com/request-quote/
+[*] Crawled:
+http://malcams.com/case-studies/high-speed-milling-of-aluminum-control-housing-
+for-the-aerospace-industry/
+[*] Crawled: http://malcams.com/markets/#industrial
+[*] Crawled: http://malcams.com#top
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-milling-grinding-index-cam-automate
+d-assembly-machine/
+[*] Crawled: http://malcams.com/markets/#aerospace
+[*] Crawled: http://malcams.com/about-us/
+[*] Crawled: http://malcams.com/services/multi-axis-turning/
+[*] Crawled: http://malcams.com/markets/
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-of-aluminum-heli
+copter-component-for-the-aerospace-industry/#menu
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-of-aluminum-heli
+copter-component-for-the-aerospace-industry/#top
+[*] Crawled: http://malcams.com/services/cnc-turning/#menu
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-milling-grinding-index-cam-automate
+d-assembly-machine//
+[*] Crawled: http://malcams.com/services/cnc-turning/#top
+[*] Crawled: http://malcams.com/services/cnc-high-speed-vertical-milling/#menu
+[*] Crawled:
+http://malcams.com/case-studies/high-speed-cnc-milling-aluminum-electronics-hou
+sing-aerospace/
+[*] Crawled: http://malcams.com/services/cnc-high-speed-vertical-milling/#top
+[*] Crawled: http://malcams.com/services/wire-edm/#top
+[*] Crawled: http://malcams.com/services/wire-edm/#menu
+[*] Crawled: http://malcams.com/careers/#menu
+[*] Crawled: http://malcams.com/careers/#top
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-wire-edm-of-alum
+inum-centrifugal-pump-impeller-for-a-fuel-pump-application/#top
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-high-speed-milling-wire-edm-of-alum
+inum-centrifugal-pump-impeller-for-a-fuel-pump-application/#menu
+[*] Crawled: http://malcams.com/services/gearing/#menu
+[*] Crawled: http://malcams.com/services/gearing/#top
+[*] Crawled: http://malcams.com/markets/#top
+[*] Crawled: http://malcams.com/markets/#menu
+[*] Crawled: http://malcams.com/request-quote/#menu
+[*] Crawled: http://malcams.com/request-quote/#top
+[*] Crawled:
+http://malcams.com/case-studies/high-speed-milling-of-aluminum-control-housing-
+for-the-aerospace-industry/#menu
+[*] Crawled:
+http://malcams.com/case-studies/high-speed-milling-of-aluminum-control-housing-
+for-the-aerospace-industry/#top
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-milling-grinding-index-cam-automate
+d-assembly-machine/#menu
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-milling-grinding-index-cam-automate
+d-assembly-machine/#top
+[+] Found email: QB@i.-
+[+] Found email: e@s.E
+[+] Found email: 6@s.u.
+[+] Found email: v@Etc.Ez
+[+] Found email: h@J.V
+[+] Found email: O@57..j
+[+] Found email: dlScl@3.V
+[+] Found email: _@5.G
+[+] Found email: k@xcm.l
+[+] Found email: M@C.C
+[+] Found email: gd6R@yk.h
+[+] Found email: Y@e.qR
+[+] Found email: c@2B.E
+[+] Found email: I@3.G
+[+] Found email: V@wJ.i
+[+] Found email: 8@y.F
+[+] Found email: X@4.B
+[+] Found email: -@k.K
+[+] Found email: z@k.V
+[+] Found email: z@K.U
+[+] Found email: g@T.kH
+[+] Found email: D@0M.0
+[+] Found email: vyO@rs.I
+[+] Found email: k@8.XD
+[+] Found email: I@I.K
+[+] Found email: H@M.I
+[+] Found email: 4@4.v
+[+] Found email: b@xj.J
+[+] Found email: m@z.8
+[+] Found email: N@mx.nZ
+[+] Found email: a@c.jl
+[+] Found email: j@uB.eeAy
+[+] Found email: BD@j.m
+[+] Found email: FGg@3r.p
+[+] Found email: dm@8.D
+[+] Found email: vb@z.Ld
+[+] Found email: Z@OL.JA
+[+] Found email: dB@b.q8
+[+] Found email: P@Z.h
+[+] Found email: Ke@6.L
+Total emails found so far: 41
+[*] Crawled:
+http://malcams.com/wp-content/uploads/Mallory-Industries-Inc.-10024244-V4.mp4
+[*] Crawled: http://malcams.com/about-us/#top
+[*] Crawled: http://malcams.com/about-us/#menu
+[*] Crawled: http://malcams.com/services/multi-axis-turning/#menu
+[*] Crawled: http://malcams.com/services/multi-axis-turning/#top
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-milling-grinding-index-cam-automate
+d-assembly-machine//#menu
+[*] Crawled:
+http://malcams.com/case-studies/cnc-turning-milling-grinding-index-cam-automate
+d-assembly-machine//#top
+[*] Crawled:
+http://malcams.com/case-studies/high-speed-cnc-milling-aluminum-electronics-hou
+sing-aerospace/#top
+[*] Crawled:
+http://malcams.com/case-studies/high-speed-cnc-milling-aluminum-electronics-hou
+sing-aerospace/#menu
++-----------------------+
+| Email Addresses Found |
+|-----------------------|
+| -@k.K                 |
+| 4@4.v                 |
+| 6@s.u.                |
+| 8@y.F                 |
+| BD@j.m                |
+| D@0M.0                |
+| FGg@3r.p              |
+| H@M.I                 |
+| I@3.G                 |
+| I@I.K                 |
+| Ke@6.L                |
+| M@C.C                 |
+| N@mx.nZ               |
+| O@57..j               |
+| P@Z.h                 |
+| QB@i.-                |
+| V@wJ.i                |
+| X@4.B                 |
+| Y@e.qR                |
+| Z@OL.JA               |
+| _@5.G                 |
+| a@c.jl                |
+| b@xj.J                |
+| c@2B.E                |
+| dB@b.q8               |
+| dlScl@3.V             |
+| dm@8.D                |
+| e@s.E                 |
+| g@T.kH                |
+| gd6R@yk.h             |
+| h@J.V                 |
+| j@uB.eeAy             |
+| k@8.XD                |
+| k@xcm.l               |
+| m@z.8                 |
+| nejaz@malcams.com     |
+| v@Etc.Ez              |
+| vb@z.Ld               |
+| vyO@rs.I              |
+| z@K.U                 |
+| z@k.V                 |
++-----------------------+
+
+[*] Email harvesting completed. Total emails found: 41
+
+
+=== Performance Monitoring ===
+Traceback (most recent call last):
+File "C:\Decian\vscode\Argus_frontend\modules\performance_monitoring.py", line 10, in <module>
+from config.settings import DEFAULT_TIMEOUT, GOOGLE_API_KEY
+ImportError: cannot import name 'GOOGLE_API_KEY' from 'config.settings' (C:\Decian\vscode\Argus_frontend\config\settings.py)
+
+
+=== Quality Metrics ===
+[32m
+=============================================
+Argus - Quality Metrics Check
+=============================================
+
+[37m[*] Fetching quality metrics for: malcams.com
+[31m[!] Error retrieving quality metrics: 403 Client Error: Forbidden for url:
+http://www.malcams.com/
+[31m[!] No quality metrics found.
+[37m[*] Quality metrics retrieval completed.
+
+
+=== Redirect Chain ===
+[32m
+=============================================
+Argus - Redirect Chain Tracking
+=============================================
+
+[37m[*] Fetching redirect chain for: http://malcams.com
++-----------------------------------+
+| Redirect URL        | Status Code |
+|---------------------+-------------|
+| http://malcams.com/ | 301         |
++-----------------------------------+
+[37m[*] Redirect chain tracking completed.
+
+
+=== Sitemap Parsing ===
+[32m
+=============================================
+Argus - Sitemap Analysis
+=============================================
+
+[37m[*] Fetching sitemaps for: http://malcams.com
+[31m[!] No sitemaps found.
+
+
+=== Social Media Presence Scan ===
+[32m
+=============================================
+Argus - Social Media Presence Check
+=============================================
+
+[37m[*] Please wait, this may take some time...
+[37m[*] Detecting social media presence for: http://malcams.com
+[31m[!] Error detecting social media profiles from page source: 403 Client
+Error: Forbidden for url: http://www.malcams.com/
+[33m[!] No social media profiles found in the HTML page source. Trying
+DuckDuckGo search...
+[33m[!] No social media profiles found using DuckDuckGo. Trying internal page
+links...
+[31m[!] Error detecting social media profiles from internal links: 403 Client
+Error: Forbidden for url: http://www.malcams.com/
+[33m[!] No social media profiles found in internal links. Trying metadata...
+[31m[!] Error detecting social media profiles from metadata: 403 Client Error:
+Forbidden for url: http://www.malcams.com/
+[33m[!] No social media profiles found in metadata. Trying Google search...
++-------------------------------------------+
+| Platform | Profile URL                    |
+|----------+--------------------------------|
+| No Data  | No social media profiles found |
++-------------------------------------------+
+[37m[*] Social media presence check completed.
+
+
+=== Technology Stack Detection ===
+
+=============================================
+Argus - Technology Stack Detection
+=============================================
+
+[*] Detecting technology stack for: malcams.com
+[*] Analyzing HTML content...
+[!] Error retrieving HTML content: 403 Client Error: Forbidden for url: http://www.malcams.com/
+[*] Analyzing HTTP headers...
+[!] Error retrieving HTTP headers: 403 Client Error: Forbidden for url: http://www.malcams.com/
+[*] Checking for specific files and endpoints...
+[+] Technologies detected:
++----------------------------+
+| Technology | Categories    |
+|------------+---------------|
+| Favicon    | Miscellaneous |
++----------------------------+
+[+] Results saved to C:\Decian\vscode\Argus_frontend\modules\..\Results\technology_stack_http_malcams.com.txt
+[*] Technology stack detection completed.
+
+
+=== Third-Party Integrations ===
+
+=============================================
+Argus - Third-Party Integrations Check
+=============================================
+
+[*] Detecting third-party integrations for: malcams.com
+[*] Analyzing HTML content...
+[!] Error retrieving HTML content: 403 Client Error: Forbidden for url: http://www.malcams.com/
+[*] Analyzing HTTP headers...
+[!] Error retrieving HTTP headers: 403 Client Error: Forbidden for url: http://www.malcams.com/
+[*] Analyzing meta tags and JavaScript references...
+[!] Error retrieving meta tags: 403 Client Error: Forbidden for url: http://www.malcams.com/
+[31m[!] No third-party integrations found.
+[*] Third-party integrations check completed.
+
+
+=== Censys Reconnaissance ===
+[32m
+=============================================
+Argus - Censys Exposure Analyzer
+=============================================
+
+[31m[!] Unauthorized. Check your Censys API credentials.
+[31m[!] 141.193.213.10: Unauthorized
+[31m[!] Unauthorized. Check your Censys API credentials.
+[31m[!] 141.193.213.11: Unauthorized
+
+[36m[*] Censys Recon completed.
+
+
+=== Certificate Authority Recon ===
+[32m
+=============================================
+Argus - Advanced Certificate Recon
+=============================================
+
+[37m[*] Fetching certificate details for: malcams.com
+[31m[!] Error retrieving certificate from malcams.com: embedded null byte
+[31m[!] No certificate details found for malcams.com.
+[36m[*] Certificate Authority Recon completed.
+
+
+=== Exposed Environment Files Checker ===
+
+
+=============================================
+Argus - Exposed Environment Files Checker
+=============================================
+
+
+[*] Checking for publicly exposed environment files on malcams.com...
+[!] Error checking .env: Invalid URL 'malcams.com/.env': No scheme supplied.
+Perhaps you meant https://malcams.com/.env?
+[!] Error checking env: Invalid URL 'malcams.com/env': No scheme supplied.
+Perhaps you meant https://malcams.com/env?
+[!] Error checking environment: Invalid URL 'malcams.com/environment': No
+scheme supplied. Perhaps you meant https://malcams.com/environment?
+[!] Error checking .env.php: Invalid URL 'malcams.com/.env.php': No scheme
+supplied. Perhaps you meant https://malcams.com/.env.php?
+[!] Error checking config.php: Invalid URL 'malcams.com/config.php': No scheme
+supplied. Perhaps you meant https://malcams.com/config.php?
+[!] Error checking config.yaml: Invalid URL 'malcams.com/config.yaml': No
+scheme supplied. Perhaps you meant https://malcams.com/config.yaml?
+[!] Error checking config.yml: Invalid URL 'malcams.com/config.yml': No scheme
+supplied. Perhaps you meant https://malcams.com/config.yml?
+[!] Error checking config.json: Invalid URL 'malcams.com/config.json': No
+scheme supplied. Perhaps you meant https://malcams.com/config.json?
+[!] Error checking config.ini: Invalid URL 'malcams.com/config.ini': No scheme
+supplied. Perhaps you meant https://malcams.com/config.ini?
+[!] Error checking localsettings.php: Invalid URL
+'malcams.com/localsettings.php': No scheme supplied. Perhaps you meant
+https://malcams.com/localsettings.php?
+[!] Error checking settings.php: Invalid URL 'malcams.com/settings.php': No
+scheme supplied. Perhaps you meant https://malcams.com/settings.php?
+[!] Error checking db.php: Invalid URL 'malcams.com/db.php': No scheme
+supplied. Perhaps you meant https://malcams.com/db.php?
+[!] Error checking database.php: Invalid URL 'malcams.com/database.php': No
+scheme supplied. Perhaps you meant https://malcams.com/database.php?
+[!] Error checking wp-config.php: Invalid URL 'malcams.com/wp-config.php': No
+scheme supplied. Perhaps you meant https://malcams.com/wp-config.php?
+[!] Error checking appsettings.json: Invalid URL
+'malcams.com/appsettings.json': No scheme supplied. Perhaps you meant
+https://malcams.com/appsettings.json?
+[!] Error checking web.config: Invalid URL 'malcams.com/web.config': No scheme
+supplied. Perhaps you meant https://malcams.com/web.config?
+[!] Error checking .git/config: Invalid URL 'malcams.com/.git/config': No
+scheme supplied. Perhaps you meant https://malcams.com/.git/config?
+[!] Error checking .svn/entries: Invalid URL 'malcams.com/.svn/entries': No
+scheme supplied. Perhaps you meant https://malcams.com/.svn/entries?
+[!] Error checking .hg/.hgignore: Invalid URL 'malcams.com/.hg/.hgignore': No
+scheme supplied. Perhaps you meant https://malcams.com/.hg/.hgignore?
+[!] Error checking .gitignore: Invalid URL 'malcams.com/.gitignore': No scheme
+supplied. Perhaps you meant https://malcams.com/.gitignore?
+[!] Error checking composer.lock: Invalid URL 'malcams.com/composer.lock': No
+scheme supplied. Perhaps you meant https://malcams.com/composer.lock?
+[!] Error checking package-lock.json: Invalid URL
+'malcams.com/package-lock.json': No scheme supplied. Perhaps you meant
+https://malcams.com/package-lock.json?
+[!] Error checking yarn.lock: Invalid URL 'malcams.com/yarn.lock': No scheme
+supplied. Perhaps you meant https://malcams.com/yarn.lock?
+[!] Error checking Dockerfile: Invalid URL 'malcams.com/Dockerfile': No scheme
+supplied. Perhaps you meant https://malcams.com/Dockerfile?
+[!] Error checking docker-compose.yml: Invalid URL
+'malcams.com/docker-compose.yml': No scheme supplied. Perhaps you meant
+https://malcams.com/docker-compose.yml?
+[!] Error checking Makefile: Invalid URL 'malcams.com/Makefile': No scheme
+supplied. Perhaps you meant https://malcams.com/Makefile?
+[!] Error checking requirements.txt: Invalid URL
+'malcams.com/requirements.txt': No scheme supplied. Perhaps you meant
+https://malcams.com/requirements.txt?
+[!] Error checking Gemfile: Invalid URL 'malcams.com/Gemfile': No scheme
+supplied. Perhaps you meant https://malcams.com/Gemfile?
+[!] Error checking Pipfile: Invalid URL 'malcams.com/Pipfile': No scheme
+supplied. Perhaps you meant https://malcams.com/Pipfile?
+[!] Error checking Pipfile.lock: Invalid URL 'malcams.com/Pipfile.lock': No
+scheme supplied. Perhaps you meant https://malcams.com/Pipfile.lock?
+[!] Error checking setup.py: Invalid URL 'malcams.com/setup.py': No scheme
+supplied. Perhaps you meant https://malcams.com/setup.py?
+[!] Error checking phpinfo.php: Invalid URL 'malcams.com/phpinfo.php': No
+scheme supplied. Perhaps you meant https://malcams.com/phpinfo.php?
+[!] Error checking php.ini: Invalid URL 'malcams.com/php.ini': No scheme
+supplied. Perhaps you meant https://malcams.com/php.ini?
+[!] Error checking backup.sql: Invalid URL 'malcams.com/backup.sql': No scheme
+supplied. Perhaps you meant https://malcams.com/backup.sql?
+[!] Error checking dump.sql: Invalid URL 'malcams.com/dump.sql': No scheme
+supplied. Perhaps you meant https://malcams.com/dump.sql?
+[!] Error checking database.sql: Invalid URL 'malcams.com/database.sql': No
+scheme supplied. Perhaps you meant https://malcams.com/database.sql?
+[+] No publicly exposed environment files found.
+
+
+=== Firewall Detection ===
+[32m
+=============================================
+Argus - Advanced Firewall Detection
+=============================================
+
+[37m[*] Detecting firewall for: malcams.com
+[31m[!] Error retrieving firewall information: Invalid URL 'malcams.com': No
+scheme supplied. Perhaps you meant https://malcams.com?
+[31m[!] No firewall information found.
+[37m[*] Firewall detection completed.
+
+
+=== Global Ranking ===
+[32m
+=============================================
+Argus - Global Ranking Analysis
+=============================================
+
+[37m[*] Retrieving current Tranco list ID...
+[37m[*] Fetching global ranking for: malcams.com
+[33m[!] malcams.com is not ranked in the current Tranco list.
+[36m[*] Global ranking analysis completed.
+
+
+=== HTTP Headers ===
+[32m
+=============================================
+Argus - Advanced HTTP Header Analysis
+=============================================
+
+[37m[*] Fetching HTTP headers for: http://malcams.com
+[31m[!] Error retrieving headers: 403 Client Error: Forbidden for url:
+http://www.malcams.com/
+[31m[!] No headers found.
+[37m[*] HTTP header analysis completed.
+
+
+=== HTTP Security Features ===
+[32m
+=============================================
+Argus - Advanced HTTP Security Headers Check
+=============================================
+
+[37m[*] Fetching HTTP headers for: http://malcams.com
+[31m[!] Error retrieving headers: 403 Client Error: Forbidden for url:
+http://www.malcams.com/
+[31m[!] No headers found.
+[37m[*] HTTP header analysis completed.
+
+
+=== Malware & Phishing Check ===
+[32m
+=============================================
+Argus - Advanced Malware & Phishing Check
+=============================================
+
+[37m[*] Checking for malware and phishing threats for: http://malcams.com
+[33m[*] Performing heuristic analysis...
+[32m[+] No suspicious keywords found in URL path.
+[33m[*] Performing additional heuristic checks...
+[31m[!] URL does not use HTTPS. Potential security risk.
+[33m[*] Checking against public blacklist services...
+[31m[!] IP 68.116.172.148 is listed in zen.spamhaus.org.
+[31m[!] DNS query error for b.barracudacentral.org: All nameservers failed to
+answer the query 148.172.116.68.b.barracudacentral.org. IN A: Server
+Do53:192.168.1.1@53 answered SERVFAIL
+[33m[*] Checking URLhaus...
+[32m[+] URL not found in URLhaus database.
+[33m[*] Checking VirusTotal...
+[31m[!] VirusTotal scan failed with status code No Response.
+[36m
+[*] Malware & Phishing checks completed.
+
+
+
+=== Pastebin Monitoring ===
+[32m
+=============================================
+Argus - Advanced Paste Monitoring
+=============================================
+
+[37m[*] Monitoring paste sites for query: malcams.com
+[33m[*] Searching Pastebin - Page 1...
+[33m[*] Searching Ghostbin - Page 1...
+[33m[*] Searching Paste.ee - Page 1...
+[33m[*] Searching ControlC - Page 1...
+[33m[*] Searching Paste.org - Page 1...
+[31m[!] Failed to fetch https://pastebin.com/search with status 403.
+[31m[!] Error fetching https://ghostbin.com/search: Cannot connect to host
+pst.klgrth.io:443 ssl:default
+[31m[!] POST request to https://api.paste.ee/v1/pastes/search failed with
+status 405.
+[33m[!] No more results found on ControlC at page 1.
+[33m[*] Searching Pastebin - Page 2...
+[33m[*] Searching Ghostbin - Page 2...
+[33m[*] Searching Paste.ee - Page 2...
+[31m[!] Error fetching https://ghostbin.com/search: Cannot connect to host
+pst.klgrth.io:443 ssl:default
+[31m[!] POST request to https://api.paste.ee/v1/pastes/search failed with
+status 405.
+[31m[!] Failed to fetch https://pastebin.com/search with status 403.
+[33m[!] No more results found on Paste.org at page 1.
+[33m[!] No pastes found for the given query.
+[36m[*] Paste monitoring completed.
+
+
+=== Privacy & GDPR Compliance ===
+[32m
+=============================================
+Argus - Privacy & GDPR Compliance
+=============================================
+
+[37m[*] Checking Privacy Policy, GDPR Compliance, and Cookie Policy for:
+http://malcams.com
+[31m[!] Error fetching the homepage: 403 Client Error: Forbidden for url:
+http://malcams.com/
+[37m[*] Privacy Policy URL: None
+[37m[*] GDPR Compliance URL: None
+[37m[*] Cookie Policy URL: None
+[31m[!] Error retrieving Privacy Policy at None: Invalid URL 'None': No scheme
+supplied. Perhaps you meant https://None?
+[31m[!] Error retrieving GDPR Compliance at None: Invalid URL 'None': No scheme
+supplied. Perhaps you meant https://None?
+[31m[!] Error retrieving Cookie Policy at None: Invalid URL 'None': No scheme
+supplied. Perhaps you meant https://None?
++---------------------------------------+
+| Check           | Result | Compliance |
+|-----------------+--------+------------|
+| Privacy Policy  | Error  | No         |
+| GDPR Compliance | Error  | No         |
+| Cookie Policy   | Error  | No         |
++---------------------------------------+
+[37m[*] Privacy & GDPR compliance check completed.
+
+
+=== Security.txt Check ===
+[32m
+=============================================
+Argus - Security.txt Detection
+=============================================
+
+[37m[*] Fetching security.txt for: http://malcams.com
+[31m[!] No security.txt file found.
+[37m[*] Security.txt detection and analysis completed.
+
+
+=== Shodan Reconnaissance ===
+[32m
+=============================================
+Argus - Shodan Exposure Analyzer
+=============================================
+
+Shodan Data for 141.193.213.10
++------------------------------------+
+| Field            | Details         |
+|------------------+-----------------|
+| IP Address       | 141.193.213.10  |
+| Organization     | WPEngine, Inc.  |
+| Operating System |                 |
+| Location         | Germany, Berlin |
+| Hostnames        | None            |
++------------------------------------+
+Statistics
++------------------------------------+
+| Metric           | Value           |
+|------------------+-----------------|
+| Open Ports       | 11              |
+| Unique Services  | CloudFlare      |
+| Vulnerabilities  | None            |
+| Operating System | None            |
+| Hostnames        | None            |
+| Location         | Germany, Berlin |
++------------------------------------+
+Open Ports and
+Services
++-------------------+
+| Port | Service    |
+|------+------------|
+| 8080 | CloudFlare |
+| 2082 | Unknown    |
+| 2083 | Unknown    |
+| 2053 | Unknown    |
+| 2086 | Unknown    |
+| 2087 | Unknown    |
+| 2095 | Unknown    |
+| 80   | CloudFlare |
+| 8880 | Unknown    |
+| 8443 | CloudFlare |
+| 443  | CloudFlare |
++-------------------+
+
+[36m[*] Shodan Recon completed.
+
+
+=== SSL Labs Report ===
+[32m
+=============================================
+Argus - Advanced SSL Labs Scanner
+=============================================
+
+[37m[*] Fetching SSL Labs report for: malcams.com
+[33m[*] Analysis in progress for malcams.com. Waiting for results...
+SSL Labs Report for malcams.com
+[141.193.213.11]
++---------------------------------------------+
+| Field                    | Details          |
+|--------------------------+------------------|
+| Grade                    | A                |
+| Protocols Supported      | TLS 1.2, TLS 1.3 |
+| Cipher Suites            |                  |
+| Server Signature         | cloudflare       |
+| OCSP Stapling            | No               |
+| HSTS Policy              | absent           |
+| Vulnerable to BEAST      | No               |
+| POODLE TLS               | 1                |
+| Heartbleed Vulnerability | No               |
+| Supports RC4             | No               |
++---------------------------------------------+
+SSL Labs Report for malcams.com
+[141.193.213.10]
++---------------------------------------------+
+| Field                    | Details          |
+|--------------------------+------------------|
+| Grade                    | A                |
+| Protocols Supported      | TLS 1.2, TLS 1.3 |
+| Cipher Suites            |                  |
+| Server Signature         | cloudflare       |
+| OCSP Stapling            | No               |
+| HSTS Policy              | absent           |
+| Vulnerable to BEAST      | No               |
+| POODLE TLS               | 1                |
+| Heartbleed Vulnerability | No               |
+| Supports RC4             | No               |
++---------------------------------------------+
+[36m[*] SSL Labs analysis completed.
+
+
+=== SSL Pinning Check ===
+[32m
+=============================================
+Argus - Advanced SSL Pinning Check
+=============================================
+
+[37m[*] Checking SSL pinning for: malcams.com
+SSL Pinning Check for malcams.com
++----------------------------------+
+| Domain      | SSL Pinning Status |
+|-------------+--------------------|
+| malcams.com | Not Enabled        |
++----------------------------------+
+[36m[*] SSL pinning check completed.
+
+
+=== Subdomain Enumeration ===
+[32m
+=============================================
+Argus - Subdomain Enumeration (crt.sh)
+=============================================
+
+[37m[*] Fetching subdomains for: malcams.com
++--------------------------+
+| Subdomains               |
+|--------------------------|
+| www.malcams.com          |
+| autodiscover.malcams.com |
+| mail.malcams.com         |
+| remote.malcams.com       |
+| www.remote.malcams.com   |
+| malcams.com              |
+| *.malcams.com            |
+| malcams.com              |
++--------------------------+
+[37m[*] Subdomain enumeration completed.
+
+
+=== VirusTotal Scan ===
+[32m
+=============================================
+Argus - VirusTotal Scan Module
+=============================================
+
+[37m[*] Initiating VirusTotal scans for 1 URL(s)...
+[37m[*] Scanning URL: http://malcams.com
+[31m[!] Error: Received status code 403 for URL: http://malcams.com
+[37m[*] Processing results for: http://malcams.com
+[31m[!] No data to display for URL: http://malcams.com
+[31m
+[!] An unexpected error occurred: 'str' object has no attribute 'substitute'
+
+

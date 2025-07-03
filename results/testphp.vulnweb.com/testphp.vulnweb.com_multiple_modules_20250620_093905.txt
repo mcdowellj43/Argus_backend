@@ -1,0 +1,561 @@
+=== VirusTotal Scan ===
+[32m
+=============================================
+Argus - VirusTotal Scan Module
+=============================================
+
+[37m[*] Initiating VirusTotal scans for 1 URL(s)...
+[37m[*] Scanning URL: http://testphp.vulnweb.com
+[31m[!] Error: Received status code 403 for URL: http://testphp.vulnweb.com
+[37m[*] Processing results for: http://testphp.vulnweb.com
+[31m[!] No data to display for URL: http://testphp.vulnweb.com
+[31m
+[!] An unexpected error occurred: 'str' object has no attribute 'substitute'
+
+
+=== Subdomain Takeover ===
+[32m
+=============================================
+Argus - Advanced Subdomain Takeover Detection
+=============================================
+
+[37m[*] Fetching subdomains for testphp.vulnweb.com from crt.sh...
+[32m[+] Found 0 subdomains for testphp.vulnweb.com.
+[31m[!] No subdomains found for testphp.vulnweb.com.
+[33m[INFO] Subdomain takeover check completed, but no subdomains were
+effectively checked (e.g., all domains failed to resolve or no valid initial
+inputs).
+
+
+=== Subdomain Enumeration ===
+[32m
+=============================================
+Argus - Subdomain Enumeration (crt.sh)
+=============================================
+
+[37m[*] Fetching subdomains for: testphp.vulnweb.com
+[31m[!] Error fetching subdomains: ('Connection aborted.',
+ConnectionResetError(10054, 'An existing connection was forcibly closed by the
+remote host', None, 10054, None))
+[33m[INFO] No subdomains found for testphp.vulnweb.com.
+
+
+=== Shodan Reconnaissance ===
+[32m
+=============================================
+Argus - Enhanced IP Reconnaissance
+(Free Account Compatible Version)
+=============================================
+
+Shodan Account Info:
+Traceback (most recent call last):
+File "C:\Decian\vscode\Argus_frontend\modules\shodan.py", line 47, in check_api_status
+console.print(f"[cyan]\u251c\u2500 Plan: {data.get('plan', 'Unknown')}[/cyan]")
+~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 1673, in print
+with self:
+^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 865, in __exit__
+self._exit_buffer()
+~~~~~~~~~~~~~~~~~^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 823, in _exit_buffer
+self._check_buffer()
+~~~~~~~~~~~~~~~~~~^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 2027, in _check_buffer
+legacy_windows_render(buffer, LegacyWindowsTerm(self.file))
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_windows_renderer.py", line 17, in legacy_windows_render
+term.write_styled(text, style)
+~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_win32_console.py", line 442, in write_styled
+self.write_text(text)
+~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_win32_console.py", line 403, in write_text
+self.write(text)
+~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 47, in write
+self.__convertor.write(text)
+~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 177, in write
+self.write_and_convert(text)
+~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 205, in write_and_convert
+self.write_plain_text(text, cursor, len(text))
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 210, in write_plain_text
+self.wrapped.write(text[start:end])
+~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+File "C:\Decian\vscode\Argus_frontend\modules\shodan.py", line 288, in main
+asyncio.run(main_async(inputs))
+~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 195, in run
+return runner.run(main)
+~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\asyncio\runners.py", line 118, in run
+return self._loop.run_until_complete(task)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\asyncio\base_events.py", line 719, in run_until_complete
+return future.result()
+~~~~~~~~~~~~~^^
+File "C:\Decian\vscode\Argus_frontend\modules\shodan.py", line 232, in main_async
+api_info = await check_api_status()
+^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Decian\vscode\Argus_frontend\modules\shodan.py", line 58, in check_api_status
+console.print(f"[red][!] Error checking API status: {e}[/red]")
+~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 1673, in print
+with self:
+^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 865, in __exit__
+self._exit_buffer()
+~~~~~~~~~~~~~~~~~^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 823, in _exit_buffer
+self._check_buffer()
+~~~~~~~~~~~~~~~~~~^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 2027, in _check_buffer
+legacy_windows_render(buffer, LegacyWindowsTerm(self.file))
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_windows_renderer.py", line 17, in legacy_windows_render
+term.write_styled(text, style)
+~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_win32_console.py", line 442, in write_styled
+self.write_text(text)
+~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_win32_console.py", line 403, in write_text
+self.write(text)
+~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 47, in write
+self.__convertor.write(text)
+~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 177, in write
+self.write_and_convert(text)
+~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 205, in write_and_convert
+self.write_plain_text(text, cursor, len(text))
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 210, in write_plain_text
+self.wrapped.write(text[start:end])
+~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+File "C:\Decian\vscode\Argus_frontend\modules\shodan.py", line 300, in <module>
+main(args.inputs)
+~~~~^^^^^^^^^^^^^
+File "C:\Decian\vscode\Argus_frontend\modules\shodan.py", line 293, in main
+console.print(Fore.RED + f"[!] Unexpected error: {e}")
+~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 1673, in print
+with self:
+^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 865, in __exit__
+self._exit_buffer()
+~~~~~~~~~~~~~~~~~^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 823, in _exit_buffer
+self._check_buffer()
+~~~~~~~~~~~~~~~~~~^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\console.py", line 2027, in _check_buffer
+legacy_windows_render(buffer, LegacyWindowsTerm(self.file))
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_windows_renderer.py", line 17, in legacy_windows_render
+term.write_styled(text, style)
+~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_win32_console.py", line 442, in write_styled
+self.write_text(text)
+~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\rich\_win32_console.py", line 403, in write_text
+self.write(text)
+~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 47, in write
+self.__convertor.write(text)
+~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 177, in write
+self.write_and_convert(text)
+~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 205, in write_and_convert
+self.write_plain_text(text, cursor, len(text))
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\site-packages\colorama\ansitowin32.py", line 210, in write_plain_text
+self.wrapped.write(text[start:end])
+~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+File "C:\Users\mcdow\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 0-1: character maps to <undefined>
+
+
+=== Pastebin Monitoring ===
+[32m
+=============================================
+Argus - Advanced Paste Monitoring
+=============================================
+
+[37m[*] Monitoring paste sites for query: testphp.vulnweb.com
+[33m[*] Searching Pastebin - Page 1...
+[33m[*] Searching Ghostbin - Page 1...
+[33m[*] Searching Paste.ee - Page 1...
+[33m[*] Searching ControlC - Page 1...
+[33m[*] Searching Paste.org - Page 1...
+[33m[!] No more results found on ControlC at page 1.
+[31m[!] Failed to fetch https://pastebin.com/search with status 403.
+[31m[!] Error fetching https://ghostbin.com/search: Cannot connect to host
+pst.klgrth.io:443 ssl:default
+[31m[!] POST request to https://api.paste.ee/v1/pastes/search failed with
+status 405.
+[33m[*] Searching Pastebin - Page 2...
+[33m[*] Searching Ghostbin - Page 2...
+[31m[!] Error fetching https://ghostbin.com/search: Cannot connect to host
+pst.klgrth.io:443 ssl:default
+[33m[*] Searching Paste.ee - Page 2...
+[31m[!] POST request to https://api.paste.ee/v1/pastes/search failed with
+status 405.
+[31m[!] Failed to fetch https://pastebin.com/search with status 403.
+[33m[!] No more results found on Paste.org at page 1.
+[33m[!] No pastes found for the given query.
+[37m[*] Paste monitoring completed.
+
+
+=== Exposed Environment Files Checker ===
+
+
+=============================================
+Argus - Exposed Environment Files Checker
+=============================================
+
+
+[*] Checking for publicly exposed environment files on testphp.vulnweb.com...
+[!] Error checking .env: Invalid URL 'testphp.vulnweb.com/.env': No scheme
+supplied. Perhaps you meant https://testphp.vulnweb.com/.env?
+[!] Error checking env: Invalid URL 'testphp.vulnweb.com/env': No scheme
+supplied. Perhaps you meant https://testphp.vulnweb.com/env?
+[!] Error checking environment: Invalid URL 'testphp.vulnweb.com/environment':
+No scheme supplied. Perhaps you meant https://testphp.vulnweb.com/environment?
+[!] Error checking .env.php: Invalid URL 'testphp.vulnweb.com/.env.php': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/.env.php?
+[!] Error checking config.php: Invalid URL 'testphp.vulnweb.com/config.php': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/config.php?
+[!] Error checking config.yaml: Invalid URL 'testphp.vulnweb.com/config.yaml':
+No scheme supplied. Perhaps you meant https://testphp.vulnweb.com/config.yaml?
+[!] Error checking config.yml: Invalid URL 'testphp.vulnweb.com/config.yml': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/config.yml?
+[!] Error checking config.json: Invalid URL 'testphp.vulnweb.com/config.json':
+No scheme supplied. Perhaps you meant https://testphp.vulnweb.com/config.json?
+[!] Error checking config.ini: Invalid URL 'testphp.vulnweb.com/config.ini': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/config.ini?
+[!] Error checking localsettings.php: Invalid URL
+'testphp.vulnweb.com/localsettings.php': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/localsettings.php?
+[!] Error checking settings.php: Invalid URL
+'testphp.vulnweb.com/settings.php': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/settings.php?
+[!] Error checking db.php: Invalid URL 'testphp.vulnweb.com/db.php': No scheme
+supplied. Perhaps you meant https://testphp.vulnweb.com/db.php?
+[!] Error checking database.php: Invalid URL
+'testphp.vulnweb.com/database.php': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/database.php?
+[!] Error checking wp-config.php: Invalid URL
+'testphp.vulnweb.com/wp-config.php': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/wp-config.php?
+[!] Error checking appsettings.json: Invalid URL
+'testphp.vulnweb.com/appsettings.json': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/appsettings.json?
+[!] Error checking web.config: Invalid URL 'testphp.vulnweb.com/web.config': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/web.config?
+[!] Error checking .git/config: Invalid URL 'testphp.vulnweb.com/.git/config':
+No scheme supplied. Perhaps you meant https://testphp.vulnweb.com/.git/config?
+[!] Error checking .svn/entries: Invalid URL
+'testphp.vulnweb.com/.svn/entries': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/.svn/entries?
+[!] Error checking .hg/.hgignore: Invalid URL
+'testphp.vulnweb.com/.hg/.hgignore': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/.hg/.hgignore?
+[!] Error checking .gitignore: Invalid URL 'testphp.vulnweb.com/.gitignore': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/.gitignore?
+[!] Error checking composer.lock: Invalid URL
+'testphp.vulnweb.com/composer.lock': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/composer.lock?
+[!] Error checking package-lock.json: Invalid URL
+'testphp.vulnweb.com/package-lock.json': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/package-lock.json?
+[!] Error checking yarn.lock: Invalid URL 'testphp.vulnweb.com/yarn.lock': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/yarn.lock?
+[!] Error checking Dockerfile: Invalid URL 'testphp.vulnweb.com/Dockerfile': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/Dockerfile?
+[!] Error checking docker-compose.yml: Invalid URL
+'testphp.vulnweb.com/docker-compose.yml': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/docker-compose.yml?
+[!] Error checking Makefile: Invalid URL 'testphp.vulnweb.com/Makefile': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/Makefile?
+[!] Error checking requirements.txt: Invalid URL
+'testphp.vulnweb.com/requirements.txt': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/requirements.txt?
+[!] Error checking Gemfile: Invalid URL 'testphp.vulnweb.com/Gemfile': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/Gemfile?
+[!] Error checking Pipfile: Invalid URL 'testphp.vulnweb.com/Pipfile': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/Pipfile?
+[!] Error checking Pipfile.lock: Invalid URL
+'testphp.vulnweb.com/Pipfile.lock': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/Pipfile.lock?
+[!] Error checking setup.py: Invalid URL 'testphp.vulnweb.com/setup.py': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/setup.py?
+[!] Error checking phpinfo.php: Invalid URL 'testphp.vulnweb.com/phpinfo.php':
+No scheme supplied. Perhaps you meant https://testphp.vulnweb.com/phpinfo.php?
+[!] Error checking php.ini: Invalid URL 'testphp.vulnweb.com/php.ini': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/php.ini?
+[!] Error checking backup.sql: Invalid URL 'testphp.vulnweb.com/backup.sql': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/backup.sql?
+[!] Error checking dump.sql: Invalid URL 'testphp.vulnweb.com/dump.sql': No
+scheme supplied. Perhaps you meant https://testphp.vulnweb.com/dump.sql?
+[!] Error checking database.sql: Invalid URL
+'testphp.vulnweb.com/database.sql': No scheme supplied. Perhaps you meant
+https://testphp.vulnweb.com/database.sql?
+[SUCCESS] No publicly exposed environment files found for testphp.vulnweb.com.
+
+
+=== Data Leak Detection ===
+
+=============================================
+Argus - Advanced Data Leak Checker
+=============================================
+
+[37m[*] Validating API key...
+[32m[+] API key validated successfully
+[37m[*] Checking data leaks for domain: testphp.vulnweb.com
+[37m[*] Emails to check: 17
+[37m[*] Rate limit: 10 requests per minute
+[37m[*] Estimated time: 1.7 minutes
+[37m[*] Using 1 thread (forced due to rate limits)
+[33m[!] This will take approximately 1.7 minutes due to API rate limits.
+[33m[!] Consider using --limit to test with fewer emails first.
+[33m[*] Checking admin@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[31m[!] Network error checking admin@testphp.vulnweb.com:
+HTTPSConnectionPool(host='haveibeenpwned.com', port=443): Read timed out. (read
+timeout=15)
+[33m[*] Checking administrator@testphp.vulnweb.com...
+[32m[+] No breaches found for administrator@testphp.vulnweb.com
+[33m[*] Checking contact@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for contact@testphp.vulnweb.com
+[33m[*] Checking info@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for info@testphp.vulnweb.com
+[33m[*] Checking support@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for support@testphp.vulnweb.com
+[33m[*] Checking sales@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for sales@testphp.vulnweb.com
+[33m[*] Checking webmaster@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for webmaster@testphp.vulnweb.com
+[33m[*] Checking postmaster@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for postmaster@testphp.vulnweb.com
+[33m[*] Checking security@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for security@testphp.vulnweb.com
+[33m[*] Checking noreply@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for noreply@testphp.vulnweb.com
+[33m[*] Checking no-reply@testphp.vulnweb.com...
+[32m[+] No breaches found for no-reply@testphp.vulnweb.com
+[33m[*] Checking help@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for help@testphp.vulnweb.com
+[33m[*] Checking service@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for service@testphp.vulnweb.com
+[33m[*] Checking abuse@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for abuse@testphp.vulnweb.com
+[33m[*] Checking privacy@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for privacy@testphp.vulnweb.com
+[33m[*] Checking legal@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for legal@testphp.vulnweb.com
+[33m[*] Checking marketing@testphp.vulnweb.com...
+[33m[!] Rate limited despite precautions. Waiting 60 seconds...
+[32m[+] No breaches found for marketing@testphp.vulnweb.com
+
+[36m============================================================
+[36m                    SCAN SUMMARY
+[36m============================================================
+Total Emails Checked:    17
+Clean (No Breaches):     16
+Compromised Emails:      0
+Total Breaches Found:    0
+Errors:                  1
+Scan Duration:           33415.4 seconds
+
+[32m[+] RISK LEVEL: LOW
+[37m    No known breaches found for this domain.
+[32m
+[SUCCESS] Data leak check for testphp.vulnweb.com completed. No breaches found
+for 16 checked email(s) (out of 17 total). Review summary above.
+
+
+=== Technology Stack Detection ===
+
+=============================================
+Argus - Technology Stack Detection
+=============================================
+
+[*] Detecting technology stack for: testphp.vulnweb.com
+[*] Analyzing HTML content...
+[*] Analyzing HTTP headers...
+[*] Checking for specific files and endpoints...
++-----------------------------------+
+| Technology | Categories           |
+|------------+----------------------|
+| Nginx      | Web Server           |
+| PHP        | Programming Language |
+| Favicon    | Miscellaneous        |
++-----------------------------------+
+[+] Results saved to C:\Decian\vscode\Argus_frontend\modules\..\Results\technology_stack_http_testphp.vulnweb.com.txt
+[SUCCESS] Detected 3 unique technology/technologies for http://testphp.vulnweb.com.
+
+
+=== Social Media Presence Scan ===
+[32m
+=============================================
+Argus - Social Media Presence Check
+=============================================
+
+[37m[*] Please wait, this may take some time...
+[37m[*] Detecting social media presence for: http://testphp.vulnweb.com
+[33m[!] No social media profiles found in the HTML page source. Trying
+DuckDuckGo search...
+[33m[!] No social media profiles found using DuckDuckGo. Trying internal page
+links...
+[33m[!] No social media profiles found in internal links. Trying metadata...
+[33m[!] No social media profiles found in metadata. Trying Google search...
++-------------------------------------------+
+| Platform | Profile URL                    |
+|----------+--------------------------------|
+| No Data  | No social media profiles found |
++-------------------------------------------+
+[33m[INFO] No social media profiles found for http://testphp.vulnweb.com.
+
+
+=== Email Harvesting ===
+
+
+=============================================
+Argus - Email Harvesting Module
+=============================================
+
+
+[*] Starting email harvesting on http://testphp.vulnweb.com...
+[+] Found email: wvs@acunetix.com
+Total emails found so far: 1
+[*] Crawled: http://testphp.vulnweb.com
+[*] Crawled: http://testphp.vulnweb.com/login.php
+[*] Crawled: http://testphp.vulnweb.com/Mod_Rewrite_Shop/
+[*] Crawled: http://testphp.vulnweb.com/artists.php
+[*] Crawled: http://testphp.vulnweb.com/userinfo.php
+[*] Crawled: http://testphp.vulnweb.com/AJAX/index.php
+[!] Skipped http://testphp.vulnweb.com/privacy.php (Status code: 404)
+[*] Crawled: http://testphp.vulnweb.com/disclaimer.php
+[*] Crawled: http://testphp.vulnweb.com/cart.php
+[*] Crawled: http://testphp.vulnweb.com/index.php
+[*] Crawled: http://testphp.vulnweb.com/guestbook.php
+[*] Crawled: http://testphp.vulnweb.com/categories.php
+[*] Crawled: http://testphp.vulnweb.com/hpp/
+[*] Crawled: http://testphp.vulnweb.com/signup.php
+[*] Crawled:
+http://testphp.vulnweb.com/Mod_Rewrite_Shop/Details/web-camera-a4tech/2/
+[*] Crawled:
+http://testphp.vulnweb.com/Mod_Rewrite_Shop/Details/color-printer/3/
+[*] Crawled:
+http://testphp.vulnweb.com/Mod_Rewrite_Shop/Details/network-attached-storage-dl
+ink/1/
+[*] Crawled: http://testphp.vulnweb.com/artists.php?artist=1
+[*] Crawled: http://testphp.vulnweb.com/artists.php?artist=3
+[*] Crawled: http://testphp.vulnweb.com/artists.php?artist=2
+[*] Crawled: http://testphp.vulnweb.com/listproducts.php?cat=1
+[*] Crawled: http://testphp.vulnweb.com/listproducts.php?cat=2
+[*] Crawled: http://testphp.vulnweb.com/listproducts.php?cat=4
+[*] Crawled: http://testphp.vulnweb.com/listproducts.php?cat=3
+[*] Crawled: http://testphp.vulnweb.com/hpp/?pp=12
+[*] Crawled: http://testphp.vulnweb.com/Mod_Rewrite_Shop/BuyProduct-2/
+[*] Crawled: http://testphp.vulnweb.com/Mod_Rewrite_Shop/RateProduct-2.html
+[*] Crawled: http://testphp.vulnweb.com/Mod_Rewrite_Shop/RateProduct-3.html
+[*] Crawled: http://testphp.vulnweb.com/Mod_Rewrite_Shop/BuyProduct-3/
+[*] Crawled: http://testphp.vulnweb.com/Mod_Rewrite_Shop/RateProduct-1.html
+[*] Crawled: http://testphp.vulnweb.com/Mod_Rewrite_Shop/BuyProduct-1/
+[*] Crawled: http://testphp.vulnweb.com/listproducts.php?artist=1
+[*] Crawled: http://testphp.vulnweb.com/listproducts.php?artist=3
+[*] Crawled: http://testphp.vulnweb.com/listproducts.php?artist=2
+[*] Crawled: http://testphp.vulnweb.com/showimage.php?file=./pictures/7.jpg
+[*] Crawled: http://testphp.vulnweb.com/product.php?pic=4
+[*] Crawled: http://testphp.vulnweb.com/showimage.php?file=./pictures/3.jpg
+[*] Crawled: http://testphp.vulnweb.com/product.php?pic=2
+[*] Crawled: http://testphp.vulnweb.com/showimage.php?file=./pictures/2.jpg
+[*] Crawled: http://testphp.vulnweb.com/product.php?pic=5
+[*] Crawled: http://testphp.vulnweb.com/showimage.php?file=./pictures/4.jpg
+[*] Crawled: http://testphp.vulnweb.com/product.php?pic=7
+[*] Crawled: http://testphp.vulnweb.com/showimage.php?file=./pictures/1.jpg
+[*] Crawled: http://testphp.vulnweb.com/product.php?pic=3
+[*] Crawled: http://testphp.vulnweb.com/product.php?pic=1
+[*] Crawled: http://testphp.vulnweb.com/showimage.php?file=./pictures/5.jpg
+[*] Crawled: http://testphp.vulnweb.com/product.php?pic=6
+[*] Crawled: http://testphp.vulnweb.com/showimage.php?file=./pictures/6.jpg
+[*] Crawled: http://testphp.vulnweb.com/hpp/params.php?p=valid&pp=12
++-----------------------+
+| Email Addresses Found |
+|-----------------------|
+| wvs@acunetix.com      |
++-----------------------+
+
+[SUCCESS] Found 1 email address(es) for http://testphp.vulnweb.com.
+
+
+=== Directory Finder ===
+
+=============================================
+Argus - Directory Finder
+=============================================
+
+[*] Target base URL set to: http://testphp.vulnweb.com
+[*] Loading paths from wordlists\directory_wordlists.txt...
+[!] Wordlist file not found: wordlists\directory_wordlists.txt
+
+
+=== WHOIS Lookup ===
+
+[32m=============================================
+Argus - WHOIS Lookup Module
+=============================================[0m
+
+[36m[*] Performing WHOIS lookup for domain: testphp.vulnweb.com[0m
+[31m[!] 'whois' command not found. Please ensure it is installed on your
+system.[0m
+[33m[!] No WHOIS information found.[0m
+[33m[INFO] No WHOIS information found, or an error occurred during lookup for
+testphp.vulnweb.com.[0m
+
+
+=== DNSSEC Check ===
+[32m
+=============================================
+Argus - DNSSEC Check
+=============================================
+
+[31m[!] Invalid domain format. Please check the domain and try again.
+
+
